@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RJVC Admin Dashboard</title>
 
+<script>
+// ✅ सबसे पहले security check
+(function() {
+  const flag = localStorage.getItem("rjvc_admin_logged");
+  if (flag !== "yes") {
+    // अगर login नहीं किया तो direct login page पर भेज दो
+    window.location.href = "login.html";
+  }
+})();
+</script>
+
 <style>
   body {
     font-family: sans-serif;
@@ -52,6 +63,7 @@
     border-radius: 8px;
     text-decoration: none;
     font-size: 14px;
+    cursor: pointer;
   }
 
   .btn:hover {
@@ -73,7 +85,7 @@
     <p>अभी basic admin panel active है।  
     अगले version में आप जो कहोगे वो जोड़ देंगे।</p>
 
-    <h3>Admin देख सकता है:</h3>
+    <h3>Admin देख सकता है (आगे जोड़ेंगे):</h3>
     <ul>
       <li>कितने customers साइट का उपयोग कर रहे हैं</li>
       <li>किस customer ने कितने member add किए</li>
@@ -87,10 +99,18 @@
 
     <p style="color:red;">(यह basic version है। आप बताओ कि admin panel में क्या-क्या extra चाहिए — मैं पूरा जोड़ दूँगा।)</p>
 
-    <a class="btn" href="login.html">Logout</a>
+    <button class="btn" onclick="logout()">Logout</button>
   </div>
 
 </div>
+
+<script>
+function logout() {
+  // ✅ logout पर flag हटाओ
+  localStorage.removeItem("rjvc_admin_logged");
+  window.location.href = "login.html";
+}
+</script>
 
 </body>
 </html>
