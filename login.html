@@ -88,6 +88,8 @@ function login() {
   const correctPass = "RJVC@2025";
 
   if (id === correctId && pass === correctPass) {
+    // ✅ admin के लिए secret flag सेट
+    localStorage.setItem("rjvc_admin_logged", "yes");
     window.location.href = "admin.html";  // login सफल → admin पेज पर जाएँ
   } else {
     document.getElementById("msg").innerText = "गलत ID या Password!";
