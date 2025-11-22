@@ -6,7 +6,7 @@
 <title>RJVC Admin Dashboard</title>
 
 <script>
-// ✅ सबसे पहले security check
+// ✅ सबसे पहले security check (sessionStorage → browser/tab बंद होते ही auto logout)
 (function() {
   const flag = sessionStorage.getItem("rjvc_admin_logged");
   if (flag !== "yes") {
@@ -148,12 +148,16 @@
       <div id="totalMembers" class="big">0</div>
     </div>
     <div class="card summary">
-      <h3>Total Calculated Income (₹)</h3>
-      <div id="totalIncome" class="big">0</div>
+      <h3>Total Wallet Balance (₹)</h3>
+      <div id="totalWallet" class="big">0</div>
     </div>
     <div class="card summary">
       <h3>Today Calculations</h3>
       <div id="todayCalc" class="big">0</div>
+    </div>
+    <div class="card summary">
+      <h3>Pending Withdrawals</h3>
+      <div id="pendingWithdrawals" class="big">0</div>
     </div>
   </div>
 
@@ -191,6 +195,10 @@
         <input id="manualName" type="text" placeholder="जैसे: राजेश">
       </div>
       <div class="col">
+        <label>Mobile</label>
+        <input id="manualMobile" type="tel" placeholder="10 digit mobile">
+      </div>
+      <div class="col">
         <label>Joined Members</label>
         <input id="manualJoined" type="number" min="0" value="0">
       </div>
@@ -209,14 +217,15 @@
         <thead>
           <tr>
             <th>Name</th>
+            <th>Mobile</th>
             <th>Joined</th>
             <th>Current Level</th>
             <th>Next Level</th>
             <th>Remaining</th>
             <th>Next Level Income (₹)</th>
-            <th>Payout Status</th>
+            <th>Wallet (₹)</th>
             <th>Date</th>
-            <th>Action</th>
+            <th>Delete</th>
           </tr>
         </thead>
         <tbody id="customerTableBody">
@@ -225,7 +234,31 @@
     </div>
     <div class="note">
       ये data index.html पर customer calculation होने पर automatic save होता है।
-      Admin यहां से payout status को भी manage कर सकता है।
+    </div>
+  </div>
+
+  <!-- Withdrawal Requests -->
+  <div class="section-title">Bank Withdrawal Requests</div>
+  <div class="card">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Mobile</th>
+            <th>Amount (₹)</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="withdrawTableBody">
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      यहाँ से admin हर withdrawal को Approve (Paid) या Reject कर सकता है।  
+      Reject होने पर amount वापस customer के wallet में चला जाएगा।
     </div>
   </div>
 
@@ -238,6 +271,32 @@
 <script>
 function formatNumber(n) {
   return Number(n || 0).toLocaleString("en-IN");
+}
+
+function getCustomers() {
+  try {
+    return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
+  } catch (e) {
+    console.warn("Customer read error", e);
+    return [];
+  }
+}
+
+function setCustomers(list) {
+  localStorage.setItem("rjvc_customers", JSON.stringify(list));
+}
+
+function getWithdrawals() {
+  try {
+    return JSON.parse(localStorage.getItem("rjvc_withdrawals") || "[]");
+  } catch (e) {
+    console.warn("Withdraw read error", e);
+    return [];
+  }
+}
+
+function setWithdrawals(list) {
+  localStorage.setItem("rjvc_withdrawals", JSON.stringify(list));
 }
 
 function loadSettingsToUI() {
@@ -263,35 +322,27 @@ function saveSettings() {
   alert("Settings saved. Customers वाले page पर नया plan apply होगा.");
 }
 
-function getCustomers() {
-  try {
-    return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
-  } catch (e) {
-    console.warn("Customer read error", e);
-    return [];
-  }
-}
-
-function setCustomers(list) {
-  localStorage.setItem("rjvc_customers", JSON.stringify(list));
-}
-
 function renderDashboard() {
   const customers = getCustomers();
+  const withdrawals = getWithdrawals();
 
   const totalCustomers = customers.length;
   const totalMembers = customers.reduce((sum, c) => sum + (c.joinedMembers || 0), 0);
-  const totalIncome = customers.reduce((sum, c) => sum + (c.totalIncome || 0), 0);
+  const totalWallet = customers.reduce((sum, c) => sum + (c.walletBalance || 0), 0);
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const todayCalc = customers.filter(c => (c.createdAt || "").slice(0,10) === todayStr).length;
 
+  const pending = withdrawals.filter(w => w.status === "Pending").length;
+
   document.getElementById("totalCustomers").innerText = formatNumber(totalCustomers);
   document.getElementById("totalMembers").innerText = formatNumber(totalMembers);
-  document.getElementById("totalIncome").innerText = formatNumber(totalIncome);
+  document.getElementById("totalWallet").innerText = formatNumber(totalWallet);
   document.getElementById("todayCalc").innerText = formatNumber(todayCalc);
+  document.getElementById("pendingWithdrawals").innerText = formatNumber(pending);
 
   renderCustomerTable(customers);
+  renderWithdrawTable(withdrawals);
 }
 
 function renderCustomerTable(customers) {
@@ -306,25 +357,20 @@ function renderCustomerTable(customers) {
 
       const dateStr = c.createdAt ? c.createdAt.slice(0,10) : "";
       const currentLevel = c.currentLevel || (c.state === "allComplete" ? "All" : "-");
-
       const nextLevel = c.state === "allComplete" ? "-" : (c.nextLevel || "-");
       const remaining = c.state === "allComplete" ? "0" : formatNumber(c.remainingForNext || 0);
       const nextIncome = c.state === "allComplete" ? "-" : ("₹" + formatNumber(c.nextLevelIncome || 0));
+      const wallet = "₹" + formatNumber(c.walletBalance || 0);
 
       tr.innerHTML = `
         <td>${c.name || "-"}</td>
+        <td>${c.mobile || "-"}</td>
         <td>${formatNumber(c.joinedMembers || 0)}</td>
         <td>${currentLevel}</td>
         <td>${nextLevel}</td>
         <td>${remaining}</td>
         <td>${nextIncome}</td>
-        <td>
-          <select onchange="updatePayoutStatus(${c.id}, this.value)">
-            <option value="Pending"${c.payoutStatus === "Pending" ? " selected" : ""}>Pending</option>
-            <option value="Paid"${c.payoutStatus === "Paid" ? " selected" : ""}>Paid</option>
-            <option value="Rejected"${c.payoutStatus === "Rejected" ? " selected" : ""}>Rejected</option>
-          </select>
-        </td>
+        <td>${wallet}</td>
         <td>${dateStr}</td>
         <td><button class="btn small danger" onclick="deleteCustomer(${c.id})">Delete</button></td>
       `;
@@ -332,15 +378,68 @@ function renderCustomerTable(customers) {
     });
 }
 
-function updatePayoutStatus(id, status) {
+function renderWithdrawTable(withdrawals) {
+  const tbody = document.getElementById("withdrawTableBody");
+  tbody.innerHTML = "";
+
+  withdrawals
+    .slice()
+    .sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || "")) // latest first
+    .forEach(w => {
+      const tr = document.createElement("tr");
+      const dateStr = w.createdAt ? w.createdAt.slice(0,10) : "";
+
+      tr.innerHTML = `
+        <td>${w.name || "-"}</td>
+        <td>${w.mobile || "-"}</td>
+        <td>₹${formatNumber(w.amount || 0)}</td>
+        <td>${w.status}</td>
+        <td>${dateStr}</td>
+        <td>
+          ${w.status === "Pending"
+            ? `<button class="btn small" onclick="approveWithdrawal(${w.id})">Approve</button>
+               <button class="btn small danger" onclick="rejectWithdrawal(${w.id})">Reject</button>`
+            : "-"}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+}
+
+function approveWithdrawal(id) {
+  const withdrawals = getWithdrawals();
+  const idx = withdrawals.findIndex(w => w.id === id);
+  if (idx === -1) return;
+
+  withdrawals[idx].status = "Paid";
+  setWithdrawals(withdrawals);
+  renderDashboard();
+}
+
+function rejectWithdrawal(id) {
+  const withdrawals = getWithdrawals();
+  const idx = withdrawals.findIndex(w => w.id === id);
+  if (idx === -1) return;
+
+  const req = withdrawals[idx];
+  if (req.status !== "Pending") return;
+
+  // Refund amount to customer wallet
   const customers = getCustomers();
-  const updated = customers.map(c => {
-    if (c.id === id) {
-      return { ...c, payoutStatus: status };
-    }
-    return c;
-  });
-  setCustomers(updated);
+  const cIdx = customers.findIndex(c =>
+    (c.id && req.customerId && c.id === req.customerId) ||
+    (c.mobile && req.mobile && c.mobile === req.mobile)
+  );
+  if (cIdx !== -1) {
+    customers[cIdx].walletBalance =
+      (customers[cIdx].walletBalance || 0) + (req.amount || 0);
+    setCustomers(customers);
+  }
+
+  withdrawals[idx].status = "Rejected";
+  setWithdrawals(withdrawals);
+
+  renderDashboard();
 }
 
 function deleteCustomer(id) {
@@ -352,16 +451,24 @@ function deleteCustomer(id) {
 
 function addCustomerManually() {
   const name = (document.getElementById("manualName").value || "").trim();
+  const mobile = (document.getElementById("manualMobile").value || "").trim();
   const joined = parseInt(document.getElementById("manualJoined").value || "0", 10);
 
-  if (!name || joined <= 0) {
-    alert("नाम और joined members सही से भरें।");
+  if (!name || !mobile) {
+    alert("नाम और mobile दोनों भरें।");
+    return;
+  }
+
+  const customers = getCustomers();
+  if (customers.some(c => c.mobile === mobile)) {
+    alert("इस mobile के साथ customer already मौजूद है।");
     return;
   }
 
   const record = {
     id: Date.now(),
     name,
+    mobile,
     joinedMembers: joined,
     state: "manual",
     currentLevel: 0,
@@ -369,15 +476,15 @@ function addCustomerManually() {
     remainingForNext: 0,
     nextLevelIncome: 0,
     totalIncome: 0,
-    payoutStatus: "Pending",
+    walletBalance: 0,
     createdAt: new Date().toISOString()
   };
 
-  const customers = getCustomers();
   customers.push(record);
   setCustomers(customers);
 
   document.getElementById("manualName").value = "";
+  document.getElementById("manualMobile").value = "";
   document.getElementById("manualJoined").value = "0";
 
   renderDashboard();
@@ -395,4 +502,4 @@ window.addEventListener("load", function () {
 </script>
 
 </body>
-</html>
+        </html>
