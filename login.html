@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RJVC Admin Login</title>
+
   <style>
     body {
       font-family: sans-serif;
@@ -25,9 +26,12 @@
     h2 {
       margin-top: 0;
       text-align: center;
+      font-size: 24px;
+      color: #003399;
     }
     label {
       font-weight: 600;
+      font-size: 14px;
     }
     input {
       width: 100%;
@@ -35,6 +39,7 @@
       margin-bottom: 14px;
       border-radius: 8px;
       border: 1px solid #bbb;
+      font-size: 14px;
     }
     button {
       width: 100%;
@@ -46,11 +51,22 @@
       color: white;
       cursor: pointer;
     }
+    button:hover {
+      background: #004ccc;
+    }
+    #msg {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+    }
   </style>
 </head>
+
 <body>
   <div class="box">
     <h2>Admin Login</h2>
+
     <label>Admin ID</label>
     <input type="text" id="adminId" placeholder="Enter Admin ID">
 
@@ -59,7 +75,7 @@
 
     <button onclick="login()">Login</button>
 
-    <p id="msg" style="color:red; text-align:center; font-size:14px;"></p>
+    <p id="msg"></p>
   </div>
 
 <script>
@@ -67,15 +83,17 @@ function login() {
   const id = document.getElementById("adminId").value.trim();
   const pass = document.getElementById("adminPass").value.trim();
 
+  // आपके लॉगिन विवरण
   const correctId = "rjvcadmin";
   const correctPass = "RJVC@2025";
 
   if (id === correctId && pass === correctPass) {
-    window.location.href = "admin.html";
+    window.location.href = "admin.html";  // login सफल → admin पेज पर जाएँ
   } else {
     document.getElementById("msg").innerText = "गलत ID या Password!";
   }
 }
 </script>
+
 </body>
 </html>
