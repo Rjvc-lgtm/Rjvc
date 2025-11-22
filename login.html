@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RJVC Admin Login</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #e8f0ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .box {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 350px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    label {
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 14px;
+      border-radius: 8px;
+      border: 1px solid #bbb;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #0066ff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Admin Login</h2>
+    <label>Admin ID</label>
+    <input type="text" id="adminId" placeholder="Enter Admin ID">
+
+    <label>Password</label>
+    <input type="password" id="adminPass" placeholder="Enter Password">
+
+    <button onclick="login()">Login</button>
+
+    <p id="msg" style="color:red; text-align:center; font-size:14px;"></p>
+  </div>
+
+<script>
+function login() {
+  const id = document.getElementById("adminId").value.trim();
+  const pass = document.getElementById("adminPass").value.trim();
+
+  const correctId = "rjvcadmin";
+  const correctPass = "RJVC@2025";
+
+  if (id === correctId && pass === correctPass) {
+    window.location.href = "admin.html";
+  } else {
+    document.getElementById("msg").innerText = "गलत ID या Password!";
+  }
+}
+</script>
+</body>
+</html>
