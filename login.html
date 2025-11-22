@@ -83,14 +83,13 @@ function login() {
   const id = document.getElementById("adminId").value.trim();
   const pass = document.getElementById("adminPass").value.trim();
 
-  // आपके लॉगिन विवरण
   const correctId = "rjvcadmin";
   const correctPass = "RJVC@2025";
 
   if (id === correctId && pass === correctPass) {
-    // ✅ admin के लिए secret flag सेट
-    localStorage.setItem("rjvc_admin_logged", "yes");
-    window.location.href = "admin.html";  // login सफल → admin पेज पर जाएँ
+    // ✅ sessionStorage → tab / browser बंद होते ही auto logout
+    sessionStorage.setItem("rjvc_admin_logged", "yes");
+    window.location.href = "admin.html";
   } else {
     document.getElementById("msg").innerText = "गलत ID या Password!";
   }
