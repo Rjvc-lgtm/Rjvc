@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RJVC – Admin MLM Tree</title>
+
+<!-- ✅ Admin Security: सिर्फ admin को access -->
+<script>
+(function () {
+  const flag = sessionStorage.getItem("rjvc_admin_logged");
+  if (flag !== "yes") {
+    window.location.href = "login.html";
+  }
+})();
+</script>
+
+<style>
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #eef2ff;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    background: #1a73ff;
+    color: #fff;
+    padding: 14px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 14px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    font-size: 14px;
+  }
+  .card h3 {
+    margin-top: 0;
+    font-size: 16px;
+    color: #003399;
+  }
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+  }
+  input, select {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+    font-size: 13px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .col {
+    flex: 1 1 200px;
+  }
+  .btn {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 6px;
+  }
+  .btn-primary {
+    background: #1a73ff;
+    color: #fff;
+  }
+  .btn-secondary {
+    background: #f0f2ff;
+    color: #102a6b;
+  }
+  .note {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+  .tree-box {
+    max-height: 450px;
+    overflow: auto;
+    padding-left: 4px;
+    background: #f7f8ff;
+    border-radius: 10px;
+    border: 1px solid #dde3ff;
+  }
+  ul.tree {
+    list-style: none;
+    padding-left: 18px;
+  }
+  ul.tree li {
+    position: relative;
+    margin: 4px 0;
+    padding-left: 10px;
+  }
+  ul.tree li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 8px;
+    height: 1px;
+    background: #999;
+  }
+  .main-node {
+    font-weight: 700;
+    color: #102a6b;
+  }
+  .sub-node {
+    font-weight: 500;
+    color: #555;
+  }
+  .id-tag {
+    font-size: 11px;
+    background: #e6f0ff;
+    padding: 2px 6px;
+    border-radius: 999px;
+    margin-left: 4px;
+  }
+  .mobile-tag {
+    font-size: 11px;
+    color: #444;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">RJVC – MLM Tree (Admin Only)</div>
+
+<div class="container">
+
+  <!-- नया member (Main + 3 Sub) -->
+  <div class="card">
+    <h3>नया Member जोड़ें (Main + 3 Sub IDs)</h3>
+    <div class="row">
+      <div class="col">
+        <label>नाम (Main ID)</label>
+        <input id="newName" type="text" placeholder="जैसे: Rajesh Parmar">
+      </div>
+      <div class="col">
+        <label>Mobile</label>
+        <input id="newMobile" type="tel" placeholder="10 digit mobile">
+      </div>
+      <div class="col">
+        <label>Parent (किसके नीचे लगाना है?)</label>
+        <select id="newParent">
+          <option value="">Top Level (कोई parent नहीं)</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addMainWithSubs()">Create Main + 3 Sub</button>
+    <div class="note">
+      सिस्टम इस नाम के लिए 1 Main + 3 Sub IDs create करेगा।<br>
+      Customer को tree नहीं दिखेगी, ये केवल admin view है।
+    </div>
+  </div>
+
+  <!-- किसी node की position बदलें -->
+  <div class="card">
+    <h3>Tree में किसी ID की position बदलें</h3>
+    <div class="row">
+      <div class="col">
+        <label>कौन सा Member move करना है?</label>
+        <select id="moveNode"></select>
+      </div>
+      <div class="col">
+        <label>New Parent चुनें</label>
+        <select id="newParentForMove">
+          <option value="">Top Level</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-secondary" onclick="changeParent()">Update Position</button>
+    <div class="note">
+      आप Main या Sub किसी भी ID को tree में ऊपर–नीचे कहीं भी लगा सकते हैं।<br>
+      (Owner system में अलग से stored रहेगा, ये सिर्फ view है)
+    </div>
+  </div>
+
+  <!-- Tree View -->
+  <div class="card">
+    <h3>पूरा MLM Tree (सिर्फ Admin के लिए)</h3>
+    <div id="treeBox" class="tree-box">
+      Tree data खाली है।
+    </div>
+    <div class="note">
+      यह tree सिर्फ structure दिखाने के लिए है।<br>
+      Commission, wallet, bonus आदि अलग data में चल रहे हैं।
+    </div>
+  </div>
+
+  <div style="margin-top:10px;">
+    <button class="btn btn-secondary" onclick="goAdmin()">⬅ Back to Admin Panel</button>
+  </div>
+
+</div>
+
+<script>
+// ====== STORAGE KEY ======
+const TREE_KEY = "rjvc_tree_members";
+
+// ---- Helper: load/save ----
+function loadTree() {
+  try {
+    return JSON.parse(localStorage.getItem(TREE_KEY) || "[]");
+  } catch(e) {
+    console.warn("Tree load error", e);
+    return [];
+  }
+}
+function saveTree(list) {
+  localStorage.setItem(TREE_KEY, JSON.stringify(list));
+}
+
+// Unique node ID (internal)
+function newNodeId() {
+  return "N" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+// नया member: 1 Main + 3 Sub
+function addMainWithSubs() {
+  const name = (document.getElementById("newName").value || "").trim();
+  const mobile = (document.getElementById("newMobile").value || "").trim();
+  const parentId = document.getElementById("newParent").value || null;
+
+  if (!name || !mobile) {
+    alert("नाम और mobile दोनों भरें।");
+    return;
+  }
+
+  let tree = loadTree();
+
+  // सिर्फ warning: same mobile पहले से है तो
+  if (tree.some(n => n.mobile === mobile && n.type === "MAIN")) {
+    const ok = confirm("इस mobile के लिए पहले से Main ID मौजूद है. फिर भी नया main create करना है?");
+    if (!ok) return;
+  }
+
+  // Main node
+  const mainId = newNodeId();
+  const mainNode = {
+    id: mainId,
+    name: name,
+    label: name,
+    mobile: mobile,
+    type: "MAIN",
+    parentId: parentId,
+    createdAt: new Date().toISOString()
+  };
+
+  // 3 Sub IDs
+  const sub1 = {
+    id: newNodeId(),
+    name: name + " 1",
+    label: name + " 1",
+    mobile: mobile,
+    type: "SUB",
+    parentId: mainId,
+    createdAt: new Date().toISOString()
+  };
+  const sub2 = {
+    id: newNodeId(),
+    name: name + " 2",
+    label: name + " 2",
+    mobile: mobile,
+    type: "SUB",
+    parentId: mainId,
+    createdAt: new Date().toISOString()
+  };
+  const sub3 = {
+    id: newNodeId(),
+    name: name + " 3",
+    label: name + " 3",
+    mobile: mobile,
+    type: "SUB",
+    parentId: mainId,
+    createdAt: new Date().toISOString()
+  };
+
+  tree.push(mainNode, sub1, sub2, sub3);
+  saveTree(tree);
+
+  document.getElementById("newName").value = "";
+  document.getElementById("newMobile").value = "";
+
+  alert("Main + 3 Sub IDs create हो गईं।");
+  refreshUI();
+}
+
+// Dropdowns में list भरना
+function refreshDropdowns(tree) {
+  const parentSel = document.getElementById("newParent");
+  const moveNodeSel = document.getElementById("moveNode");
+  const parentForMoveSel = document.getElementById("newParentForMove");
+
+  parentSel.innerHTML = '<option value="">Top Level (कोई parent नहीं)</option>';
+  moveNodeSel.innerHTML = "";
+  parentForMoveSel.innerHTML = '<option value="">Top Level</option>';
+
+  tree.forEach(n => {
+    const label = (n.type === "MAIN" ? "★ " : "— ") + n.name + " (" + (n.mobile || "") + ")";
+
+    // नए member के parent select के लिए
+    const opt1 = document.createElement("option");
+    opt1.value = n.id;
+    opt1.textContent = label;
+    parentSel.appendChild(opt1);
+
+    // किस node को move करना है
+    const opt2 = document.createElement("option");
+    opt2.value = n.id;
+    opt2.textContent = label;
+    moveNodeSel.appendChild(opt2);
+
+    // किसके नीचे लगाना है
+    const opt3 = document.createElement("option");
+    opt3.value = n.id;
+    opt3.textContent = label;
+    parentForMoveSel.appendChild(opt3);
+  });
+}
+
+// Tree HTML बनाना
+function buildTreeHTML(nodes, parentId) {
+  const children = nodes.filter(n => n.parentId === parentId);
+  if (!children.length) return "";
+
+  const ul = document.createElement("ul");
+  ul.className = "tree";
+
+  children.forEach(ch => {
+    const li = document.createElement("li");
+    li.className = ch.type === "MAIN" ? "main-node" : "sub-node";
+
+    const textSpan = document.createElement("span");
+    textSpan.textContent = ch.name;
+    li.appendChild(textSpan);
+
+    const tag = document.createElement("span");
+    tag.className = "id-tag";
+    tag.textContent = ch.type === "MAIN" ? "MAIN" : "SUB";
+    li.appendChild(tag);
+
+    if (ch.mobile) {
+      const m = document.createElement("span");
+      m.className = "mobile-tag";
+      m.textContent = "📱 " + ch.mobile;
+      li.appendChild(m);
+    }
+
+    const childTree = buildTreeHTML(nodes, ch.id);
+    if (childTree) li.appendChild(childTree);
+
+    ul.appendChild(li);
+  });
+
+  return ul;
+}
+
+function renderTree(tree) {
+  const box = document.getElementById("treeBox");
+  box.innerHTML = "";
+
+  if (!tree.length) {
+    box.textContent = "Tree data खाली है। पहले Main member जोड़ें।";
+    return;
+  }
+
+  const rootTree = buildTreeHTML(tree, null);
+  if (rootTree) box.appendChild(rootTree);
+  else box.textContent = "Tree में कोई root node नहीं है।";
+}
+
+// किसी node को दूसरे parent के नीचे लगाना
+function isDescendant(rootId, maybeChildId, tree) {
+  const queue = [rootId];
+  while (queue.length) {
+    const current = queue.shift();
+    const children = tree.filter(n => n.parentId === current).map(n => n.id);
+    if (children.includes(maybeChildId)) return true;
+    queue.push(...children);
+  }
+  return false;
+}
+
+function changeParent() {
+  const nodeId = document.getElementById("moveNode").value;
+  const newParentId = document.getElementById("newParentForMove").value || null;
+
+  if (!nodeId) {
+    alert("पहले कौनसा member move करना है वो चुनें।");
+    return;
+  }
+
+  let tree = loadTree();
+  const node = tree.find(n => n.id === nodeId);
+  if (!node) {
+    alert("Member नहीं मिला।");
+    return;
+  }
+
+  if (newParentId && isDescendant(nodeId, newParentId, tree)) {
+    alert("किसी member को उसके ही नीचे दुबारा नहीं लगा सकते।");
+    return;
+  }
+
+  node.parentId = newParentId;
+  saveTree(tree);
+  alert("Position update हो गई।");
+  refreshUI();
+}
+
+// UI refresh
+function refreshUI() {
+  const tree = loadTree();
+  refreshDropdowns(tree);
+  renderTree(tree);
+}
+
+function goAdmin() {
+  window.location.href = "admin.html";
+}
+
+window.addEventListener("load", refreshUI);
+</script>
+
+</body>
+</html>
