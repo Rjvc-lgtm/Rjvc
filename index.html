@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>Binary MLM Calculator</title>
+  <title>Binary MLM Calculator - RJVC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
@@ -31,7 +31,7 @@
       text-align: center;
       font-size: 13px;
       color: #555;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     label {
       font-size: 14px;
@@ -102,26 +102,64 @@
       font-size: 12px;
       color: #777;
     }
+    .card {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #fff7e6;
+      border: 1px solid #ffe0a3;
+      font-size: 14px;
+      white-space: pre-line;
+    }
+    .card-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .admin-link {
+      text-align: right;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .admin-link a {
+      color: #0066ff;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
   <div class="app">
+    <div class="admin-link">
+      <a href="login.html">Admin Login</a>
+    </div>
     <h1>Binary MLM Calculator</h1>
     <div class="subtitle">
-      हर लेवल पर लोग डबल होंगे (2, 4, 8, 16...) और उनकी कमाई ऑटोमैटिक निकलेगी।
+      हर लेवल पर लोग डबल होंगे (2, 4, 8, 16...) और पूरी कमाई व ग्राहक की रिपोर्ट यहाँ दिखेगी।
     </div>
 
-    <!-- Inputs -->
+    <!-- Customer info -->
+    <div class="row">
+      <div class="col">
+        <label>ग्राहक का नाम</label>
+        <input id="customerName" type="text" placeholder="जैसे: राजेश" />
+      </div>
+      <div class="col">
+        <label>अभी तक कुल कितने सदस्य join हुए?</label>
+        <input id="joinedMembers" type="number" min="0" value="0" />
+        <div class="small">आपके direct + indirect दोनों, कुल team members</div>
+      </div>
+    </div>
+
+    <!-- Plan settings -->
     <div class="row">
       <div class="col">
         <label>कितने लेवल दिखाने हैं?</label>
         <input id="levels" type="number" min="1" max="20" value="11" />
-        <div class="small">जैसे: 11 तक (जैसा आपकी कॉपी में लिखा है)</div>
+        <div class="small">जैसे: 11 तक (admin panel से बदल सकते हैं)</div>
       </div>
       <div class="col">
         <label>प्रति सदस्य कमीशन (₹)</label>
         <input id="commissionPerMember" type="number" min="0" value="15" />
-        <div class="small">आप अपनी कंपनी के हिसाब से बदल सकते हैं</div>
+        <div class="small">admin panel से change किया जा सकता है</div>
       </div>
     </div>
 
@@ -132,7 +170,7 @@
         <div class="small">जैसे Binary में शुरू में 2</div>
       </div>
       <div class="col">
-        <label>क्या डबलिंग 2x हो?</label>
+        <label>डबलिंग (multiplier)</label>
         <input id="multiplier" type="number" min="2" value="2" />
         <div class="small">आमतौर पर Binary में 2 रहता है</div>
       </div>
@@ -140,7 +178,13 @@
 
     <div style="margin-bottom: 10px;">
       <button class="btn-primary" onclick="calculate()">कैल्क्युलेट करें</button>
-      <button class="btn-secondary" onclick="loadExample()">मेरी कॉपी वाला उदाहरण</button>
+      <button class="btn-secondary" onclick="loadExample()">Demo Example</button>
+    </div>
+
+    <!-- Customer summary -->
+    <div id="customerSummary" class="card">
+      <div class="card-title">ग्राहक रिपोर्ट</div>
+      <div id="summaryText">ऊपर डेटा भरकर "कैल्क्युलेट करें" दबाएँ।</div>
     </div>
 
     <!-- Result table -->
@@ -168,7 +212,19 @@
 
   <script>
     function formatNumber(n) {
-      return n.toLocaleString("en-IN");
+      return Number(n || 0).toLocaleString("en-IN");
+    }
+
+    function loadSettings() {
+      try {
+        const s = JSON.parse(localStorage.getItem("rjvc_settings") || "{}");
+        if (s.levels) document.getElementById("levels").value = s.levels;
+        if (s.perMember) document.getElementById("commissionPerMember").value = s.perMember;
+        if (s.startMembers) document.getElementById("startMembers").value = s.startMembers;
+        if (s.multiplier) document.getElementById("multiplier").value = s.multiplier;
+      } catch (e) {
+        console.warn("Settings load error", e);
+      }
     }
 
     function calculate() {
@@ -176,17 +232,26 @@
       const perMember = parseFloat(document.getElementById("commissionPerMember").value || "0");
       const startMembers = parseInt(document.getElementById("startMembers").value || "0", 10);
       const multiplier = parseInt(document.getElementById("multiplier").value || "2", 10);
+      const customerName = (document.getElementById("customerName").value || "").trim();
+      const joinedMembers = parseInt(document.getElementById("joinedMembers").value || "0", 10);
 
       const tbody = document.querySelector("#resultTable tbody");
       tbody.innerHTML = "";
 
       let currentMembers = startMembers;
       let totalIncome = 0;
+      const levelInfo = [];
 
       for (let level = 1; level <= levels; level++) {
         const newMembers = currentMembers;
         const levelIncome = newMembers * perMember;
         totalIncome += levelIncome;
+
+        levelInfo.push({
+          level,
+          members: newMembers,
+          income: levelIncome
+        });
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -198,25 +263,160 @@
         `;
         tbody.appendChild(tr);
 
-        // next level members
         currentMembers = currentMembers * multiplier;
       }
 
       document.getElementById("totalBox").innerText =
         "कुल कमाई: ₹" + formatNumber(totalIncome);
+
+      const summaryData = computeSummaryData(joinedMembers, levelInfo, perMember);
+      renderCustomerSummary(customerName, joinedMembers, levelInfo, perMember, summaryData);
+      saveCustomerRecord(customerName, joinedMembers, summaryData, totalIncome);
     }
 
-    // आपकी कॉपी जैसा फिक्स्ड example (approx)
+    function computeSummaryData(joined, levelInfo, perMember) {
+      if (!levelInfo.length) return { state: "noLevels" };
+
+      if (joined <= 0) {
+        return {
+          state: "noMembers",
+          neededFirstLevel: levelInfo[0].members
+        };
+      }
+
+      let cumulative = 0;
+      let currentLevel = 0;
+      let nextLevel = 0;
+      let neededInNextLevel = 0;
+      let remainingForNext = 0;
+      let nextLevelIncome = 0;
+      const totalLevels = levelInfo.length;
+
+      for (let i = 0; i < totalLevels; i++) {
+        const levelMembers = levelInfo[i].members;
+        const level = levelInfo[i].level;
+        const prevCum = cumulative;
+        cumulative += levelMembers;
+
+        if (joined >= cumulative) {
+          currentLevel = level;
+        } else {
+          nextLevel = level;
+          const joinedInThisLevel = Math.max(0, joined - prevCum);
+          neededInNextLevel = levelMembers;
+          remainingForNext = Math.max(0, levelMembers - joinedInThisLevel);
+          nextLevelIncome = levelMembers * perMember;
+          break;
+        }
+      }
+
+      if (joined >= cumulative && nextLevel === 0) {
+        return {
+          state: "allComplete",
+          totalLevels
+        };
+      }
+
+      return {
+        state: "normal",
+        currentLevel,
+        nextLevel,
+        neededInNextLevel,
+        remainingForNext,
+        nextLevelIncome
+      };
+    }
+
+    function renderCustomerSummary(name, joined, levelInfo, perMember, summary) {
+      const summaryDiv = document.getElementById("summaryText");
+
+      if (!name && !joined) {
+        summaryDiv.innerText = "ऊपर ग्राहक का नाम और अभी तक के सदस्य भरकर \"कैल्क्युलेट करें\" दबाएँ।";
+        return;
+      }
+
+      if (summary.state === "noMembers") {
+        summaryDiv.innerText =
+          (name ? (name + " जी, ") : "") +
+          "अभी तक कोई सदस्य join नहीं हुआ है। आप Level 1 के लिए " +
+          formatNumber(summary.neededFirstLevel) + " सदस्य की ज़रूरत है।";
+        return;
+      }
+
+      if (summary.state === "allComplete") {
+        summaryDiv.innerText =
+          (name ? (name + " जी, ") : "") +
+          "आपने दिए गए सभी " + summary.totalLevels +
+          " levels पूरा कर लिए हैं। अगला level data नहीं है (ऊपर लेवल बढ़ाकर नया प्लान बना सकते हैं)।";
+        return;
+      }
+
+      if (summary.state !== "normal") {
+        summaryDiv.innerText = "डेटा उपलब्ध नहीं है।";
+        return;
+      }
+
+      let text = "";
+      if (name) {
+        text += name + " जी,\n";
+      }
+
+      text += "अभी तक आपकी टीम में कुल " + formatNumber(joined) + " सदस्य जुड़ चुके हैं।\n";
+
+      if (summary.currentLevel > 0) {
+        text += "आपने Level " + summary.currentLevel + " तक पूरा कर लिया है।\n";
+      } else {
+        text += "आप अभी Level 1 पर हैं (अभी कोई पूरा level नहीं हुआ है)।\n";
+      }
+
+      text += "\nNext Level: Level " + summary.nextLevel + "\n";
+      text += "इस level के लिए कुल सदस्य चाहिए: " + formatNumber(summary.neededInNextLevel) + "\n";
+      text += "आपको और सदस्य चाहिए: " + formatNumber(summary.remainingForNext) + "\n";
+      text += "जब यह level पूरा होगा तो इस level से आपकी income होगी: ₹" + formatNumber(summary.nextLevelIncome) + "\n";
+
+      summaryDiv.innerText = text;
+    }
+
+    function saveCustomerRecord(name, joined, summary, totalIncome) {
+      if (!name || joined <= 0) return;
+
+      const record = {
+        id: Date.now(),
+        name,
+        joinedMembers: joined,
+        state: summary.state,
+        currentLevel: summary.currentLevel || 0,
+        nextLevel: summary.nextLevel || null,
+        remainingForNext: summary.remainingForNext || 0,
+        nextLevelIncome: summary.nextLevelIncome || 0,
+        totalIncome: totalIncome || 0,
+        payoutStatus: "Pending",
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        const existing = JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
+        existing.push(record);
+        localStorage.setItem("rjvc_customers", JSON.stringify(existing));
+      } catch (e) {
+        console.warn("Customer save error", e);
+      }
+    }
+
     function loadExample() {
       document.getElementById("levels").value = 11;
       document.getElementById("startMembers").value = 2;
       document.getElementById("multiplier").value = 2;
-      document.getElementById("commissionPerMember").value = 15; // आप चाहें बदल सकते हैं
+      document.getElementById("commissionPerMember").value = 15;
+      document.getElementById("customerName").value = "Demo Customer";
+      document.getElementById("joinedMembers").value = 100;
       calculate();
     }
 
-    // पहली बार page खुलते ही calculation
-    calculate();
+    window.addEventListener("load", function () {
+      loadSettings();
+      calculate();
+    });
   </script>
 </body>
-</html>
+          </html>
