@@ -96,7 +96,7 @@
     font-size:11px;
     border:none;
     cursor:pointer;
-    margin-right:3px;
+    margin:2px 3px 0 0;
   }
   .edit-btn {
     background:#e0f2fe;
@@ -112,6 +112,16 @@
     background:#ecfdf5;
     color:#047857;
     border:1px solid #bbf7d0;
+  }
+  .main-add-btn {
+    background:#e0f2fe;
+    color:#1d4ed8;
+    border:1px solid #bfdbfe;
+  }
+  .sub-add-btn {
+    background:#f1f5f9;
+    color:#0f766e;
+    border:1px solid #bae6fd;
   }
   .status-badge {
     display:inline-block;
@@ -168,7 +178,7 @@
         <th>RJVC ID</th>
         <th>Name</th>
         <th>Mobile</th>
-        <th>Joined Members</th>
+        <th>Joined Members<br/>(Total Tree)</th>
         <th>Commission Wallet</th>
         <th>Bonus Wallet</th>
         <th>Status / Actions</th>
@@ -197,6 +207,7 @@
 </div>
 
 <script>
+/* ---------- BASIC STORAGE HELPERS ---------- */
 function getCustomers() {
   return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
 }
@@ -209,6 +220,15 @@ function getWithdrawals() {
 }
 function saveWithdrawals(arr) {
   localStorage.setItem("rjvc_withdrawals", JSON.stringify(arr));
+}
+
+/* rjvc_settings से commission per member उठाने की कोशिश */
+function getSettings() {
+  try {
+    return JSON.parse(localStorage.getItem("rjvc_settings") || "{}");
+  } catch(e) {
+    return {};
+  }
 }
 
 /* Helper: एक base RJVC ID बनाना (mobile के last 4 digit से) */
@@ -249,8 +269,8 @@ function createCustomer() {
     remainingForNext: 0,
     nextLevelIncome: 0,
     totalIncome: 0,
-    walletBalance: 0,
-    bonusBalance: 0,
+    walletBalance: 0,   // Commission Wallet
+    bonusBalance: 0,    // Bonus Wallet (Sub IDs से + extra bonus)
     isBlocked: false,
     createdAt: new Date().toISOString()
   });
@@ -325,14 +345,93 @@ function editCustomer(mobile) {
   alert("Customer detail update हो गया ✔️");
 }
 
-/* -------------------- ADD BONUS (Sub ID commission –15%) -------------------- */
+/* -------------------- AUTO ADD MEMBERS (Main/Sub) -------------------- */
 /*
-  यहाँ आप जो amount डालोगे, वो माना जाएगा "सारी Sub ID की commission का total"।
-  System:
-    - 15% company share काटेगा
-    - बाकी 85% Main ID के Bonus Wallet में जोड़ देगा
+  idType:
+    - "main"  = Main ID की डाउनलाइन
+    - "sub1"  = Sub ID 1 की डाउनलाइन
+    - "sub2"  = Sub ID 2 की डाउनलाइन
+    - "sub3"  = Sub ID 3 की डाउनलाइन
+
+  Logic:
+    - Commission per member = rjvc_settings.perMember, वरना admin से पूछेंगे
+    - Main ID पर: पूरी commission Commission Wallet में
+    - Sub ID पर: commission पर 15% company share, 85% Main ID के Bonus Wallet में
+    - joinedMembers = पुराना + newCount (पूरी tree गिनी जाएगी)
 */
-function addBonusToCustomer(mobile) {
+function addMembersTo(mobile, idType) {
+  let customers = getCustomers();
+  let idx = customers.findIndex(c => c.mobile === mobile);
+  if (idx === -1) {
+    alert("Customer नहीं मिला।");
+    return;
+  }
+  let c = customers[idx];
+
+  let countStr = prompt("कितने नए members add करने हैं इस ID के नीचे?", "1");
+  if (countStr === null) return;
+  let count = parseInt(countStr || "0", 10);
+  if (isNaN(count) || count <= 0) {
+    alert("Valid members count दर्ज करें (1 या उससे ज्यादा)।");
+    return;
+  }
+
+  let settings = getSettings();
+  let perMember = parseFloat(settings.perMember || "0");
+  if (!perMember || isNaN(perMember) || perMember <= 0) {
+    let pmStr = prompt("Per member commission (₹) क्या रखें?", "16");
+    if (pmStr === null) return;
+    perMember = parseFloat(pmStr || "0");
+    if (!perMember || isNaN(perMember) || perMember <= 0) {
+      alert("Valid commission amount दर्ज करें।");
+      return;
+    }
+    // चाहें तो future के लिए settings में save कर सकते हैं:
+    settings.perMember = perMember;
+    localStorage.setItem("rjvc_settings", JSON.stringify(settings));
+  }
+
+  const gross = count * perMember;
+  let msg = "";
+
+  if (idType === "main") {
+    // Main ID की direct/downline – पूरी commission Commission Wallet
+    c.walletBalance = (c.walletBalance || 0) + gross;
+    msg =
+      "Main ID के नीचे " + count + " नए members जोड़े गए।\n" +
+      "कुल commission: ₹" + gross + "\n" +
+      "Commission Wallet में ₹" + gross + " add हो गया।";
+  } else {
+    // Sub ID case – पूरी commission Sub ID से आयी मानी जाएगी
+    // Company share 15%, बचा हुआ 85% Bonus Wallet
+    const rate = 15;
+    const companyPart = Math.round(gross * rate) / 100;
+    const bonusNet = gross - companyPart;
+    c.bonusBalance = (c.bonusBalance || 0) + bonusNet;
+
+    let whichSub = "Sub ID";
+    if (idType === "sub1") whichSub = "Sub ID 1";
+    if (idType === "sub2") whichSub = "Sub ID 2";
+    if (idType === "sub3") whichSub = "Sub ID 3";
+
+    msg =
+      whichSub + " के नीचे " + count + " नए members जोड़े गए।\n" +
+      "कुल Sub ID Commission: ₹" + gross + "\n" +
+      "Company Share (15%): ₹" + companyPart + "\n" +
+      "Main ID के Bonus Wallet में credit: ₹" + bonusNet;
+  }
+
+  // पूरी tree में कुल members बढ़ेंगे (Main + Sub सब साथ)
+  c.joinedMembers = (c.joinedMembers || 0) + count;
+
+  customers[idx] = c;
+  saveCustomers(customers);
+  renderCustomers();
+  alert(msg + "\n\nअब इस ID की पूरी tree का level और earning index page पर auto दिखेगी।");
+}
+
+/* -------------------- MANUAL BONUS (अतिरिक्त bonus) -------------------- */
+function addBonusManual(mobile) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
   if (idx === -1) return;
@@ -340,32 +439,25 @@ function addBonusToCustomer(mobile) {
   let c = customers[idx];
 
   let amtStr = prompt(
-    "Sub ID Commission (₹) की कुल राशि दर्ज करें जिस पर 15% कंपनी शेयर कटेगा:",
+    "Manual Bonus (₹) दर्ज करें जो सीधे Bonus Wallet में जोड़ना है:",
     "0"
   );
   if (amtStr === null) return;
 
-  let gross = parseFloat(amtStr || "0");
-  if (isNaN(gross) || gross <= 0) {
+  let amt = parseFloat(amtStr || "0");
+  if (isNaN(amt) || amt <= 0) {
     alert("Valid amount दर्ज करें।");
     return;
   }
 
-  const rate = 15; // 15% कंपनी शेयर
-  const companyPart = Math.round(gross * rate) / 100;
-  const bonusNet = gross - companyPart;
-
-  c.bonusBalance = (c.bonusBalance || 0) + bonusNet;
+  c.bonusBalance = (c.bonusBalance || 0) + amt;
   customers[idx] = c;
   saveCustomers(customers);
   renderCustomers();
 
   alert(
-    "Sub ID Commission जोड़ी गई:\n" +
-    "कुल Sub ID Commission: ₹" + gross + "\n" +
-    "Company Share (15%): ₹" + companyPart + "\n" +
-    "Bonus Wallet में credit (Main ID पर): ₹" + bonusNet + "\n\n" +
-    "\"" + (c.name || "") + "\" के Bonus Wallet में ₹" + bonusNet + " जोड़ दिया गया ✔️"
+    "Manual Bonus: ₹" + amt +
+    " \"" + (c.name || "") + "\" के Bonus Wallet में जोड़ दिया गया ✔️"
   );
 }
 
@@ -418,14 +510,18 @@ function renderCustomers() {
       <td>₹${c.bonusBalance || 0}</td>
       <td>
         <span class="${statusClass}">${statusText}</span><br/>
+        <button class="small-btn main-add-btn" onclick="addMembersTo('${c.mobile}','main')">+ Member (Main)</button>
+        <button class="small-btn sub-add-btn" onclick="addMembersTo('${c.mobile}','sub1')">+ Member (Sub 1)</button>
+        <button class="small-btn sub-add-btn" onclick="addMembersTo('${c.mobile}','sub2')">+ Member (Sub 2)</button>
+        <button class="small-btn sub-add-btn" onclick="addMembersTo('${c.mobile}','sub3')">+ Member (Sub 3)</button>
+        <button class="small-btn bonus-btn" onclick="addBonusManual('${c.mobile}')">Manual Bonus</button>
         <button class="small-btn edit-btn" onclick="editCustomer('${c.mobile}')">Edit</button>
-        <button class="small-btn bonus-btn" onclick="addBonusToCustomer('${c.mobile}')">Add Bonus (Sub IDs)</button>
         <button class="small-btn block-btn" onclick="toggleBlock('${c.mobile}')">${blockBtnText}</button>
       </td>
     `;
     tbody.appendChild(trMain);
 
-    // 2️⃣ Sub ID rows (1,2,3) – केवल display, wallet main पर ही रहेगा
+    // 2️⃣ Sub ID rows (1,2,3) – display only, wallets main पर ही हैं
     for (let i = 1; i <= 3; i++) {
       let trSub = document.createElement("tr");
       trSub.className = "sub-row";
@@ -438,8 +534,8 @@ function renderCustomers() {
         <td>→ Main ID</td>
         <td>→ Main ID</td>
         <td class="sub-note">
-          Bonus इस Sub ID की कमाई से आता है,  
-          पर credit हमेशा Main ID के Bonus Wallet में ही होगा।
+          इस Sub ID के नीचे जो भी members add होंगे,<br/>
+          उनकी commission में से 15% company share कटकर, बाकी 85% Main ID के Bonus Wallet में automatically जाएगा।
         </td>
       `;
       tbody.appendChild(trSub);
