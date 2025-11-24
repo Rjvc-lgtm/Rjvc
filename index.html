@@ -524,7 +524,7 @@
       <div class="wallet-card">
         <div class="card-title">RJVC Wallets & Mobile Transfer</div>
         <div id="walletInfo" class="text-muted">
-          पहले ऊपर अपना नाम और मोबाइल नंबर भरें और "ಕैल್ಕ्युलेट करें" दबाएँ।
+          पहले ऊपर अपना नाम और मोबाइल नंबर भरें और "कैल्क्युलेट करें" दबाएँ।
         </div>
         <div class="small" style="margin-top:4px;">
           Bonus Wallet से हर महीने withdrawal किया जा सकता है।  
@@ -588,7 +588,19 @@
       return Number(n || 0).toLocaleString("en-IN");
     }
 
-    // ---------- LOGIN SYSTEM (केवल admin-created customers login कर पाएँगे) ----------
+    // ---------- LOGIN SYSTEM ----------
+
+    function getCustomersArray() {
+      try {
+        return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveCustomersArray(list) {
+      localStorage.setItem("rjvc_customers", JSON.stringify(list));
+    }
 
     function customerLogin() {
       const mobile = (document.getElementById("loginMobile").value || "").trim();
@@ -604,17 +616,20 @@
         return;
       }
 
-      // save logged in mobile
+      if (cust.isBlocked) {
+        alert("यह account अभी BLOCKED है। कृपया admin से contact करें।");
+        return;
+      }
+
       try {
         localStorage.setItem("rjvc_logged_in_mobile", mobile);
       } catch (e) {}
 
-      // fill customer form
       document.getElementById("customerMobile").value = mobile;
       document.getElementById("customerName").value = cust.name || "";
       document.getElementById("joinedMembers").value = cust.joinedMembers || 0;
 
-      // show / hide sections
+      document.getElementById("loginCard").style.display = "block";
       document.getElementById("loginCard").style.display = "none";
       document.getElementById("loggedInfo").style.display = "flex";
       document.getElementById("mainContent").style.display = "block";
@@ -648,8 +663,8 @@
 
       const customers = getCustomersArray();
       const cust = customers.find(c => c.mobile === mobile);
-      if (!cust) {
-        // अगर record हट चुका है तो logout कर दो
+
+      if (!cust || cust.isBlocked) {
         customerLogout();
         return;
       }
@@ -790,7 +805,6 @@
         return;
       }
 
-      // कटौती सही wallet से
       if (source === "bonus") {
         cust.bonusBalance = bonusWallet - amount;
       } else {
@@ -807,7 +821,7 @@
         name: name || cust.name || "",
         mobile,
         amount,
-        source, // "commission" या "bonus"
+        source,
         status: "Pending",
         createdAt: new Date().toISOString()
       });
@@ -817,7 +831,7 @@
       refreshWalletInfo();
     }
 
-    // ---------- SETTINGS / CUSTOMERS ----------
+    // ---------- SETTINGS / CALCULATION ----------
 
     function loadSettings() {
       try {
@@ -829,18 +843,6 @@
       } catch (e) {
         console.warn("Settings load error", e);
       }
-    }
-
-    function getCustomersArray() {
-      try {
-        return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveCustomersArray(list) {
-      localStorage.setItem("rjvc_customers", JSON.stringify(list));
     }
 
     function calculate() {
@@ -995,12 +997,12 @@
     }
 
     function saveCustomerRecord(name, mobile, joined, summary, totalIncome) {
-      if (!mobile) return; // mobile ही unique ID
+      if (!mobile) return;
 
       const customers = getCustomersArray();
       const idx = customers.findIndex(c => c.mobile === mobile);
 
-      // ❗ Customer खुद से नया record नहीं बना सकता, सिर्फ admin बनाया हुआ update होगा
+      // Customer खुद से नया record नहीं बना सकता
       if (idx === -1) {
         console.warn("Unregistered mobile पर calculate चलाया गया:", mobile);
         alert("यह mobile RJVC system में registered नहीं है। कृपया admin से contact करके पहले ID बनवाएँ।");
@@ -1088,7 +1090,7 @@
       }
 
       const from = customers[fromIdx];
-      const fromWallet = from.walletBalance || 0; // सिर्फ commission wallet से transfer
+      const fromWallet = from.walletBalance || 0;
       if (fromWallet < amount) {
         alert("आपके Commission Wallet में इतना balance नहीं है। Current balance: ₹" + formatNumber(fromWallet));
         return;
@@ -1117,7 +1119,7 @@
 
       const to = customers[toIdx];
 
-      from.walletBalance = fromWallet - amount; // bonus नहीं घटा
+      from.walletBalance = fromWallet - amount;
       to.walletBalance = (to.walletBalance || 0) + amount;
 
       customers[fromIdx] = from;
@@ -1145,7 +1147,7 @@
       loadSettings();
       loadBankDetails();
       initLoginFromStorage(); // पहले login check
-      calculate();            // table भरने के लिए (login न हो तो भी सिर्फ calculation)
+      calculate();            // table भरने के लिए
     });
   </script>
 </body>
