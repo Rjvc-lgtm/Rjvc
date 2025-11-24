@@ -222,7 +222,7 @@ function saveWithdrawals(arr) {
   localStorage.setItem("rjvc_withdrawals", JSON.stringify(arr));
 }
 
-/* rjvc_settings से commission per member उठाने की कोशिश */
+/* rjvc_settings से commission per member */
 function getSettings() {
   try {
     return JSON.parse(localStorage.getItem("rjvc_settings") || "{}");
@@ -231,7 +231,7 @@ function getSettings() {
   }
 }
 
-/* Helper: एक base RJVC ID बनाना (mobile के last 4 digit से) */
+/* Helper: base RJVC ID (mobile के last 4 digit से) */
 function getBaseId(c) {
   const mob = (c.mobile || "").replace(/\D/g, "");
   const last4 = mob.slice(-4) || String(c.id).slice(-4);
@@ -258,19 +258,21 @@ function createCustomer() {
     return;
   }
 
+  // यहाँ joinedMembers = 2 रखा है
+  // मतलब: Main ID के नीचे Sub ID 1 और Sub ID 2 पहले से जुड़े हुए माने जाएँगे
   customers.push({
     id: Date.now(),
     name,
     mobile,
-    joinedMembers: 0,
+    joinedMembers: 2,       // 👉 शुरुआती 2 member (Sub ID 1 + Sub ID 2)
     state: "new",
     currentLevel: 0,
     nextLevel: 1,
     remainingForNext: 0,
     nextLevelIncome: 0,
     totalIncome: 0,
-    walletBalance: 0,   // Commission Wallet
-    bonusBalance: 0,    // Bonus Wallet (Sub IDs से + extra bonus)
+    walletBalance: 0,       // Commission Wallet
+    bonusBalance: 0,        // Bonus Wallet
     isBlocked: false,
     createdAt: new Date().toISOString()
   });
@@ -278,7 +280,7 @@ function createCustomer() {
   saveCustomers(customers);
 
   document.getElementById("createMsg").innerText =
-    "Customer सफलतापूर्वक बनाया गया ✔️ (1 Main ID + 3 Sub ID auto बन गए हैं)";
+    "Customer सफलतापूर्वक बनाया गया ✔️ (Main ID के नीचे 2 Sub IDs auto joined माने गए हैं)";
   document.getElementById("custName").value = "";
   document.getElementById("custMobile").value = "";
 
@@ -346,19 +348,6 @@ function editCustomer(mobile) {
 }
 
 /* -------------------- AUTO ADD MEMBERS (Main/Sub) -------------------- */
-/*
-  idType:
-    - "main"  = Main ID की डाउनलाइन
-    - "sub1"  = Sub ID 1 की डाउनलाइन
-    - "sub2"  = Sub ID 2 की डाउनलाइन
-    - "sub3"  = Sub ID 3 की डाउनलाइन
-
-  Logic:
-    - Commission per member = rjvc_settings.perMember, वरना admin से पूछेंगे
-    - Main ID पर: पूरी commission Commission Wallet में
-    - Sub ID पर: commission पर 15% company share, 85% Main ID के Bonus Wallet में
-    - joinedMembers = पुराना + newCount (पूरी tree गिनी जाएगी)
-*/
 function addMembersTo(mobile, idType) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -386,7 +375,6 @@ function addMembersTo(mobile, idType) {
       alert("Valid commission amount दर्ज करें।");
       return;
     }
-    // चाहें तो future के लिए settings में save कर सकते हैं:
     settings.perMember = perMember;
     localStorage.setItem("rjvc_settings", JSON.stringify(settings));
   }
@@ -395,15 +383,12 @@ function addMembersTo(mobile, idType) {
   let msg = "";
 
   if (idType === "main") {
-    // Main ID की direct/downline – पूरी commission Commission Wallet
     c.walletBalance = (c.walletBalance || 0) + gross;
     msg =
       "Main ID के नीचे " + count + " नए members जोड़े गए।\n" +
       "कुल commission: ₹" + gross + "\n" +
       "Commission Wallet में ₹" + gross + " add हो गया।";
   } else {
-    // Sub ID case – पूरी commission Sub ID से आयी मानी जाएगी
-    // Company share 15%, बचा हुआ 85% Bonus Wallet
     const rate = 15;
     const companyPart = Math.round(gross * rate) / 100;
     const bonusNet = gross - companyPart;
@@ -421,7 +406,6 @@ function addMembersTo(mobile, idType) {
       "Main ID के Bonus Wallet में credit: ₹" + bonusNet;
   }
 
-  // पूरी tree में कुल members बढ़ेंगे (Main + Sub सब साथ)
   c.joinedMembers = (c.joinedMembers || 0) + count;
 
   customers[idx] = c;
@@ -430,7 +414,7 @@ function addMembersTo(mobile, idType) {
   alert(msg + "\n\nअब इस ID की पूरी tree का level और earning index page पर auto दिखेगी।");
 }
 
-/* -------------------- MANUAL BONUS (अतिरिक्त bonus) -------------------- */
+/* -------------------- MANUAL BONUS -------------------- */
 function addBonusManual(mobile) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -461,7 +445,7 @@ function addBonusManual(mobile) {
   );
 }
 
-/* -------------------- BLOCK / UNBLOCK (सारी 4 ID पर लागू) -------------------- */
+/* -------------------- BLOCK / UNBLOCK -------------------- */
 function toggleBlock(mobile) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -521,7 +505,7 @@ function renderCustomers() {
     `;
     tbody.appendChild(trMain);
 
-    // 2️⃣ Sub ID rows (1,2,3) – display only, wallets main पर ही हैं
+    // 2️⃣ Sub ID rows (1,2,3)
     for (let i = 1; i <= 3; i++) {
       let trSub = document.createElement("tr");
       trSub.className = "sub-row";
