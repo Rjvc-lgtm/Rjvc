@@ -35,6 +35,45 @@
       font-weight: 600;
     }
 
+    /* INTRO CARD STYLES */
+    .intro-card {
+      max-width: 900px;
+      margin: 10px auto 12px;
+      padding: 14px 14px 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #111827, #1f2937);
+      color: #f9fafb;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+    .intro-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .intro-sub {
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+      color: #e5e7eb;
+    }
+    .intro-points {
+      font-size: 12px;
+      margin: 0;
+      padding-left: 18px;
+      color: #e5e7eb;
+    }
+    .intro-points li {
+      margin-bottom: 5px;
+    }
+    .intro-highlight {
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-top: 1px solid rgba(249,250,251,0.15);
+      padding-top: 8px;
+      color: #fef3c7;
+    }
+
     h2 {
       margin: 10px 0 4px;
       font-size: 18px;
@@ -229,6 +268,59 @@
     <img src="https://raw.githubusercontent.com/Rjvc-lgtm/Rjvc/refs/heads/main/file_0000000021547209af0c0dab6fb5e932.png"
          alt="RJVC Banner" 
          style="width:100%; max-width:500px; display:block; margin:auto; border-radius:0 0 20px 20px;">
+  </div>
+
+  <!-- PREMIUM INTRO CARD just below banner -->
+  <div class="intro-card">
+    <div class="intro-title">आपका Career बदल रहा है… लेकिन आपकी Income पीछे क्यों रहे?</div>
+
+    <div class="intro-sub">
+      हम एक ऐसे दौर में हैं जहाँ AI सिर्फ tool नहीं—  
+      <b>नौकरियों का सबसे बड़ा competitor बन चुका है।</b><br>
+      Google, Amazon, Meta, IBM जैसी कंपनियों में पिछले 12 महीनों में  
+      <b>हज़ारों positions AI automation की वजह से खत्म हो गईं।</b><br><br>
+      सच्चाई साफ़ है—जो लोग आज दूसरा income source नहीं बना रहे,  
+      <b>2–3 साल में वही लोग सबसे ज़्यादा मुश्किल में होंगे।</b>
+    </div>
+
+    <ul class="intro-points">
+      <li><b>RJVC आपको Future-Proof बनाता है:</b> आपकी earning आपकी job पर depend नहीं रहती।</li>
+
+      <li><b>सोते हुए भी आय:</b> System आपके लिए खुद काम करता है—members बदलते ही income auto-generate होती है।</li>
+
+      <li><b>Zero Risk, Zero Pressure:</b> नौकरी छोड़े बिना, घर बैठे extra income। कोई target या daily task नहीं।</li>
+
+      <li><b>Commission Wallet + Bonus Wallet:</b> दोनों का balance साफ-साफ अलग—  
+          bonus हर महीने withdrawal योग्य है।</li>
+
+      <li><b>Bonus Unlock Rule:</b> हर तीसरे महीने सिर्फ 1 direct member—  
+          नहीं जोड़ेंगे तो bonus company को चला जाएगा।</li>
+
+      <li><b>Family Earning System:</b>  
+          अकेले 5–6 महीनों में <b>₹5,000+</b> extra possible।  
+          परिवार साथ काम करे तो हर महीना <b>₹30,000+</b> बनना आसान।</li>
+
+      <li><b>AI से लड़ने की असली ताकत:</b> Backup income = Financial Security।  
+          Job रहे तो भी कमाई बढ़ेगी, job गयी तो यही आपकी लाइफलाइन बनेगी।</li>
+
+      <li><b>No App – No Installation:</b> RJVC आपके mobile browser में तुरंत खुलने वाला  
+          intelligent income dashboard है।</li>
+
+      <li><b>Safe Withdrawal:</b> Bank payout हमेशा admin approved—  
+          earning secure, record transparent।</li>
+    </ul>
+
+    <div class="intro-highlight">
+      दुनिया तेजी से बदल रही है।  
+      ऐसे समय में सिर्फ skill नहीं—<b>extra income source</b> असली ताकत है।<br><br>
+
+      अगर आप अपने career और परिवार की कमाई को AI से बचाना चाहते हैं,  
+      तो RJVC सिर्फ एक मौका नहीं…  
+      <b>एक जरूरी कदम है।</b><br><br>
+
+      नीचे अपना नाम और मोबाइल नंबर भरिए,  
+      और अपना personal earning dashboard अभी चालू कीजिए।
+    </div>
   </div>
 
   <div class="app">
@@ -780,7 +872,7 @@
           nextLevel: summary.nextLevel || null,
           remainingForNext: summary.remainingForNext || 0,
           nextLevelIncome: summary.nextLevelIncome || 0,
-          totalIncome: totalIncome || 0,
+          totalIncome: totalIncome || 0,   // कुल earning
           walletBalance: totalIncome || 0, // main commission wallet
           bonusBalance: 0,                 // Bonus Wallet (admin से credit होगा)
           createdAt: new Date().toISOString()
