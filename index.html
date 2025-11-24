@@ -23,8 +23,6 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.12);
     }
 
-    /* top bar + hero */
-
     .top-bar {
       display: flex;
       justify-content: flex-end;
@@ -36,78 +34,6 @@
       text-decoration: none;
       font-weight: 600;
     }
-
-    .hero {
-      background: linear-gradient(135deg, #1a237e, #3949ab);
-      border-radius: 16px;
-      padding: 16px 14px 18px;
-      color: #fff;
-      margin-bottom: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::after {
-      content: "";
-      position: absolute;
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      border: 18px solid rgba(255,255,255,0.08);
-      right: -50px;
-      top: -40px;
-    }
-    .hero-logo {
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      background: #ffffff;
-      color: #1a237e;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 20px;
-      margin-bottom: 4px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-      z-index: 1;
-    }
-    .hero-title {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin: 0;
-      z-index: 1;
-    }
-    .hero-tagline {
-      font-size: 13px;
-      margin: 2px 0 4px;
-      max-width: 90%;
-      z-index: 1;
-    }
-    .hero-whatsapp {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #25D366;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 999px;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-      z-index: 1;
-      margin-top: 4px;
-    }
-    .hero-whatsapp span.icon {
-      font-size: 17px;
-    }
-
-    /* headings & layout */
 
     h2 {
       margin: 10px 0 4px;
@@ -312,25 +238,7 @@
       <a href="login.html">Admin Login</a>
     </div>
 
-    <!-- HERO SECTION -->
-    <div class="hero">
-      <div class="hero-logo">RJVC</div>
-      <h1 class="hero-title">RJVC THE FUTURE OF SMART EARNING</h1>
-      <div class="hero-tagline">
-        यहाँ आपकी पूरी earning, payout और withdrawal का हिसाब अपने आप दिखता है।  
-        अगर आप स्मार्ट कमाई शुरू करना चाहते हैं, तो WhatsApp पर एक “JOIN” message काफी है।
-      </div>
-      <a
-        class="hero-whatsapp"
-        href="https://wa.me/91XXXXXXXXXX?text=Hi%20I%20want%20to%20Join%20RJVC%20Smart%20Earning%20System"
-        target="_blank"
-      >
-        <span class="icon">💬</span>
-        WhatsApp पर जुड़ें
-      </a>
-    </div>
-
-    <!-- small menu for bank / withdrawal -->
+    <!-- BANK / WITHDRAWAL MENU BUTTON -->
     <div class="menu-row">
       <button class="menu-btn" onclick="toggleBankSection()">
         <span class="icon">☰</span>
@@ -437,7 +345,7 @@
         <div class="col">
           <label>प्रति सदस्य commission (₹)</label>
           <input id="commissionPerMember" type="number" min="0" value="16" />
-          <div class="small">ये amount हर member पर apply होगी</div>
+          <div class="small">ये amount हर member पर apply होगी (ग्राहक को table में अलग से नहीं दिखेगी)</div>
         </div>
       </div>
 
@@ -507,7 +415,6 @@
               <th>Level</th>
               <th>Members</th>
               <th>New Members</th>
-              <th>Commission / Member (₹)</th>
               <th>Level Income (₹)</th>
             </tr>
           </thead>
@@ -737,7 +644,6 @@
           <td>${level}</td>
           <td>${formatNumber(currentMembers)}</td>
           <td>${formatNumber(newMembers)}</td>
-          <td>${formatNumber(perMember)}</td>
           <td>${formatNumber(levelIncome)}</td>
         `;
         tbody.appendChild(tr);
@@ -897,7 +803,7 @@
           nextLevelIncome: summary.nextLevelIncome || old.nextLevelIncome || 0,
           totalIncome: totalIncome || old.totalIncome || 0,
           walletBalance: newWallet,
-          bonusBalance: old.bonusBalance || 0 // bonus हमेशा safe रहे
+          bonusBalance: old.bonusBalance || 0
         };
       }
 
