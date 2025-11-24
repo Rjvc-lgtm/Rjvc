@@ -331,10 +331,10 @@
       <li><b>Zero Risk, Zero Pressure:</b> नौकरी छोड़े बिना, घर बैठे extra income। कोई target या daily task नहीं।</li>
 
       <li><b>Commission Wallet + Bonus Wallet:</b> दोनों का balance साफ-साफ अलग—  
-          bonus हर महीने withdrawal योग्य है।</li>
+          Bonus Wallet में जो amount दिखता है, वही आपकी bonus earning है।</li>
 
       <li><b>Bonus Unlock Rule:</b> हर तीसरे महीने सिर्फ 1 direct member—  
-          नहीं जोड़ेंगे तो bonus company को चला जाएगा।</li>
+          नहीं जोड़ेंगे तो उस महीने का bonus company को चला जाएगा।</li>
 
       <li><b>Family Earning System:</b>  
           अकेले 5–6 महीनों में <b>₹5,000+</b> extra possible।  
@@ -449,7 +449,9 @@
         <div class="text-muted">
           यह details सिर्फ आपके इस mobile/browser में सुरक्षित रहेंगी।  
           Commission और Bonus दोनों wallet से withdrawal request पर admin approval के बाद ही payment होगी।  
-          Bonus Wallet का पैसा mobile से mobile transfer नहीं हो सकता, वह सिर्फ withdrawal के लिए है।
+          Bonus Wallet का पैसा mobile से mobile transfer नहीं हो सकता, वह सिर्फ withdrawal के लिए है।  
+          Sub ID Commission पर 15% company share पहले ही admin panel से काटकर Bonus Wallet में credit किया जाता है,  
+          इसलिए Bonus Wallet में जो amount दिखता है, withdrawal पर वही पूरा bank में जाएगा।
         </div>
         <div id="bankSummary" class="text-muted" style="margin-top:6px;"></div>
       </div>
@@ -529,7 +531,9 @@
         <div class="small" style="margin-top:4px;">
           Bonus Wallet से हर महीने withdrawal किया जा सकता है।  
           हर तीसरे महीने अगर आप अपने direct में कम से कम 1 नया member नहीं जोड़ते हैं  
-          तो उस महीने का bonus कंपनी को चला जाएगा (customer को नहीं मिलेगा)।
+          तो उस महीने का bonus कंपनी को चला जाएगा (customer को नहीं मिलेगा)।  
+          Bonus Wallet में जो amount दिखता है, वही withdrawal के समय bank में जाएगा  
+          (Sub ID commission पर 15% company share पहले ही admin side पर adjust हो चुका होता है)।
         </div>
 
         <div class="wallet-row" style="margin-top:8px;">
@@ -588,7 +592,7 @@
       return Number(n || 0).toLocaleString("en-IN");
     }
 
-    // ---------- LOGIN SYSTEM ----------
+    // ---------- LOGIN / CUSTOMER STORAGE ----------
 
     function getCustomersArray() {
       try {
@@ -629,7 +633,6 @@
       document.getElementById("customerName").value = cust.name || "";
       document.getElementById("joinedMembers").value = cust.joinedMembers || 0;
 
-      document.getElementById("loginCard").style.display = "block";
       document.getElementById("loginCard").style.display = "none";
       document.getElementById("loggedInfo").style.display = "flex";
       document.getElementById("mainContent").style.display = "block";
@@ -768,6 +771,7 @@
       localStorage.setItem("rjvc_withdrawals", JSON.stringify(list));
     }
 
+    // 🔸 Withdrawal: जितना wallet में लिखा, उतना ही मिलेगा (कोई extra कटौती नहीं)
     function requestWithdrawal() {
       const amount = parseFloat(document.getElementById("withdrawAmount").value || "0");
       const source = document.getElementById("withdrawSource").value; // commission | bonus
@@ -798,13 +802,14 @@
       const commissionWallet = cust.walletBalance || 0;
       const bonusWallet = cust.bonusBalance || 0;
 
-      let available = source === "bonus" ? bonusWallet : commissionWallet;
+      const available = (source === "bonus") ? bonusWallet : commissionWallet;
 
       if (available < amount) {
         alert("चुने गए wallet में इतना balance नहीं है। Current balance: ₹" + formatNumber(available));
         return;
       }
 
+      // जो amount user withdraw करना चाहता है, वही पूरा काटेंगे और वही bank में माना जाएगा
       if (source === "bonus") {
         cust.bonusBalance = bonusWallet - amount;
       } else {
@@ -820,14 +825,23 @@
         customerId: cust.id,
         name: name || cust.name || "",
         mobile,
-        amount,
-        source,
+        amount: amount,        // wallet से काटी गयी और bank में मान्य राशि
+        source,                // "commission" या "bonus"
         status: "Pending",
         createdAt: new Date().toISOString()
       });
       saveWithdrawals(withdrawals);
 
-      alert("Withdrawal request भेज दी गई है। Admin approval के बाद status 'Paid' हो जाएगी।");
+      alert(
+        (source === "bonus"
+          ? "Bonus Wallet से withdrawal request भेज दी गई है।\n"
+          : "Commission Wallet से withdrawal request भेज दी गई है।\n"
+        ) +
+        "Wallet से कटेगा: ₹" + formatNumber(amount) +
+        "\nBank में अनुमानित राशि: ₹" + formatNumber(amount) +
+        "\nAdmin approval के बाद status 'Paid' हो जाएगी।"
+      );
+
       refreshWalletInfo();
     }
 
@@ -1002,7 +1016,6 @@
       const customers = getCustomersArray();
       const idx = customers.findIndex(c => c.mobile === mobile);
 
-      // Customer खुद से नया record नहीं बना सकता
       if (idx === -1) {
         console.warn("Unregistered mobile पर calculate चलाया गया:", mobile);
         alert("यह mobile RJVC system में registered नहीं है। कृपया admin से contact करके पहले ID बनवाएँ।");
@@ -1147,7 +1160,7 @@
       loadSettings();
       loadBankDetails();
       initLoginFromStorage(); // पहले login check
-      calculate();            // table भरने के लिए
+      calculate();            // demo table के लिए
     });
   </script>
 </body>
