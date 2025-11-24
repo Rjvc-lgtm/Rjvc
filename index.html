@@ -126,7 +126,7 @@
       display: block;
       margin-bottom: 4px;
     }
-    input {
+    input, select {
       width: 100%;
       padding: 8px 10px;
       border-radius: 8px;
@@ -375,13 +375,21 @@
           <label>Withdrawal Amount (₹)</label>
           <input id="withdrawAmount" type="number" min="0" value="0" />
         </div>
+        <div class="bank-col">
+          <label>Amount किस wallet से काटें?</label>
+          <select id="withdrawSource">
+            <option value="commission">Commission Wallet</option>
+            <option value="bonus">Bonus Wallet</option>
+          </select>
+        </div>
         <div class="bank-col" style="align-self:flex-end;">
           <button class="btn-primary" onclick="requestWithdrawal()">Request Bank Withdrawal</button>
         </div>
       </div>
       <div class="text-muted">
         यह details सिर्फ आपके इस mobile/browser में सुरक्षित रहेंगी।  
-        Bank withdrawal request पर admin approval के बाद ही payment होगी।
+        Commission और Bonus दोनों wallet से withdrawal request पर admin approval के बाद ही payment होगी।  
+        Bonus Wallet का पैसा mobile से mobile transfer नहीं हो सकता, वह सिर्फ withdrawal के लिए है।
       </div>
       <div id="bankSummary" class="text-muted" style="margin-top:6px;"></div>
     </div>
@@ -401,7 +409,7 @@
         <div class="col">
           <label>मोबाइल नंबर</label>
           <input id="customerMobile" type="tel" placeholder="10 digit mobile" />
-          <div class="small">यही नंबर commission wallet और transfer के लिए use होगा</div>
+          <div class="small">यही नंबर commission wallet, bonus wallet और transfer के लिए use होगा</div>
         </div>
       </div>
 
@@ -454,14 +462,19 @@
 
     <!-- WALLET / TRANSFER SECTION -->
     <div class="wallet-card">
-      <div class="card-title">RJVC Commission Wallet & Mobile Transfer</div>
+      <div class="card-title">RJVC Wallets & Mobile Transfer</div>
       <div id="walletInfo" class="text-muted">
         पहले ऊपर अपना नाम और मोबाइल नंबर भरें और "कैल्क्युलेट करें" दबाएँ।
+      </div>
+      <div class="small" style="margin-top:4px;">
+        Bonus Wallet से हर महीने withdrawal किया जा सकता है।  
+        हर तीसरे महीने अगर आप अपने direct में कम से कम 1 नया member नहीं जोड़ते हैं  
+        तो उस महीने का bonus कंपनी को चला जाएगा (customer को नहीं मिलेगा)।
       </div>
 
       <div class="wallet-row" style="margin-top:8px;">
         <div class="wallet-col">
-          <label>Transfer To Mobile</label>
+          <label>Transfer To Mobile (सिर्फ Commission Wallet से)</label>
           <input id="transferToMobile" type="tel" placeholder="जैसे: 98xxxxxxxx" />
         </div>
         <div class="wallet-col">
@@ -474,7 +487,7 @@
       </div>
       <div class="text-muted">
         Mobile से mobile commission transfer के लिए admin approval की ज़रूरत नहीं है।  
-        दूसरा व्यक्ति भी इसी system में अपना mobile डालकर wallet देख सकता है।
+        यह transfer सिर्फ Commission Wallet से होगा। Bonus Wallet से transfer नहीं होगा, वह सिर्फ withdrawal के लिए है।
       </div>
     </div>
 
@@ -604,6 +617,7 @@
 
     function requestWithdrawal() {
       const amount = parseFloat(document.getElementById("withdrawAmount").value || "0");
+      const source = document.getElementById("withdrawSource").value; // commission | bonus
       const name = (document.getElementById("customerName").value || "").trim();
       const mobile = (document.getElementById("customerMobile").value || "").trim();
 
@@ -623,18 +637,28 @@
       const customers = getCustomersArray();
       const idx = customers.findIndex(c => c.mobile === mobile);
       if (idx === -1) {
-        alert("इस मोबाइल के लिए कोई commission wallet नहीं मिला। पहले calculation करें।");
+        alert("इस मोबाइल के लिए कोई wallet नहीं मिला। पहले calculation करें।");
         return;
       }
 
       const cust = customers[idx];
-      const wallet = cust.walletBalance || 0;
-      if (wallet < amount) {
-        alert("Wallet में इतना balance नहीं है। Current balance: ₹" + formatNumber(wallet));
+      const commissionWallet = cust.walletBalance || 0;
+      const bonusWallet = cust.bonusBalance || 0;
+
+      let available = source === "bonus" ? bonusWallet : commissionWallet;
+
+      if (available < amount) {
+        alert("चुने गए wallet में इतना balance नहीं है। Current balance: ₹" + formatNumber(available));
         return;
       }
 
-      cust.walletBalance = wallet - amount;
+      // कटौती सही wallet से
+      if (source === "bonus") {
+        cust.bonusBalance = bonusWallet - amount;
+      } else {
+        cust.walletBalance = commissionWallet - amount;
+      }
+
       customers[idx] = cust;
       saveCustomersArray(customers);
 
@@ -645,6 +669,7 @@
         name: name || cust.name || "",
         mobile,
         amount,
+        source, // "commission" या "bonus"
         status: "Pending",
         createdAt: new Date().toISOString()
       });
@@ -850,7 +875,8 @@
           remainingForNext: summary.remainingForNext || 0,
           nextLevelIncome: summary.nextLevelIncome || 0,
           totalIncome: totalIncome || 0,
-          walletBalance: totalIncome || 0,
+          walletBalance: totalIncome || 0, // main commission wallet
+          bonusBalance: 0,                 // Bonus Wallet (admin से credit होगा)
           createdAt: new Date().toISOString()
         };
         customers.push(record);
@@ -870,7 +896,8 @@
           remainingForNext: summary.remainingForNext || old.remainingForNext || 0,
           nextLevelIncome: summary.nextLevelIncome || old.nextLevelIncome || 0,
           totalIncome: totalIncome || old.totalIncome || 0,
-          walletBalance: newWallet
+          walletBalance: newWallet,
+          bonusBalance: old.bonusBalance || 0 // bonus हमेशा safe रहे
         };
       }
 
@@ -892,13 +919,17 @@
       const customers = getCustomersArray();
       const cust = customers.find(c => c.mobile === mobile);
       if (!cust) {
-        box.innerText = "इस मोबाइल नंबर के लिए अभी कोई commission रिकॉर्ड नहीं मिला। पहले calculation करें।";
+        box.innerText = "इस मोबाइल नंबर के लिए अभी कोई रिकॉर्ड नहीं मिला। पहले calculation करें।";
         return;
       }
 
+      const commissionWallet = cust.walletBalance || 0;
+      const bonusWallet = cust.bonusBalance || 0;
+
       box.innerText =
         (name ? (name + " जी,\n") : "") +
-        "आपका current RJVC wallet balance: ₹" + formatNumber(cust.walletBalance || 0) +
+        "Commission Wallet Balance: ₹" + formatNumber(commissionWallet) +
+        "\nBonus Wallet Balance: ₹" + formatNumber(bonusWallet) +
         "\nTotal calculated earning: ₹" + formatNumber(cust.totalIncome || 0);
     }
 
@@ -932,9 +963,9 @@
       }
 
       const from = customers[fromIdx];
-      const fromWallet = from.walletBalance || 0;
+      const fromWallet = from.walletBalance || 0; // सिर्फ commission wallet से transfer
       if (fromWallet < amount) {
-        alert("आपके wallet में इतना balance नहीं है। Current balance: ₹" + formatNumber(fromWallet));
+        alert("आपके Commission Wallet में इतना balance नहीं है। Current balance: ₹" + formatNumber(fromWallet));
         return;
       }
 
@@ -952,6 +983,7 @@
           nextLevelIncome: 0,
           totalIncome: 0,
           walletBalance: 0,
+          bonusBalance: 0,
           createdAt: new Date().toISOString()
         };
         customers.push(newCust);
@@ -960,7 +992,7 @@
 
       const to = customers[toIdx];
 
-      from.walletBalance = fromWallet - amount;
+      from.walletBalance = fromWallet - amount; // bonus नहीं घटा
       to.walletBalance = (to.walletBalance || 0) + amount;
 
       customers[fromIdx] = from;
@@ -968,7 +1000,7 @@
 
       saveCustomersArray(customers);
 
-      alert("₹" + formatNumber(amount) + " सफलतापूर्वक " + toMobile + " पर transfer कर दिया गया है।");
+      alert("₹" + formatNumber(amount) + " सफलतापूर्वक " + toMobile + " पर transfer कर दिया गया है (Commission Wallet से)।");
       refreshWalletInfo();
       document.getElementById("transferAmount").value = "0";
     }
