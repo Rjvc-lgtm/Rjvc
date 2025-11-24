@@ -1,513 +1,587 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RJVC Admin Dashboard</title>
+  <meta charset="UTF-8" />
+  <title>RJVC Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #eef2ff;
+    }
+    .app {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 18px 18px 26px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
 
-<script>
-// ✅ सबसे पहले security check (sessionStorage → browser/tab बंद होते ही auto logout)
-(function() {
-  const flag = sessionStorage.getItem("rjvc_admin_logged");
-  if (flag !== "yes") {
-    window.location.href = "login.html";
-  }
-})();
-</script>
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      color: #102a6b;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 12px;
+    }
 
-<style>
-  body {
-    font-family: sans-serif;
-    background: #eef2ff;
-    margin: 0;
-    padding: 0;
-  }
-  .header {
-    background: #1a73ff;
-    color: white;
-    padding: 16px;
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-  }
-  .container {
-    padding: 16px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  .cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 16px;
-  }
-  .card {
-    background: white;
-    padding: 12px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-  }
-  .card.summary {
-    flex: 1 1 130px;
-    min-width: 140px;
-  }
-  .card h3 {
-    margin: 0 0 6px 0;
-    font-size: 15px;
-    color: #003399;
-  }
-  .card .big {
-    font-size: 18px;
-    font-weight: bold;
-  }
-  .section-title {
-    margin-top: 20px;
-    font-size: 18px;
-    font-weight: 600;
-    color: #222;
-  }
-  input, select {
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #bbb;
-    font-size: 13px;
-  }
-  label {
-    font-size: 13px;
-    font-weight: 600;
-    display: block;
-    margin-bottom: 3px;
-  }
-  .row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .col {
-    flex: 1 1 150px;
-  }
-  .btn {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 8px 14px;
-    background: #1a73ff;
-    color: white;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 13px;
-    border: none;
-    cursor: pointer;
-  }
-  .btn.danger {
-    background: #ff4444;
-  }
-  .btn.small {
-    padding: 4px 8px;
-    font-size: 12px;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin-top: 10px;
-  }
-  th, td {
-    border-bottom: 1px solid #ddd;
-    padding: 6px 5px;
-    text-align: left;
-  }
-  th {
-    background: #dde5ff;
-  }
-  .table-wrapper {
-    max-height: 320px;
-    overflow: auto;
-  }
-  .note {
-    font-size: 12px;
-    color: #666;
-    margin-top: 4px;
-  }
-</style>
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .col {
+      flex: 1 1 180px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 13px;
+    }
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+    button {
+      border: none;
+      padding: 9px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    .btn-primary {
+      background: #0066ff;
+      color: white;
+    }
+    .btn-secondary {
+      background: #e0e4ff;
+      color: #102a6b;
+    }
+    .btn-small {
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: 999px;
+      margin: 0 3px;
+    }
+
+    .section-card {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f9f9ff;
+      border: 1px solid #dde2ff;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #102a6b;
+    }
+    .small {
+      font-size: 11px;
+      color: #777;
+    }
+
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .stat-card {
+      flex: 1 1 150px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #ffffff;
+      border: 1px solid #e0e4ff;
+      font-size: 12px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #555;
+    }
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 4px;
+      color: #102a6b;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 11px;
+    }
+    th, td {
+      border-bottom: 1px solid #eee;
+      padding: 5px 6px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background: #f2f3ff;
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+    }
+    .badge-pending {
+      background: #fff7e6;
+      color: #ad6800;
+    }
+    .badge-paid {
+      background: #f6ffed;
+      color: #389e0d;
+    }
+    .badge-rejected {
+      background: #fff1f0;
+      color: #a8071a;
+    }
+    .badge-commission {
+      background: #e6f4ff;
+      color: #0958d9;
+    }
+    .badge-bonus {
+      background: #fff0f6;
+      color: #c41d7f;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .top-bar a {
+      text-decoration: none;
+      color: #0d47a1;
+      font-weight: 600;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="app">
+    <div class="top-bar">
+      <div>RJVC Admin Panel</div>
+      <div><a href="index.html">⬅ User Page पर जाएँ</a></div>
+    </div>
 
-<div class="header">RJVC - Admin Panel</div>
+    <h1>RJVC Admin Panel</h1>
+    <div class="subtitle">
+      यहाँ से आप Customers देख सकते हैं, Bonus Wallet में amount add कर सकते हैं  
+      और सभी Withdrawal Requests को approve / reject कर सकते हैं।
+    </div>
 
-<div class="container">
+    <!-- OVERALL STATS -->
+    <div class="section-card">
+      <div class="section-title">System Overview</div>
+      <div class="small">ये डेटा customer side की calculation और wallets से लिया जा रहा है (localStorage आधारित)।</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Customers</div>
+          <div id="statTotalCustomers" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Commission Wallet (₹)</div>
+          <div id="statTotalCommission" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Bonus Wallet (₹)</div>
+          <div id="statTotalBonus" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending Withdrawals</div>
+          <div id="statPendingWithdrawals" class="stat-value">0</div>
+        </div>
+      </div>
+    </div>
 
-  <!-- Summary cards -->
-  <div class="cards">
-    <div class="card summary">
-      <h3>Total Customers</h3>
-      <div id="totalCustomers" class="big">0</div>
+    <!-- BONUS WALLET SECTION -->
+    <div class="section-card">
+      <div class="section-title">Bonus Wallet Control (Admin Only)</div>
+      <div class="small">
+        यहाँ से आप किसी भी customer के <b>Bonus Wallet</b> में manually amount add कर सकते हैं।  
+        यह bonus customer panel में Bonus Wallet के रूप में दिखाई देगा और वही से withdrawal request डाल पाएगा।  
+        Bonus Wallet से mobile-to-mobile transfer नहीं होगा।
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="col">
+          <label>Customer Mobile Number</label>
+          <input id="bonusMobile" type="tel" placeholder="जैसे: 98xxxxxxxx" />
+        </div>
+        <div class="col">
+          <label>Bonus Amount (₹)</label>
+          <input id="bonusAmount" type="number" min="0" value="0" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>Bonus का Month / Reason</label>
+          <input id="bonusReason" type="text" placeholder="जैसे: January Bonus / 3rd month reward" />
+        </div>
+        <div class="col">
+          <label>Note (Optional)</label>
+          <textarea id="bonusNote" placeholder="कोई extra comment / detail लिख सकते हैं"></textarea>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addBonusToWallet()">Add Bonus to Bonus Wallet</button>
+      <button class="btn-secondary" onclick="reloadAll()">Refresh Data</button>
+
+      <div class="small" style="margin-top:6px;">
+        हर तीसरे महीने वाले bonus के लिए आप यहाँ से bonus add कर सकते हैं,  
+        और अपनी तरफ से rule लगा सकते हैं कि जिसने उस महीने direct में 1 नया member नहीं जोड़ा,  
+        उसे bonus न दें (ऐसी स्थिति में bonus add ही मत करें या पहले से दिए bonus को adjust करें)।
+      </div>
     </div>
-    <div class="card summary">
-      <h3>Total Members Joined</h3>
-      <div id="totalMembers" class="big">0</div>
+
+    <!-- RECENT BONUS LIST -->
+    <div class="section-card">
+      <div class="section-title">Bonus History (Local)</div>
+      <div class="small">
+        यहाँ हाल ही में admin द्वारा दिए गए bonus दिखेंगे (localStorage key: <code>rjvc_bonus_history</code>).
+      </div>
+      <div style="max-height: 220px; overflow:auto; margin-top:8px;">
+        <table id="bonusTable">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Mobile</th>
+              <th>Amount (₹)</th>
+              <th>Reason</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- rows JS से -->
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="card summary">
-      <h3>Total Wallet Balance (₹)</h3>
-      <div id="totalWallet" class="big">0</div>
+
+    <!-- WITHDRAWAL REQUESTS SECTION -->
+    <div class="section-card">
+      <div class="section-title">Withdrawal Requests</div>
+      <div class="small">
+        नीचे customer panel से आई सभी withdrawal requests दिख रही हैं।  
+        Source से पता चलता है कि amount Commission Wallet से काटा गया था या Bonus Wallet से।  
+        Status: Pending, Paid, Rejected.  
+      </div>
+
+      <div style="max-height: 260px; overflow:auto; margin-top:8px;">
+        <table id="withdrawTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Time</th>
+              <th>Name</th>
+              <th>Mobile</th>
+              <th>Source</th>
+              <th>Amount (₹)</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JS rows -->
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="card summary">
-      <h3>Today Calculations</h3>
-      <div id="todayCalc" class="big">0</div>
-    </div>
-    <div class="card summary">
-      <h3>Pending Withdrawals</h3>
-      <div id="pendingWithdrawals" class="big">0</div>
+
+    <!-- CUSTOMER LIST (LIGHT) -->
+    <div class="section-card">
+      <div class="section-title">Customer Snapshot (Read Only)</div>
+      <div class="small">
+        यह customers की एक छोटी सी list है – full details देखने के लिए आप developer tools / localStorage भी देख सकते हैं।
+      </div>
+      <div style="max-height: 260px; overflow:auto; margin-top:8px;">
+        <table id="customerTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Mobile</th>
+              <th>Joined Members</th>
+              <th>Commission Wallet (₹)</th>
+              <th>Bonus Wallet (₹)</th>
+              <th>Current Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JS rows -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- Settings -->
-  <div class="section-title">Plan Settings (Admin Control)</div>
-  <div class="card">
-    <div class="row">
-      <div class="col">
-        <label>Levels</label>
-        <input id="set_levels" type="number" min="1" max="20" value="11">
-      </div>
-      <div class="col">
-        <label>Per Member Commission (₹)</label>
-        <input id="set_perMember" type="number" min="0" value="15">
-      </div>
-      <div class="col">
-        <label>Start Members</label>
-        <input id="set_startMembers" type="number" min="1" value="2">
-      </div>
-      <div class="col">
-        <label>Multiplier</label>
-        <input id="set_multiplier" type="number" min="2" value="2">
-      </div>
-    </div>
-    <button class="btn" onclick="saveSettings()">Save Settings</button>
-    <div class="note">ये settings customer वाले calculator (index.html) में auto apply होंगी।</div>
-  </div>
+  <script>
+    function formatNumber(n) {
+      return Number(n || 0).toLocaleString("en-IN");
+    }
 
-  <!-- Manual Add Customer -->
-  <div class="section-title">Add Customer Manually</div>
-  <div class="card">
-    <div class="row">
-      <div class="col">
-        <label>Customer Name</label>
-        <input id="manualName" type="text" placeholder="जैसे: राजेश">
-      </div>
-      <div class="col">
-        <label>Mobile</label>
-        <input id="manualMobile" type="tel" placeholder="10 digit mobile">
-      </div>
-      <div class="col">
-        <label>Joined Members</label>
-        <input id="manualJoined" type="number" min="0" value="0">
-      </div>
-      <div class="col" style="align-self:flex-end;">
-        <button class="btn" onclick="addCustomerManually()">Add</button>
-      </div>
-    </div>
-    <div class="note">यह entry सिर्फ admin panel के लिए है (customer side से नहीं)।</div>
-  </div>
+    function getCustomersArray() {
+      try {
+        return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
 
-  <!-- Customers Table -->
-  <div class="section-title">Customer List & Level Report</div>
-  <div class="card">
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Mobile</th>
-            <th>Joined</th>
-            <th>Current Level</th>
-            <th>Next Level</th>
-            <th>Remaining</th>
-            <th>Next Level Income (₹)</th>
-            <th>Wallet (₹)</th>
-            <th>Date</th>
-            <th>Delete</th>
-          </tr>
-        </thead>
-        <tbody id="customerTableBody">
-        </tbody>
-      </table>
-    </div>
-    <div class="note">
-      ये data index.html पर customer calculation होने पर automatic save होता है।
-    </div>
-  </div>
+    function saveCustomersArray(list) {
+      localStorage.setItem("rjvc_customers", JSON.stringify(list));
+    }
 
-  <!-- Withdrawal Requests -->
-  <div class="section-title">Bank Withdrawal Requests</div>
-  <div class="card">
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Mobile</th>
-            <th>Amount (₹)</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="withdrawTableBody">
-        </tbody>
-      </table>
-    </div>
-    <div class="note">
-      यहाँ से admin हर withdrawal को Approve (Paid) या Reject कर सकता है।  
-      Reject होने पर amount वापस customer के wallet में चला जाएगा।
-    </div>
-  </div>
+    function getWithdrawals() {
+      try {
+        return JSON.parse(localStorage.getItem("rjvc_withdrawals") || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
 
-  <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
+    function saveWithdrawals(list) {
+      localStorage.setItem("rjvc_withdrawals", JSON.stringify(list));
+    }
 
-    <!-- ⭐ Tree Button (Sirf Admin ke liye) -->
-    <button class="btn secondary" onclick="window.location.href='tree.html'">
-        Open MLM Tree (Admin Only)
-    </button>
+    function getBonusHistory() {
+      try {
+        return JSON.parse(localStorage.getItem("rjvc_bonus_history") || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
 
-    <!-- 🔴 Logout Button -->
-    <button class="btn danger" onclick="logout()">Logout</button>
+    function saveBonusHistory(list) {
+      localStorage.setItem("rjvc_bonus_history", JSON.stringify(list));
+    }
 
-  </div>
+    // -------- STATS + TABLES RENDER --------
 
-</div>
+    function renderStats() {
+      const customers = getCustomersArray();
+      const withdrawals = getWithdrawals();
 
-<script>
-function formatNumber(n) {
-  return Number(n || 0).toLocaleString("en-IN");
-}
+      let totalCommission = 0;
+      let totalBonus = 0;
 
-function getCustomers() {
-  try {
-    return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
-  } catch (e) {
-    console.warn("Customer read error", e);
-    return [];
-  }
-}
+      for (const c of customers) {
+        totalCommission += (c.walletBalance || 0);
+        totalBonus += (c.bonusBalance || 0);
+      }
 
-function setCustomers(list) {
-  localStorage.setItem("rjvc_customers", JSON.stringify(list));
-}
+      const pendingCount = withdrawals.filter(w => w.status === "Pending").length;
 
-function getWithdrawals() {
-  try {
-    return JSON.parse(localStorage.getItem("rjvc_withdrawals") || "[]");
-  } catch (e) {
-    console.warn("Withdraw read error", e);
-    return [];
-  }
-}
+      document.getElementById("statTotalCustomers").innerText = formatNumber(customers.length);
+      document.getElementById("statTotalCommission").innerText = formatNumber(totalCommission);
+      document.getElementById("statTotalBonus").innerText = formatNumber(totalBonus);
+      document.getElementById("statPendingWithdrawals").innerText = formatNumber(pendingCount);
+    }
 
-function setWithdrawals(list) {
-  localStorage.setItem("rjvc_withdrawals", JSON.stringify(list));
-}
+    function renderBonusHistory() {
+      const tbody = document.querySelector("#bonusTable tbody");
+      tbody.innerHTML = "";
+      const history = getBonusHistory().slice().reverse(); // latest first
 
-function loadSettingsToUI() {
-  try {
-    const s = JSON.parse(localStorage.getItem("rjvc_settings") || "{}");
-    if (s.levels) document.getElementById("set_levels").value = s.levels;
-    if (s.perMember) document.getElementById("set_perMember").value = s.perMember;
-    if (s.startMembers) document.getElementById("set_startMembers").value = s.startMembers;
-    if (s.multiplier) document.getElementById("set_multiplier").value = s.multiplier;
-  } catch (e) {
-    console.warn("Settings load error", e);
-  }
-}
+      if (!history.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="5">अभी तक कोई bonus history नहीं है।</td>';
+        tbody.appendChild(tr);
+        return;
+      }
 
-function saveSettings() {
-  const levels = parseInt(document.getElementById("set_levels").value || "0", 10);
-  const perMember = parseFloat(document.getElementById("set_perMember").value || "0");
-  const startMembers = parseInt(document.getElementById("set_startMembers").value || "0", 10);
-  const multiplier = parseInt(document.getElementById("set_multiplier").value || "2", 10);
+      for (const item of history) {
+        const tr = document.createElement("tr");
+        const dt = new Date(item.createdAt || Date.now());
+        tr.innerHTML = `
+          <td>${dt.toLocaleString("en-IN")}</td>
+          <td>${item.mobile || ""}</td>
+          <td>₹${formatNumber(item.amount || 0)}</td>
+          <td>${item.reason || ""}</td>
+          <td>${item.note || ""}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
 
-  const s = { levels, perMember, startMembers, multiplier };
-  localStorage.setItem("rjvc_settings", JSON.stringify(s));
-  alert("Settings saved. Customers वाले page पर नया plan apply होगा.");
-}
+    function renderWithdrawals() {
+      const tbody = document.querySelector("#withdrawTable tbody");
+      tbody.innerHTML = "";
+      const list = getWithdrawals().slice().sort((a,b)=> (b.createdAt||0) > (a.createdAt||0) ? 1 : -1);
 
-function renderDashboard() {
-  const customers = getCustomers();
-  const withdrawals = getWithdrawals();
+      if (!list.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="8">अभी कोई withdrawal request नहीं है।</td>';
+        tbody.appendChild(tr);
+        return;
+      }
 
-  const totalCustomers = customers.length;
-  const totalMembers = customers.reduce((sum, c) => sum + (c.joinedMembers || 0), 0);
-  const totalWallet = customers.reduce((sum, c) => sum + (c.walletBalance || 0), 0);
+      for (const w of list) {
+        const tr = document.createElement("tr");
+        const dt = new Date(w.createdAt || Date.now());
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const todayCalc = customers.filter(c => (c.createdAt || "").slice(0,10) === todayStr).length;
+        let statusBadge = "";
+        if (w.status === "Paid") {
+          statusBadge = '<span class="badge badge-paid">Paid</span>';
+        } else if (w.status === "Rejected") {
+          statusBadge = '<span class="badge badge-rejected">Rejected</span>';
+        } else {
+          statusBadge = '<span class="badge badge-pending">Pending</span>';
+        }
 
-  const pending = withdrawals.filter(w => w.status === "Pending").length;
+        let sourceBadge = "";
+        if (w.source === "bonus") {
+          sourceBadge = '<span class="badge badge-bonus">Bonus</span>';
+        } else {
+          sourceBadge = '<span class="badge badge-commission">Commission</span>';
+        }
 
-  document.getElementById("totalCustomers").innerText = formatNumber(totalCustomers);
-  document.getElementById("totalMembers").innerText = formatNumber(totalMembers);
-  document.getElementById("totalWallet").innerText = formatNumber(totalWallet);
-  document.getElementById("todayCalc").innerText = formatNumber(todayCalc);
-  document.getElementById("pendingWithdrawals").innerText = formatNumber(pending);
+        tr.innerHTML = `
+          <td>${w.id || ""}</td>
+          <td>${dt.toLocaleString("en-IN")}</td>
+          <td>${w.name || ""}</td>
+          <td>${w.mobile || ""}</td>
+          <td>${sourceBadge}</td>
+          <td>₹${formatNumber(w.amount || 0)}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <button class="btn-small btn-primary" onclick="updateWithdrawalStatus(${w.id}, 'Paid')">Mark Paid</button>
+            <button class="btn-small btn-secondary" onclick="updateWithdrawalStatus(${w.id}, 'Rejected')">Reject</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
 
-  renderCustomerTable(customers);
-  renderWithdrawTable(withdrawals);
-}
+    function renderCustomers() {
+      const tbody = document.querySelector("#customerTable tbody");
+      tbody.innerHTML = "";
+      const customers = getCustomersArray();
 
-function renderCustomerTable(customers) {
-  const tbody = document.getElementById("customerTableBody");
-  tbody.innerHTML = "";
+      if (!customers.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="6">अभी कोई customer record नहीं है।</td>';
+        tbody.appendChild(tr);
+        return;
+      }
 
-  customers
-    .slice()
-    .sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || "")) // latest first
-    .forEach(c => {
-      const tr = document.createElement("tr");
+      for (const c of customers) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${c.name || ""}</td>
+          <td>${c.mobile || ""}</td>
+          <td>${formatNumber(c.joinedMembers || 0)}</td>
+          <td>₹${formatNumber(c.walletBalance || 0)}</td>
+          <td>₹${formatNumber(c.bonusBalance || 0)}</td>
+          <td>${c.currentLevel || 0}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
 
-      const dateStr = c.createdAt ? c.createdAt.slice(0,10) : "";
-      const currentLevel = c.currentLevel || (c.state === "allComplete" ? "All" : "-");
-      const nextLevel = c.state === "allComplete" ? "-" : (c.nextLevel || "-");
-      const remaining = c.state === "allComplete" ? "0" : formatNumber(c.remainingForNext || 0);
-      const nextIncome = c.state === "allComplete" ? "-" : ("₹" + formatNumber(c.nextLevelIncome || 0));
-      const wallet = "₹" + formatNumber(c.walletBalance || 0);
+    function reloadAll() {
+      renderStats();
+      renderBonusHistory();
+      renderWithdrawals();
+      renderCustomers();
+    }
 
-      tr.innerHTML = `
-        <td>${c.name || "-"}</td>
-        <td>${c.mobile || "-"}</td>
-        <td>${formatNumber(c.joinedMembers || 0)}</td>
-        <td>${currentLevel}</td>
-        <td>${nextLevel}</td>
-        <td>${remaining}</td>
-        <td>${nextIncome}</td>
-        <td>${wallet}</td>
-        <td>${dateStr}</td>
-        <td><button class="btn small danger" onclick="deleteCustomer(${c.id})">Delete</button></td>
-      `;
-      tbody.appendChild(tr);
+    // -------- ADMIN BONUS ADD --------
+
+    function addBonusToWallet() {
+      const mobile = (document.getElementById("bonusMobile").value || "").trim();
+      const amount = parseFloat(document.getElementById("bonusAmount").value || "0");
+      const reason = (document.getElementById("bonusReason").value || "").trim();
+      const note = (document.getElementById("bonusNote").value || "").trim();
+
+      if (!mobile) {
+        alert("पहले customer का mobile number भरें।");
+        return;
+      }
+      if (amount <= 0) {
+        alert("Valid bonus amount भरें (0 से बड़ा)।");
+        return;
+      }
+
+      const customers = getCustomersArray();
+      const idx = customers.findIndex(c => c.mobile === mobile);
+
+      if (idx === -1) {
+        alert("इस mobile number के लिए कोई customer नहीं मिला। पहले customer side से calculation करवाएँ।");
+        return;
+      }
+
+      const cust = customers[idx];
+      const oldBonus = cust.bonusBalance || 0;
+      cust.bonusBalance = oldBonus + amount;
+      customers[idx] = cust;
+      saveCustomersArray(customers);
+
+      // bonus history में entry
+      const history = getBonusHistory();
+      history.push({
+        id: Date.now(),
+        mobile,
+        amount,
+        reason,
+        note,
+        createdAt: new Date().toISOString()
+      });
+      saveBonusHistory(history);
+
+      alert("Bonus Wallet में ₹" + formatNumber(amount) + " सफलतापूर्वक add कर दिया गया है।");
+      document.getElementById("bonusAmount").value = "0";
+      renderStats();
+      renderBonusHistory();
+      renderCustomers();
+    }
+
+    // -------- WITHDRAWAL STATUS UPDATE --------
+
+    function updateWithdrawalStatus(id, newStatus) {
+      const withdrawals = getWithdrawals();
+      const idx = withdrawals.findIndex(w => String(w.id) === String(id));
+      if (idx === -1) {
+        alert("Withdrawal record नहीं मिला।");
+        return;
+      }
+      withdrawals[idx].status = newStatus;
+      saveWithdrawals(withdrawals);
+      renderWithdrawals();
+      renderStats();
+    }
+
+    // INIT
+    window.addEventListener("load", function() {
+      reloadAll();
     });
-}
-
-function renderWithdrawTable(withdrawals) {
-  const tbody = document.getElementById("withdrawTableBody");
-  tbody.innerHTML = "";
-
-  withdrawals
-    .slice()
-    .sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || "")) // latest first
-    .forEach(w => {
-      const tr = document.createElement("tr");
-      const dateStr = w.createdAt ? w.createdAt.slice(0,10) : "";
-
-      tr.innerHTML = `
-        <td>${w.name || "-"}</td>
-        <td>${w.mobile || "-"}</td>
-        <td>₹${formatNumber(w.amount || 0)}</td>
-        <td>${w.status}</td>
-        <td>${dateStr}</td>
-        <td>
-          ${w.status === "Pending"
-            ? `<button class="btn small" onclick="approveWithdrawal(${w.id})">Approve</button>
-               <button class="btn small danger" onclick="rejectWithdrawal(${w.id})">Reject</button>`
-            : "-"}
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-}
-
-function approveWithdrawal(id) {
-  const withdrawals = getWithdrawals();
-  const idx = withdrawals.findIndex(w => w.id === id);
-  if (idx === -1) return;
-
-  withdrawals[idx].status = "Paid";
-  setWithdrawals(withdrawals);
-  renderDashboard();
-}
-
-function rejectWithdrawal(id) {
-  const withdrawals = getWithdrawals();
-  const idx = withdrawals.findIndex(w => w.id === id);
-  if (idx === -1) return;
-
-  const req = withdrawals[idx];
-  if (req.status !== "Pending") return;
-
-  // Refund amount to customer wallet
-  const customers = getCustomers();
-  const cIdx = customers.findIndex(c =>
-    (c.id && req.customerId && c.id === req.customerId) ||
-    (c.mobile && req.mobile && c.mobile === req.mobile)
-  );
-  if (cIdx !== -1) {
-    customers[cIdx].walletBalance =
-      (customers[cIdx].walletBalance || 0) + (req.amount || 0);
-    setCustomers(customers);
-  }
-
-  withdrawals[idx].status = "Rejected";
-  setWithdrawals(withdrawals);
-
-  renderDashboard();
-}
-
-function deleteCustomer(id) {
-  if (!confirm("इस customer को हटाना है?")) return;
-  const customers = getCustomers().filter(c => c.id !== id);
-  setCustomers(customers);
-  renderDashboard();
-}
-
-function addCustomerManually() {
-  const name = (document.getElementById("manualName").value || "").trim();
-  const mobile = (document.getElementById("manualMobile").value || "").trim();
-  const joined = parseInt(document.getElementById("manualJoined").value || "0", 10);
-
-  if (!name || !mobile) {
-    alert("नाम और mobile दोनों भरें।");
-    return;
-  }
-
-  const customers = getCustomers();
-  if (customers.some(c => c.mobile === mobile)) {
-    alert("इस mobile के साथ customer already मौजूद है।");
-    return;
-  }
-
-  const record = {
-    id: Date.now(),
-    name,
-    mobile,
-    joinedMembers: joined,
-    state: "manual",
-    currentLevel: 0,
-    nextLevel: null,
-    remainingForNext: 0,
-    nextLevelIncome: 0,
-    totalIncome: 0,
-    walletBalance: 0,
-    createdAt: new Date().toISOString()
-  };
-
-  customers.push(record);
-  setCustomers(customers);
-
-  document.getElementById("manualName").value = "";
-  document.getElementById("manualMobile").value = "";
-  document.getElementById("manualJoined").value = "0";
-
-  renderDashboard();
-}
-
-function logout() {
-  sessionStorage.removeItem("rjvc_admin_logged");
-  window.location.href = "login.html";
-}
-
-window.addEventListener("load", function () {
-  loadSettingsToUI();
-  renderDashboard();
-});
-</script>
-
+  </script>
 </body>
 </html>
