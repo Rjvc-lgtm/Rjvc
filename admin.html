@@ -130,6 +130,13 @@
   #createMsg {
     font-size:12px;
   }
+  .sub-row {
+    background:#fafafa;
+  }
+  .sub-note {
+    font-size:11px;
+    color:#555;
+  }
 </style>
 </head>
 
@@ -153,16 +160,18 @@
 
 
   <!-- CUSTOMER LIST -->
-  <h2>Customer List (Edit / Block / Bonus)</h2>
+  <h2>Customer List (1 Main + 3 Sub IDs)</h2>
   <table id="customerTable">
     <thead>
       <tr>
+        <th>ID Type</th>
+        <th>RJVC ID</th>
         <th>Name</th>
         <th>Mobile</th>
+        <th>Joined Members</th>
         <th>Commission Wallet</th>
         <th>Bonus Wallet</th>
-        <th>Status</th>
-        <th>Actions</th>
+        <th>Status / Actions</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -200,6 +209,13 @@ function getWithdrawals() {
 }
 function saveWithdrawals(arr) {
   localStorage.setItem("rjvc_withdrawals", JSON.stringify(arr));
+}
+
+/* Helper: एक base RJVC ID बनाना (mobile के last 4 digit से) */
+function getBaseId(c) {
+  const mob = (c.mobile || "").replace(/\D/g, "");
+  const last4 = mob.slice(-4) || String(c.id).slice(-4);
+  return "RJVC" + last4;
 }
 
 /* -------------------- CREATE CUSTOMER -------------------- */
@@ -242,14 +258,14 @@ function createCustomer() {
   saveCustomers(customers);
 
   document.getElementById("createMsg").innerText =
-    "Customer सफलतापूर्वक बनाया गया ✔️";
+    "Customer सफलतापूर्वक बनाया गया ✔️ (1 Main ID + 3 Sub ID auto बन गए हैं)";
   document.getElementById("custName").value = "";
   document.getElementById("custMobile").value = "";
 
   renderCustomers();
 }
 
-/* -------------------- EDIT CUSTOMER -------------------- */
+/* -------------------- EDIT CUSTOMER (Main ID डेटा) -------------------- */
 function editCustomer(mobile) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -258,7 +274,7 @@ function editCustomer(mobile) {
   let c = customers[idx];
 
   let newName   = prompt("Customer Name:", c.name || "");
-  if (newName === null) return; // cancel
+  if (newName === null) return;
   newName = newName.trim();
   if (!newName) {
     alert("Name खाली नहीं हो सकता।");
@@ -277,13 +293,12 @@ function editCustomer(mobile) {
     return;
   }
 
-  // check duplicate mobile on others
   if (newMobile !== mobile && customers.some(x => x.mobile === newMobile)) {
     alert("यह mobile किसी और customer के लिए पहले से मौजूद है।");
     return;
   }
 
-  let newJoined = prompt("Joined Members (Total Active):", c.joinedMembers || 0);
+  let newJoined = prompt("Joined Members (Total Active - पूरी tree):", c.joinedMembers || 0);
   if (newJoined === null) return;
   let jm = parseInt(newJoined || "0", 10);
   if (isNaN(jm) || jm < 0) jm = 0;
@@ -310,7 +325,13 @@ function editCustomer(mobile) {
   alert("Customer detail update हो गया ✔️");
 }
 
-/* -------------------- ADD BONUS TO CUSTOMER -------------------- */
+/* -------------------- ADD BONUS (Sub ID commission –15%) -------------------- */
+/*
+  यहाँ आप जो amount डालोगे, वो माना जाएगा "सारी Sub ID की commission का total"।
+  System:
+    - 15% company share काटेगा
+    - बाकी 85% Main ID के Bonus Wallet में जोड़ देगा
+*/
 function addBonusToCustomer(mobile) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -318,23 +339,37 @@ function addBonusToCustomer(mobile) {
 
   let c = customers[idx];
 
-  let amtStr = prompt("Bonus amount (₹) जो इस customer के Bonus Wallet में जोड़ना है:", "0");
+  let amtStr = prompt(
+    "Sub ID Commission (₹) की कुल राशि दर्ज करें जिस पर 15% कंपनी शेयर कटेगा:",
+    "0"
+  );
   if (amtStr === null) return;
-  let amt = parseFloat(amtStr || "0");
-  if (isNaN(amt) || amt <= 0) {
-    alert("Valid bonus amount दर्ज करें।");
+
+  let gross = parseFloat(amtStr || "0");
+  if (isNaN(gross) || gross <= 0) {
+    alert("Valid amount दर्ज करें।");
     return;
   }
 
-  c.bonusBalance = (c.bonusBalance || 0) + amt;
+  const rate = 15; // 15% कंपनी शेयर
+  const companyPart = Math.round(gross * rate) / 100;
+  const bonusNet = gross - companyPart;
+
+  c.bonusBalance = (c.bonusBalance || 0) + bonusNet;
   customers[idx] = c;
   saveCustomers(customers);
   renderCustomers();
 
-  alert("₹" + amt + " bonus \"" + (c.name || "") + "\" के Bonus Wallet में जोड़ दिया गया ✔️");
+  alert(
+    "Sub ID Commission जोड़ी गई:\n" +
+    "कुल Sub ID Commission: ₹" + gross + "\n" +
+    "Company Share (15%): ₹" + companyPart + "\n" +
+    "Bonus Wallet में credit (Main ID पर): ₹" + bonusNet + "\n\n" +
+    "\"" + (c.name || "") + "\" के Bonus Wallet में ₹" + bonusNet + " जोड़ दिया गया ✔️"
+  );
 }
 
-/* -------------------- BLOCK / UNBLOCK CUSTOMER -------------------- */
+/* -------------------- BLOCK / UNBLOCK (सारी 4 ID पर लागू) -------------------- */
 function toggleBlock(mobile) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -344,11 +379,11 @@ function toggleBlock(mobile) {
   let newState = !c.isBlocked;
 
   if (newState) {
-    if (!confirm("क्या आप इस customer को BLOCK करना चाहते हैं? वह login नहीं कर पाएगा।")) {
+    if (!confirm("क्या आप इस customer की सभी IDs (Main + 3 Sub) को BLOCK करना चाहते हैं?")) {
       return;
     }
   } else {
-    if (!confirm("क्या आप इस customer को UNBLOCK करना चाहते हैं? वह दोबारा login कर सकेगा।")) {
+    if (!confirm("क्या आप इस customer की सभी IDs को UNBLOCK करना चाहते हैं?")) {
       return;
     }
   }
@@ -359,32 +394,56 @@ function toggleBlock(mobile) {
   renderCustomers();
 }
 
-/* -------------------- SHOW CUSTOMER LIST -------------------- */
+/* -------------------- SHOW CUSTOMER LIST (Main + 3 Sub rows) -------------------- */
 function renderCustomers() {
   let customers = getCustomers();
   let tbody = document.querySelector("#customerTable tbody");
   tbody.innerHTML = "";
 
   customers.forEach(c => {
-    let tr = document.createElement("tr");
+    const baseId = getBaseId(c);
+    const statusText  = c.isBlocked ? "Blocked" : "Active";
+    const statusClass = c.isBlocked ? "status-badge blocked-badge" : "status-badge active-badge";
+    const blockBtnText = c.isBlocked ? "Unblock" : "Block";
 
-    let statusText  = c.isBlocked ? "Blocked" : "Active";
-    let statusClass = c.isBlocked ? "status-badge blocked-badge" : "status-badge active-badge";
-    let blockBtnText = c.isBlocked ? "Unblock" : "Block";
-
-    tr.innerHTML = `
+    // 1️⃣ Main ID row
+    let trMain = document.createElement("tr");
+    trMain.innerHTML = `
+      <td>Main ID</td>
+      <td>${baseId}</td>
       <td>${c.name || ""}</td>
       <td>${c.mobile || ""}</td>
+      <td>${c.joinedMembers || 0}</td>
       <td>₹${c.walletBalance || 0}</td>
       <td>₹${c.bonusBalance || 0}</td>
-      <td><span class="${statusClass}">${statusText}</span></td>
       <td>
+        <span class="${statusClass}">${statusText}</span><br/>
         <button class="small-btn edit-btn" onclick="editCustomer('${c.mobile}')">Edit</button>
-        <button class="small-btn bonus-btn" onclick="addBonusToCustomer('${c.mobile}')">Add Bonus</button>
+        <button class="small-btn bonus-btn" onclick="addBonusToCustomer('${c.mobile}')">Add Bonus (Sub IDs)</button>
         <button class="small-btn block-btn" onclick="toggleBlock('${c.mobile}')">${blockBtnText}</button>
       </td>
     `;
-    tbody.appendChild(tr);
+    tbody.appendChild(trMain);
+
+    // 2️⃣ Sub ID rows (1,2,3) – केवल display, wallet main पर ही रहेगा
+    for (let i = 1; i <= 3; i++) {
+      let trSub = document.createElement("tr");
+      trSub.className = "sub-row";
+      trSub.innerHTML = `
+        <td>Sub ID ${i}</td>
+        <td>${baseId}-${i}</td>
+        <td>${c.name || ""}</td>
+        <td>${c.mobile || ""}</td>
+        <td>${c.joinedMembers || 0}</td>
+        <td>→ Main ID</td>
+        <td>→ Main ID</td>
+        <td class="sub-note">
+          Bonus इस Sub ID की कमाई से आता है,  
+          पर credit हमेशा Main ID के Bonus Wallet में ही होगा।
+        </td>
+      `;
+      tbody.appendChild(trSub);
+    }
   });
 }
 
