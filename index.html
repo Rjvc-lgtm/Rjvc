@@ -12,21 +12,22 @@
     body {
       margin: 0;
       padding: 16px;
-      background: #e6ebff;
+      background: #0b1021;
     }
     .app {
       max-width: 900px;
       margin: 0 auto;
       background: #ffffff;
-      border-radius: 20px;
+      border-radius: 20px 20px 20px 20px;
       padding: 18px 18px 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      margin-top: -20px;
     }
 
     .top-bar {
       display: flex;
       justify-content: flex-end;
-      font-size: 12px;
+      font-size: 13px;
       margin-bottom: 8px;
     }
     .top-bar a {
@@ -85,37 +86,6 @@
       color: #102a6b;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 16px;
-      font-size: 12px;
-    }
-    th, td {
-      border-bottom: 1px solid #eee;
-      padding: 6px 6px;
-      text-align: right;
-    }
-    th {
-      background: #f8f8ff;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-    th:first-child, td:first-child {
-      text-align: left;
-    }
-    .total-box {
-      margin-top: 14px;
-      padding: 10px;
-      border-radius: 12px;
-      background: #f0f5ff;
-      font-size: 14px;
-    }
-    .small {
-      font-size: 11px;
-      color: #777;
-    }
     .card {
       margin-top: 14px;
       padding: 10px;
@@ -140,14 +110,15 @@
 
     .menu-row {
       display: flex;
-      justify-content: flex-end;
+      justify-content: center;
       align-items: center;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
+      margin-top: 4px;
     }
     .menu-btn {
       border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 12px;
+      padding: 8px 18px;
+      font-size: 13px;
       background: #f0f2ff;
       border: 1px solid #ccd2ff;
       color: #102a6b;
@@ -221,6 +192,22 @@
     .wallet-col {
       flex: 1 1 150px;
     }
+
+    .login-info {
+      font-size: 11px;
+      color: #b91c1c;
+      margin-top: 3px;
+    }
+
+    .tag-pill {
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      background:#e0e7ff;
+      font-size:10px;
+      margin-left:6px;
+      color:#1e293b;
+    }
   </style>
 </head>
 <body>
@@ -235,7 +222,7 @@
 
     <!-- Top admin link -->
     <div class="top-bar">
-      <a href="login.html">Admin Login</a>
+      <a href="admin.html">Admin Login</a>
     </div>
 
     <!-- BANK / WITHDRAWAL MENU BUTTON -->
@@ -302,84 +289,56 @@
       <div id="bankSummary" class="text-muted" style="margin-top:6px;"></div>
     </div>
 
-    <!-- CUSTOMER & PLAN SECTION -->
+    <!-- LOGIN + BASIC INFO SECTION -->
     <div class="section-card">
-      <h2>Customer Details</h2>
+      <h2>Customer Login / Wallet View</h2>
       <div class="subtitle">
-        यहाँ अपना नाम और मोबाइल नंबर भरें – इसी पर आपका wallet और payout चलेगा।
+        यहाँ अपना registered mobile number डालिए।  
+        केवल वही customer login कर पाएगा जिसे Admin ने create किया है।
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>मोबाइल नंबर (Login)</label>
+          <input id="customerMobile" type="tel" placeholder="10 digit mobile" />
+          <div class="small">यही नंबर Commission Wallet, Bonus Wallet और transfer के लिए use होगा।</div>
+          <div class="login-info">Note: Admin panel में जिस mobile पर customer बना है, वही number यहाँ डालें।</div>
+        </div>
       </div>
 
       <div class="row">
         <div class="col">
           <label>ग्राहक का नाम</label>
-          <input id="customerName" type="text" placeholder="जैसे: राजेश" />
+          <input id="customerName" type="text" placeholder="Admin वाला नाम अपने आप भर जाएगा" readonly />
         </div>
         <div class="col">
-          <label>मोबाइल नंबर</label>
-          <input id="customerMobile" type="tel" placeholder="10 digit mobile" />
-          <div class="small">यही नंबर commission wallet, bonus wallet और transfer के लिए use होगा</div>
+          <label>RJVC ID <span class="tag-pill">Read Only</span></label>
+          <input id="customerRJVCId" type="text" placeholder="Auto" readonly />
         </div>
       </div>
 
       <div class="row">
         <div class="col">
-          <label>अभी तक कुल कितने सदस्य जुड़ चुके हैं?</label>
-          <input id="joinedMembers" type="number" min="0" value="0" />
-          <div class="small">आपके direct + indirect दोनों, कुल active members</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <h2>Plan Settings</h2>
-      <div class="subtitle">
-        ये setting admin panel से भी change की जा सकती है। अभी आप चाहें तो यहाँ से देख सकते हैं।
-      </div>
-
-      <div class="row">
-        <div class="col">
-          <label>कितने levels दिखाने हैं?</label>
-          <input id="levels" type="number" min="1" max="20" value="11" />
-          <div class="small">जैसे: 11 तक</div>
-        </div>
-        <div class="col">
-          <label>प्रति सदस्य commission (₹)</label>
-          <input id="commissionPerMember" type="number" min="0" value="16" />
-          <div class="small">ये amount हर member पर apply होगी (ग्राहक को table में अलग से नहीं दिखेगी)</div>
+          <label>Joined Members (Total Tree)</label>
+          <input id="joinedMembers" type="number" min="0" value="0" readonly />
+          <div class="small">ये संख्या admin side से अपने आप आएगी (customer change नहीं कर सकता)।</div>
         </div>
       </div>
 
-      <div class="row">
-        <div class="col">
-          <label>स्टार्टिंग में कितने लोग हैं?</label>
-          <input id="startMembers" type="number" min="1" value="2" />
-          <div class="small">आमतौर पर 2 से शुरुआत</div>
-        </div>
-        <div class="col">
-          <label>डबलिंग (multiplier)</label>
-          <input id="multiplier" type="number" min="2" value="2" />
-          <div class="small">आमतौर पर 2x रहता है</div>
-        </div>
-      </div>
-
-      <div style="margin-bottom: 4px;">
-        <button class="btn-primary" onclick="calculate()">कैल्क्युलेट करें</button>
-        <button class="btn-secondary" onclick="loadExample()">Demo Example</button>
-      </div>
+      <button class="btn-primary" onclick="customerLogin()">Login / Wallet देखें</button>
     </div>
 
     <!-- WALLET / TRANSFER SECTION -->
     <div class="wallet-card">
       <div class="card-title">RJVC Wallets & Mobile Transfer</div>
       <div id="walletInfo" class="text-muted">
-        पहले ऊपर अपना नाम और मोबाइल नंबर भरें और "कैल्क्युलेट करें" दबाएँ।
+        पहले ऊपर अपना registered mobile डालकर "Login / Wallet देखें" दबाएँ।
       </div>
       <div class="small" style="margin-top:4px;">
         Bonus Wallet से हर महीने withdrawal किया जा सकता है।  
         हर तीसरे महीने अगर आप अपने direct में कम से कम 1 नया member नहीं जोड़ते हैं  
         तो उस महीने का bonus कंपनी को चला जाएगा (customer को नहीं मिलेगा)।  
-        Bonus Wallet में जो amount दिखता है, वही withdrawal के समय bank में जाएगा  
-        (Sub ID commission पर 15% company share पहले ही admin side पर adjust हो चुका होता है)।
+        Sub ID commission पर 15% company share पहले ही admin side पर minus हो चुका होता है।
       </div>
 
       <div class="wallet-row" style="margin-top:8px;">
@@ -404,31 +363,7 @@
     <!-- SUMMARY -->
     <div id="customerSummary" class="card">
       <div class="card-title">Customer Report</div>
-      <div id="summaryText">ऊपर डेटा भरकर "कैल्क्युलेट करें" दबाएँ।</div>
-    </div>
-
-    <!-- RESULT TABLE -->
-    <div class="section-card" style="margin-top:12px;">
-      <h2>Earning Table (Auto Calculated)</h2>
-      <div style="max-height: 280px; overflow:auto;">
-        <table id="resultTable">
-          <thead>
-            <tr>
-              <th>Level</th>
-              <th>Members</th>
-              <th>New Members</th>
-              <th>Level Income (₹)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- JS से rows आएँगे -->
-          </tbody>
-        </table>
-      </div>
-
-      <div class="total-box" id="totalBox">
-        कुल कमाई: ₹0
-      </div>
+      <div id="summaryText">ऊपर registered mobile डालकर "Login / Wallet देखें" दबाएँ।</div>
     </div>
   </div>
 
@@ -524,6 +459,77 @@
       localStorage.setItem("rjvc_withdrawals", JSON.stringify(list));
     }
 
+    // ---------- COMMON CUSTOMER STORAGE ----------
+    function getCustomersArray() {
+      try {
+        return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveCustomersArray(list) {
+      localStorage.setItem("rjvc_customers", JSON.stringify(list));
+    }
+
+    function findCustomerByMobile(mobile) {
+      const customers = getCustomersArray();
+      return customers.find(c => c.mobile === mobile);
+    }
+
+    // ---------- CUSTOMER LOGIN ----------
+    function customerLogin() {
+      const mobile = (document.getElementById("customerMobile").value || "").trim();
+
+      if (!mobile || mobile.length < 10) {
+        alert("सही registered mobile number डालें (10 digit)।");
+        return;
+      }
+
+      const cust = findCustomerByMobile(mobile);
+
+      if (!cust) {
+        document.getElementById("customerName").value = "";
+        document.getElementById("customerRJVCId").value = "";
+        document.getElementById("joinedMembers").value = "0";
+
+        document.getElementById("walletInfo").innerText =
+          "इस मोबाइल नंबर के लिए कोई customer record नहीं मिला। कृपया admin से contact करें।";
+
+        document.getElementById("summaryText").innerText =
+          "आपका mobile RJVC system में नहीं मिला है।\n\n" +
+          "हो सकता है कि:\n" +
+          "• Admin ने अभी तक आपका customer create न किया हो, या\n" +
+          "• Mobile number गलत टाइप हुआ हो।";
+
+        return;
+      }
+
+      // Login successful – basic details दिखाओ
+      document.getElementById("customerName").value = cust.name || "";
+      document.getElementById("customerRJVCId").value = cust.mainId || cust.rjvcId || "";
+      document.getElementById("joinedMembers").value = cust.joinedMembers || 0;
+
+      refreshWalletInfo();
+
+      const commissionWallet = cust.walletBalance || 0;
+      const bonusWallet = cust.bonusBalance || 0;
+
+      let report = "";
+      if (cust.name) {
+        report += cust.name + " जी,\n\n";
+      }
+      report += "आपका RJVC ID: " + (cust.mainId || cust.rjvcId || "N/A") + "\n";
+      report += "आपके पूरे tree में अभी तक जुड़े total members: " + formatNumber(cust.joinedMembers || 0) + "\n\n";
+      report += "Commission Wallet: ₹" + formatNumber(commissionWallet) + "\n";
+      report += "Bonus Wallet: ₹" + formatNumber(bonusWallet) + "\n\n";
+      report += "ध्यान दें: Wallet balance में main ID + 3 Sub ID से जितनी भी commission बनी है,\n" +
+                "सारी calculation admin side पर auto हो चुकी है। यहाँ आपको final amount दिखाई दे रही है।";
+
+      document.getElementById("summaryText").innerText = report;
+    }
+
+    // ---------- WITHDRAWAL ----------
     function requestWithdrawal() {
       const amount = parseFloat(document.getElementById("withdrawAmount").value || "0");
       const source = document.getElementById("withdrawSource").value; // commission | bonus
@@ -531,7 +537,7 @@
       const mobile = (document.getElementById("customerMobile").value || "").trim();
 
       if (!mobile) {
-        alert("Withdrawal के लिए पहले अपना मोबाइल नंबर भरें।");
+        alert("Withdrawal के लिए पहले अपना registered mobile number भरें।");
         return;
       }
       if (amount <= 0) {
@@ -546,7 +552,7 @@
       const customers = getCustomersArray();
       const idx = customers.findIndex(c => c.mobile === mobile);
       if (idx === -1) {
-        alert("इस मोबाइल के लिए कोई wallet नहीं मिला। पहले calculation करें।");
+        alert("इस मोबाइल के लिए कोई customer record नहीं मिला। पहले admin से contact करें।");
         return;
       }
 
@@ -561,7 +567,6 @@
         return;
       }
 
-      // कटौती सही wallet से
       if (source === "bonus") {
         cust.bonusBalance = bonusWallet - amount;
       } else {
@@ -578,7 +583,7 @@
         name: name || cust.name || "",
         mobile,
         amount,
-        source, // "commission" या "bonus"
+        source,
         status: "Pending",
         createdAt: new Date().toISOString()
       });
@@ -588,73 +593,110 @@
       refreshWalletInfo();
     }
 
-    // ---------- SETTINGS / CUSTOMERS ----------
+    // ---------- Wallet / Transfer ----------
+    function refreshWalletInfo() {
+      const mobile = (document.getElementById("customerMobile").value || "").trim();
+      const name = (document.getElementById("customerName").value || "").trim();
+      const box = document.getElementById("walletInfo");
 
-    function loadSettings() {
-      try {
-        const s = JSON.parse(localStorage.getItem("rjvc_settings") || "{}");
-        if (s.levels) document.getElementById("levels").value = s.levels;
-        if (s.perMember) document.getElementById("commissionPerMember").value = s.perMember;
-        if (s.startMembers) document.getElementById("startMembers").value = s.startMembers;
-        if (s.multiplier) document.getElementById("multiplier").value = s.multiplier;
-      } catch (e) {
-        console.warn("Settings load error", e);
-      }
-    }
-
-    function getCustomersArray() {
-      try {
-        return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveCustomersArray(list) {
-      localStorage.setItem("rjvc_customers", JSON.stringify(list));
-    }
-
-    function calculate() {
-      const levels = parseInt(document.getElementById("levels").value || "0", 10);
-      const perMember = parseFloat(document.getElementById("commissionPerMember").value || "0");
-      const startMembers = parseInt(document.getElementById("startMembers").value || "0", 10);
-      const multiplier = parseInt(document.getElementById("multiplier").value || "2", 10);
-      const customerName = (document.getElementById("customerName").value || "").trim();
-      const customerMobile = (document.getElementById("customerMobile").value || "").trim();
-      const joinedMembers = parseInt(document.getElementById("joinedMembers").value || "0", 10);
-
-      const tbody = document.querySelector("#resultTable tbody");
-      tbody.innerHTML = "";
-
-      let currentMembers = startMembers;
-      let totalIncome = 0;
-      const levelInfo = [];
-
-      for (let level = 1; level <= levels; level++) {
-        const newMembers = currentMembers;
-        const levelIncome = newMembers * perMember;
-        totalIncome += levelIncome;
-
-        levelInfo.push({
-          level,
-          members: newMembers,
-          income: levelIncome
-        });
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${level}</td>
-          <td>${formatNumber(currentMembers)}</td>
-          <td>${formatNumber(newMembers)}</td>
-          <td>${formatNumber(levelIncome)}</td>
-        `;
-        tbody.appendChild(tr);
-
-        currentMembers = currentMembers * multiplier;
+      if (!mobile) {
+        box.innerText = "पहले ऊपर अपना registered mobile number भरें और \"Login / Wallet देखें\" दबाएँ।";
+        return;
       }
 
-      document.getElementById("totalBox").innerText =
-        "कुल कमाई: ₹" + formatNumber(totalIncome);
+      const customers = getCustomersArray();
+      const cust = customers.find(c => c.mobile === mobile);
+      if (!cust) {
+        box.innerText = "इस मोबाइल नंबर के लिए अभी कोई customer record नहीं मिला (admin से contact करें)।";
+        return;
+      }
 
-      const summaryData = computeSummaryData(joinedMembers, levelInfo, perMember);
-      renderCustomerSummary(customerName, joinedMembers, le
+      const commissionWallet = cust.walletBalance || 0;
+      const bonusWallet = cust.bonusBalance || 0;
+
+      box.innerText =
+        (name ? (name + " जी,\n") : "") +
+        "Commission Wallet Balance: ₹" + formatNumber(commissionWallet) +
+        "\nBonus Wallet Balance: ₹" + formatNumber(bonusWallet) +
+        "\n(Main ID + सभी Sub IDs की commission का final result है)।";
+    }
+
+    function transferCommission() {
+      const fromMobile = (document.getElementById("customerMobile").value || "").trim();
+      const toMobile = (document.getElementById("transferToMobile").value || "").trim();
+      const amount = parseFloat(document.getElementById("transferAmount").value || "0");
+
+      if (!fromMobile) {
+        alert("पहले ऊपर अपना registered mobile number भरें और login करें।");
+        return;
+      }
+      if (!toMobile) {
+        alert("जिस mobile पर भेजना है, वो नंबर भरें।");
+        return;
+      }
+      if (fromMobile === toMobile) {
+        alert("खुद के मोबाइल पर transfer की जरूरत नहीं है।");
+        return;
+      }
+      if (amount <= 0) {
+        alert("Valid transfer amount दर्ज करें।");
+        return;
+      }
+
+      const customers = getCustomersArray();
+      const fromIdx = customers.findIndex(c => c.mobile === fromMobile);
+      if (fromIdx === -1) {
+        alert("आपके mobile के लिए कोई wallet नहीं मिला। पहले admin से contact करें।");
+        return;
+      }
+
+      const from = customers[fromIdx];
+      const fromWallet = from.walletBalance || 0; // सिर्फ commission wallet से transfer
+      if (fromWallet < amount) {
+        alert("आपके Commission Wallet में इतना balance नहीं है। Current balance: ₹" + formatNumber(fromWallet));
+        return;
+      }
+
+      let toIdx = customers.findIndex(c => c.mobile === toMobile);
+      if (toIdx === -1) {
+        const newCust = {
+          id: Date.now() + 1,
+          name: "Customer " + toMobile,
+          mobile: toMobile,
+          joinedMembers: 0,
+          state: "manual",
+          currentLevel: 0,
+          nextLevel: null,
+          remainingForNext: 0,
+          nextLevelIncome: 0,
+          totalIncome: 0,
+          walletBalance: 0,
+          bonusBalance: 0,
+          status: "Active",
+          createdAt: new Date().toISOString()
+        };
+        customers.push(newCust);
+        toIdx = customers.length - 1;
+      }
+
+      const to = customers[toIdx];
+
+      from.walletBalance = fromWallet - amount; // bonus नहीं घटा
+      to.walletBalance = (to.walletBalance || 0) + amount;
+
+      customers[fromIdx] = from;
+      customers[toIdx] = to;
+
+      saveCustomersArray(customers);
+
+      alert("₹" + formatNumber(amount) + " सफलतापूर्वक " + toMobile + " पर transfer कर दिया गया है (Commission Wallet से)।");
+      refreshWalletInfo();
+      document.getElementById("transferAmount").value = "0";
+    }
+
+    window.addEventListener("load", function () {
+      loadBankDetails();
+    });
+  </script>
+</body>
+</html>
