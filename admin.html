@@ -221,7 +221,6 @@
     justify-content:center;
   }
 
-  /* Horizontal line between Sub1 और Sub2 (Main से निकला हुआ) */
   .tree-level-2::before {
     content:"";
     position:absolute;
@@ -231,7 +230,6 @@
     height:2px;
     background:#9ca3af;
   }
-  /* Vertical lines Main से down */
   .tree-branch::before {
     content:"";
     position:absolute;
@@ -241,7 +239,6 @@
     background:#9ca3af;
   }
 
-  /* Sub1 के नीचे Sub3 के लिए vertical line */
   .tree-sub1-wrap {
     position:relative;
     display:flex;
@@ -343,22 +340,18 @@
 </div>
 
 <script>
-/* ---------- BASIC STORAGE HELPERS ---------- */
 function getCustomers() {
   return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
 }
 function saveCustomers(arr) {
   localStorage.setItem("rjvc_customers", JSON.stringify(arr));
 }
-
 function getWithdrawals() {
   return JSON.parse(localStorage.getItem("rjvc_withdrawals") || "[]");
 }
 function saveWithdrawals(arr) {
   localStorage.setItem("rjvc_withdrawals", JSON.stringify(arr));
 }
-
-/* rjvc_settings से commission per member */
 function getSettings() {
   try {
     return JSON.parse(localStorage.getItem("rjvc_settings") || "{}");
@@ -366,15 +359,13 @@ function getSettings() {
     return {};
   }
 }
-
-/* Helper: base RJVC ID (mobile के last 4 digit से) */
 function getBaseId(c) {
   const mob = (c.mobile || "").replace(/\D/g, "");
   const last4 = mob.slice(-4) || String(c.id).slice(-4);
   return "RJVC" + last4;
 }
 
-/* -------------------- CREATE CUSTOMER -------------------- */
+/* CREATE CUSTOMER */
 function createCustomer() {
   let name = document.getElementById("custName").value.trim();
   let mobile = document.getElementById("custMobile").value.trim();
@@ -394,7 +385,6 @@ function createCustomer() {
     return;
   }
 
-  // किसके नीचे join करना है? (parent)
   let parentMobile = prompt(
     "किस customer के नीचे join करना है? (उसका mobile number लिखें)\nअगर यह सबसे ऊपर वाला (root) customer है तो खाली छोड़ दें।",
     ""
@@ -426,7 +416,7 @@ function createCustomer() {
     id: Date.now(),
     name,
     mobile,
-    joinedMembers: 2,       // Sub ID 1 और Sub ID 2 already जुड़े माने जाएँगे
+    joinedMembers: 2,       // Sub ID 1 + Sub ID 2 already joined माने
     state: "new",
     currentLevel: 0,
     nextLevel: 1,
@@ -434,10 +424,10 @@ function createCustomer() {
     nextLevelIncome: 0,
     totalIncome: 0,
     walletBalance: 0,       // Commission Wallet
-    bonusBalance: 0,        // Bonus Wallet (Sub IDs से)
+    bonusBalance: 0,        // Bonus Wallet (Sub Income से)
     isBlocked: false,
     parentMobile: parentMobile || null,
-    parentNode: parentNode || null,  // main / sub1 / sub2 / sub3
+    parentNode: parentNode || null,
     createdAt: new Date().toISOString()
   });
 
@@ -451,7 +441,7 @@ function createCustomer() {
   renderCustomers();
 }
 
-/* -------------------- EDIT CUSTOMER (Main ID डेटा) -------------------- */
+/* EDIT CUSTOMER */
 function editCustomer(mobile) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -499,7 +489,6 @@ function editCustomer(mobile) {
   let bw = parseFloat(newBonus || "0");
   if (isNaN(bw) || bw < 0) bw = 0;
 
-  // Parent info भी बदल सकते हैं (optional)
   let pMob = prompt(
     "किस customer के नीचे joined है? (mobile)\nखाली छोड़ने पर top/root माना जाएगा।",
     c.parentMobile || ""
@@ -542,7 +531,7 @@ function editCustomer(mobile) {
   alert("Customer detail update हो गया ✔️");
 }
 
-/* -------------------- AUTO ADD MEMBERS (Main/Sub) -------------------- */
+/* ADD MEMBERS (Main/Sub) */
 function addMembersTo(mobile, idType) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -578,14 +567,15 @@ function addMembersTo(mobile, idType) {
   let msg = "";
 
   if (idType === "main") {
-    // Main ID → Commission Wallet
+    // Main ID → सीधा Commission Wallet
     c.walletBalance = (c.walletBalance || 0) + gross;
     msg =
       "Main ID के नीचे " + count + " नए members जोड़े गए।\n" +
       "कुल commission: ₹" + gross + "\n" +
       "Commission Wallet में ₹" + gross + " add हो गया।";
   } else {
-    // Sub IDs → 15% company, 85% Bonus Wallet
+    // Sub IDs → commission सिर्फ Bonus के रूप में Main ID को
+    // Commission Wallet में कुछ नहीं जोड़ा जाएगा
     const rate = 15;
     const companyPart = Math.round(gross * rate) / 100;
     const bonusNet = gross - companyPart;
@@ -598,12 +588,13 @@ function addMembersTo(mobile, idType) {
 
     msg =
       whichSub + " के नीचे " + count + " नए members जोड़े गए।\n" +
-      "कुल Sub ID Commission: ₹" + gross + "\n" +
+      "कुल Sub ID commission (16₹ x " + count + "): ₹" + gross + "\n" +
       "Company Share (15%): ₹" + companyPart + "\n" +
-      "Main ID के Bonus Wallet में credit: ₹" + bonusNet;
+      "Main ID के Bonus Wallet में credit: ₹" + bonusNet + "\n" +
+      "(Commission Wallet पर कोई असर नहीं, यह पूरा income bonus के रूप में माना जाएगा)";
   }
 
-  // पूरी tree के total members
+  // Level के लिए पूरे tree के members
   c.joinedMembers = (c.joinedMembers || 0) + count;
 
   customers[idx] = c;
@@ -612,7 +603,7 @@ function addMembersTo(mobile, idType) {
   alert(msg + "\n\nअब इस ID की पूरी tree का level और earning index page पर auto दिखेगी।");
 }
 
-/* -------------------- MANUAL BONUS -------------------- */
+/* MANUAL BONUS */
 function addBonusManual(mobile) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -643,7 +634,7 @@ function addBonusManual(mobile) {
   );
 }
 
-/* -------------------- BLOCK / UNBLOCK -------------------- */
+/* BLOCK / UNBLOCK */
 function toggleBlock(mobile) {
   let customers = getCustomers();
   let idx = customers.findIndex(c => c.mobile === mobile);
@@ -668,7 +659,7 @@ function toggleBlock(mobile) {
   renderCustomers();
 }
 
-/* -------------------- CHILDREN INDEX (कौन किसके नीचे) -------------------- */
+/* CHILDREN INDEX (कौन किसके नीचे) */
 function buildChildrenIndex(customers) {
   const map = {};
   customers.forEach(child => {
@@ -680,7 +671,7 @@ function buildChildrenIndex(customers) {
   return map;
 }
 
-/* -------------------- SHOW CUSTOMER LIST + TREE -------------------- */
+/* RENDER CUSTOMER + TREE */
 function renderCustomers() {
   let customers = getCustomers();
   let childrenIndex = buildChildrenIndex(customers);
@@ -693,7 +684,6 @@ function renderCustomers() {
     const statusClass = c.isBlocked ? "status-badge blocked-badge" : "status-badge active-badge";
     const blockBtnText = c.isBlocked ? "Unblock" : "Block";
 
-    // 1️⃣ Main ID row
     let trMain = document.createElement("tr");
     trMain.innerHTML = `
       <td>Main ID</td>
@@ -716,7 +706,6 @@ function renderCustomers() {
     `;
     tbody.appendChild(trMain);
 
-    // 2️⃣ Sub ID rows (1,2,3) – info only
     for (let i = 1; i <= 3; i++) {
       let trSub = document.createElement("tr");
       trSub.className = "sub-row";
@@ -729,14 +718,13 @@ function renderCustomers() {
         <td>→ Main ID</td>
         <td>→ Main ID</td>
         <td class="sub-note">
-          इस Sub ID के नीचे जो भी members add होंगे,<br/>
-          उनकी commission में से 15% company share कटकर, बाकी 85% Main ID के Bonus Wallet में automatically जाएगा।
+          इस Sub ID के नीचे जितनी commission बनेगी, उस में से 15% company share कटकर,<br/>
+          बचा हुआ 85% सिर्फ Main ID के Bonus Wallet में जाएगा (Commission Wallet पर नहीं आएगा)।
         </td>
       `;
       tbody.appendChild(trSub);
     }
 
-    // 3️⃣ TREE VIEW – base sketch + नीचे joined customers list
     const keyMain  = c.mobile + "|main";
     const keySub1  = c.mobile + "|sub1";
     const keySub2  = c.mobile + "|sub2";
@@ -767,17 +755,13 @@ function renderCustomers() {
         <div class="tree-card">
           <div class="tree-title">Tree View (सिर्फ Admin के लिए)</div>
           <div class="tree">
-            <!-- Level 1: Main -->
             <div class="tree-level-1">
               <div class="tree-node">Main ID<br>${baseId}</div>
             </div>
-
-            <!-- Level 2: Sub1 + Sub2 -->
             <div class="tree-level-2">
               <div class="tree-branch">
                 <div class="tree-sub1-wrap">
                   <div class="tree-node small">Sub ID 1<br>${baseId}-1</div>
-                  <!-- Level 3: Sub3 नीचे -->
                   <div class="tree-level-3">
                     <div class="tree-node small">Sub ID 3<br>${baseId}-3</div>
                   </div>
@@ -809,7 +793,7 @@ function renderCustomers() {
   });
 }
 
-/* -------------------- WITHDRAW LIST -------------------- */
+/* WITHDRAW LIST + APPROVE/REJECT */
 function loadWithdrawals() {
   let list = getWithdrawals();
   let tbody = document.querySelector("#withdrawTable tbody");
@@ -832,31 +816,26 @@ function loadWithdrawals() {
       tbody.appendChild(tr);
     });
 }
-
-/* -------------------- APPROVE / REJECT -------------------- */
 function approveWithdraw(id) {
   let list = getWithdrawals();
   let item = list.find(w => w.id === id);
   if (!item) return;
-
   item.status = "Paid";
   saveWithdrawals(list);
   loadWithdrawals();
   alert("Withdrawal Approved ✔️");
 }
-
 function rejectWithdraw(id) {
   let list = getWithdrawals();
   let item = list.find(w => w.id === id);
   if (!item) return;
-
   item.status = "Rejected";
   saveWithdrawals(list);
   loadWithdrawals();
   alert("Withdrawal Rejected ❌");
 }
 
-/* -------------------- INIT -------------------- */
+/* INIT */
 renderCustomers();
 loadWithdrawals();
 </script>
