@@ -7,37 +7,36 @@
   <style>
     * {
       box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     body {
       margin: 0;
-      padding: 12px;
+      padding: 16px;
       background: #e6ebff;
     }
     .app {
-      max-width: 980px;
-      margin: 0 auto 24px;
+      max-width: 950px;
+      margin: 0 auto;
       background: #ffffff;
       border-radius: 20px;
       padding: 18px 18px 24px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
     }
     h1 {
-      margin: 0 0 10px;
-      font-size: 24px;
       text-align: center;
-      color: #102a6b;
+      margin: 4px 0 12px;
+      color: #0b2a6f;
+      font-size: 26px;
     }
     h2 {
-      margin: 10px 0 6px;
+      margin: 8px 0 4px;
       font-size: 18px;
       color: #102a6b;
     }
-    p.subtitle {
-      margin: 0 0 10px;
+    .subtitle {
       font-size: 12px;
       color: #555;
+      margin-bottom: 10px;
     }
     label {
       font-size: 13px;
@@ -52,13 +51,22 @@
       border: 1px solid #ccc;
       font-size: 13px;
     }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .col {
+      flex: 1 1 160px;
+    }
     button {
       border: none;
+      padding: 7px 14px;
       border-radius: 999px;
-      padding: 7px 12px;
       font-size: 12px;
       cursor: pointer;
-      margin: 2px;
+      margin: 2px 4px 2px 0;
       white-space: nowrap;
     }
     .btn-primary {
@@ -66,125 +74,127 @@
       color: #fff;
     }
     .btn-secondary {
-      background: #e0e4ff;
+      background: #e3ebff;
       color: #102a6b;
     }
     .btn-danger {
       background: #ffccc7;
       color: #a8071a;
     }
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 999px;
-      font-size: 10px;
-      margin-left: 4px;
+    .btn-soft {
+      background: #f5f5ff;
+      color: #1a237e;
     }
-    .badge-pill {
-      background: #f0f5ff;
-      color: #102a6b;
-    }
-    .card {
-      margin-top: 12px;
-      padding: 10px 10px 12px;
+    .section-card {
+      margin-top: 10px;
+      padding: 10px 10px 14px;
       border-radius: 12px;
       background: #f9f9ff;
       border: 1px solid #dde2ff;
-    }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-    .col {
-      flex: 1 1 160px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 8px;
-      font-size: 11px;
+      font-size: 12px;
     }
-    th,
-    td {
+    th, td {
       border-bottom: 1px solid #eee;
-      padding: 5px 4px;
+      padding: 6px 6px;
       text-align: left;
     }
     th {
-      background: #f4f6ff;
-      position: sticky;
-      top: 0;
-      z-index: 1;
+      background: #f2f4ff;
     }
-    .small {
-      font-size: 11px;
-      color: #777;
-    }
-    .money {
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-    .table-wrapper {
-      max-height: 340px;
-      overflow: auto;
-      border-radius: 10px;
-      border: 1px solid #e4e7ff;
-      background: #fff;
-    }
-    .tree-card {
-      margin-top: 12px;
-      padding: 10px;
-      border-radius: 12px;
-      background: #fffef6;
-      border: 1px solid #ffe58f;
-      font-size: 12px;
-    }
-    .tree-main {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-    .tree-main span {
-      display: inline-block;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: #1a237e;
-      color: #fff;
-      font-size: 12px;
-    }
-    .tree-subs {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 6px;
-      margin-top: 6px;
-    }
-    .tree-node {
-      padding: 5px 8px;
-      border-radius: 999px;
-      background: #f0f0ff;
-      font-size: 11px;
-      text-align: center;
-    }
-    .tree-node strong {
-      display: block;
-    }
-    .status-pill {
+    .badge {
       display: inline-block;
       padding: 3px 8px;
       border-radius: 999px;
       font-size: 10px;
-      background: #f6ffed;
-      color: #237804;
     }
-    .status-pending {
-      background: #fffbe6;
-      color: #ad8b00;
+    .badge-active {
+      background: #d9f7be;
+      color: #135200;
     }
-    .status-rejected {
+    .badge-blocked {
       background: #fff1f0;
       color: #a8071a;
+    }
+    .text-muted {
+      font-size: 11px;
+      color: #666;
+    }
+    .money {
+      text-align: right;
+      font-weight: 600;
+    }
+    .tree-card {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #fefaf2;
+      border: 1px solid #ffe0a3;
+      font-size: 12px;
+    }
+    .tree-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+    }
+    .tree-node-main {
+      background: #122a72;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      text-align: center;
+      min-width: 120px;
+    }
+    .tree-node-sub {
+      background: #263238;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-align: center;
+      min-width: 90px;
+      margin: 4px;
+    }
+    .tree-line {
+      width: 160px;
+      height: 16px;
+      border-bottom: 2px solid #cfd8dc;
+      margin: 4px auto;
+    }
+    .tree-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 360px;
+    }
+    .wallet-summary {
+      margin-top: 6px;
+      padding: 8px;
+      border-radius: 10px;
+      background: #f0f5ff;
+      font-size: 12px;
+    }
+    .withdraw-card {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #fff7f0;
+      border: 1px solid #ffd8bf;
+      font-size: 12px;
+    }
+    .nowrap {
+      white-space: nowrap;
+    }
+    @media (max-width: 640px) {
+      .actions-cell {
+        display: flex;
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
@@ -192,510 +202,512 @@
   <div class="app">
     <h1>RJVC ADMIN PANEL</h1>
 
-    <!-- Create Customer -->
-    <div class="card">
+    <!-- CREATE CUSTOMER -->
+    <div class="section-card">
       <h2>नया Customer Create करें</h2>
-      <p class="subtitle">
-        हर नए customer के लिए system खुद-ब-खुद 1 Main ID और 5 Sub IDs बनाएगा।
-        Binary joining आप मैनुअली करेंगे।
-      </p>
-
+      <div class="subtitle">
+        यहाँ से आप नया customer बनाएँगे। System अपने आप 1 Main ID + 5 Sub IDs allot कर देगा।
+      </div>
       <div class="row">
         <div class="col">
           <label>Customer Name</label>
-          <input id="custName" type="text" placeholder="जैसे: रमेश" />
+          <input id="newName" type="text" placeholder="जैसे: रमेश" />
         </div>
         <div class="col">
           <label>Mobile Number</label>
-          <input id="custMobile" type="tel" placeholder="10 digit number" />
+          <input id="newMobile" type="tel" placeholder="10 digit number" />
         </div>
       </div>
       <button class="btn-primary" onclick="createCustomer()">Create Customer</button>
-      <span id="createMsg" class="small"></span>
-      <div class="small" style="margin-top:4px;">
-        Note: 1 customer = 1 Main ID + 5 Sub IDs (RJVC code auto generate होगा)।
-      </div>
+      <span id="createMsg" class="text-muted"></span>
     </div>
 
-    <!-- Customer List -->
-    <div class="card">
+    <!-- CUSTOMER LIST -->
+    <div class="section-card">
       <h2>Customer List (1 Main + 5 Sub IDs)</h2>
-      <p class="subtitle">
-        यहाँ से आप Binary Member मैनुअली add कर सकते हैं, Commission / Bonus wallet देख सकते हैं
-        और Tree View केवल admin के लिए देख सकते हैं (customer को नहीं दिखेगा)।  
-        <br />
-        <strong>Entry:</strong> 1 member = ₹20, <strong>Per Pair:</strong> ₹3 (15%)
-      </p>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>ID Type</th>
-              <th>RJVC ID</th>
-              <th>Name</th>
-              <th>Mobile</th>
-              <th>Left</th>
-              <th>Right</th>
-              <th>Pairs</th>
-              <th class="money">Comm. Wallet</th>
-              <th class="money">Bonus Wallet</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="customerTableBody">
-            <!-- JS से rows -->
-          </tbody>
-        </table>
+      <div class="subtitle">
+        यहाँ से आप Member add कर सकते हैं, Commission / Bonus देख सकते हैं और Tree View सिर्फ admin के लिए है (customer को नहीं दिखेगा)।
       </div>
-      <div class="small" id="customerSummary"></div>
+
+      <div class="text-muted" style="margin-bottom:4px;">
+        Per Pair earning: ₹3 (20 रुपये में से 15%) – Main ID के pair से Commission Wallet,  
+        किसी भी Sub ID के pair से Main ID के Bonus Wallet में ₹3 जाएगा।
+      </div>
+
+      <table id="customerTable">
+        <thead>
+          <tr>
+            <th>ID Type</th>
+            <th>RJVC ID</th>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th class="nowrap">Joined Members<br/>(Total Tree)</th>
+            <th class="nowrap">Commission<br/>Wallet (₹)</th>
+            <th class="nowrap">Bonus<br/>Wallet (₹)</th>
+            <th>Status / Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- JS से rows -->
+        </tbody>
+      </table>
     </div>
 
-    <!-- Tree View -->
-    <div id="treeCard" class="tree-card" style="display:none;">
+    <!-- TREE VIEW -->
+    <div id="treeSection" class="tree-card" style="display:none;">
       <h2>Tree View (केवल Admin के लिए)</h2>
-      <div class="small" id="treeInfo"></div>
-      <div id="treeContent"></div>
+      <div class="subtitle">
+        ऊपर किसी Main ID की row में <b>Tree</b> बटन दबाएँ – यहाँ पूरा Main + 5 Sub IDs का tree और pair details दिखेंगे।
+      </div>
+      <div id="treeInfo" class="text-muted"></div>
+      <div class="tree-wrapper" id="treeDiagram"></div>
+      <div id="treePairsInfo" class="wallet-summary"></div>
     </div>
 
-    <!-- Withdrawal Requests -->
-    <div class="card">
+    <!-- WITHDRAWAL REQUESTS -->
+    <div class="withdraw-card">
       <h2>Withdrawal Requests (Approve / Reject)</h2>
-      <p class="subtitle">
+      <div class="subtitle">
         यह सूची customer side से की गई सभी withdrawal requests दिखाती है।  
-        Approve करने पर status बदल जाएगी। Reject करने पर amount वापस wallet में चला जाएगा।
-      </p>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Mobile</th>
-              <th class="money">Amount (₹)</th>
-              <th>Wallet</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="withdrawTableBody">
-            <!-- JS -->
-          </tbody>
-        </table>
+        Approve करने पर wallet से amount काटकर status "Paid" हो जाएगा।
       </div>
+
+      <table id="withdrawTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th>Amount (₹)</th>
+            <th>Wallet</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- JS से -->
+        </tbody>
+      </table>
     </div>
   </div>
 
   <script>
-    // ---- CONSTANTS ----
-    const ENTRY_AMOUNT = 20; // हर member से
-    const PAIR_PERCENT = 0.15; // 15%
-    const PAIR_AMOUNT = ENTRY_AMOUNT * PAIR_PERCENT; // 3 रुपये प्रति pair
+    /* ---------- Helpers ---------- */
 
-    // ---- HELPERS ----
-    function formatMoney(n) {
-      return Number(n || 0).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
+    function formatNumber(n) {
+      return Number(n || 0).toLocaleString("en-IN");
     }
-    function getCustomers() {
+
+    function loadCustomers() {
       try {
         return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
       } catch (e) {
         return [];
       }
     }
+
     function saveCustomers(list) {
       localStorage.setItem("rjvc_customers", JSON.stringify(list));
     }
-    function getWithdrawals() {
+
+    function loadWithdrawals() {
       try {
         return JSON.parse(localStorage.getItem("rjvc_withdrawals") || "[]");
       } catch (e) {
         return [];
       }
     }
+
     function saveWithdrawals(list) {
       localStorage.setItem("rjvc_withdrawals", JSON.stringify(list));
     }
 
-    function nextMainIdNumber() {
-      const key = "rjvc_last_main_id";
-      let last = parseInt(localStorage.getItem(key) || "4600", 10);
-      last += 1;
-      localStorage.setItem(key, String(last));
-      return last;
+    function generateRJVCCode() {
+      const base = Math.floor(1000 + Math.random() * 9000);
+      return "RJVC" + base;
     }
 
-    function ensureStructure(cust) {
-      // wallets
-      if (typeof cust.walletBalance !== "number") cust.walletBalance = 0;
-      if (typeof cust.bonusBalance !== "number") cust.bonusBalance = 0;
+    /* ---------- Create Customer ---------- */
 
-      // main + sub IDs
-      if (!cust.rjvcMainId) {
-        const num = nextMainIdNumber();
-        cust.rjvcMainId = "RJVC" + num;
-      }
-      if (!cust.subIds || !Array.isArray(cust.subIds) || cust.subIds.length < 5) {
-        const base = cust.rjvcMainId;
-        cust.subIds = [];
-        for (let i = 1; i <= 5; i++) {
-          cust.subIds.push(base + "-" + i);
-        }
-      }
-
-      // binary data
-      if (!cust.binary) cust.binary = {};
-      const keys = ["main", "sub1", "sub2", "sub3", "sub4", "sub5"];
-      keys.forEach((k) => {
-        if (!cust.binary[k]) {
-          cust.binary[k] = { left: 0, right: 0, pairs: 0 };
-        } else {
-          cust.binary[k].left = cust.binary[k].left || 0;
-          cust.binary[k].right = cust.binary[k].right || 0;
-          cust.binary[k].pairs = cust.binary[k].pairs || 0;
-        }
-      });
-      return cust;
-    }
-
-    function getJoinedTotal(cust) {
-      ensureStructure(cust);
-      let total = 0;
-      Object.values(cust.binary).forEach((node) => {
-        total += (node.left || 0) + (node.right || 0);
-      });
-      return total;
-    }
-
-    // ---- CREATE CUSTOMER ----
     function createCustomer() {
-      const name = (document.getElementById("custName").value || "").trim();
-      const mobile = (document.getElementById("custMobile").value || "").trim();
-      const msg = document.getElementById("createMsg");
-      msg.textContent = "";
+      const name = (document.getElementById("newName").value || "").trim();
+      const mobile = (document.getElementById("newMobile").value || "").trim();
+      const msgSpan = document.getElementById("createMsg");
+      msgSpan.innerText = "";
 
       if (!name || !mobile || mobile.length < 10) {
-        msg.textContent = "Name और सही mobile number भरें।";
-        msg.style.color = "#cf1322";
+        alert("कृपया सही नाम और 10 digit mobile number भरें।");
         return;
       }
 
-      const list = getCustomers();
-      if (list.some((c) => c.mobile === mobile)) {
-        msg.textContent = "इस mobile नंबर के लिए customer पहले से मौजूद है।";
-        msg.style.color = "#cf1322";
+      const customers = loadCustomers();
+      const existing = customers.find(c => c.mobile === mobile);
+      if (existing) {
+        alert("यह mobile number पहले से registered है।");
         return;
       }
 
-      const record = {
+      const mainCode = generateRJVCCode();
+      const subCodes = [];
+      for (let i = 1; i <= 5; i++) {
+        subCodes.push(mainCode + "-" + i);
+      }
+
+      const customer = {
         id: Date.now(),
         name,
         mobile,
-        walletBalance: 0,
-        bonusBalance: 0,
-        joinedMembers: 0,
+        rjvcId: mainCode,
+        subIds: subCodes,
+        mainMembers: 0,
+        subMembers: [0, 0, 0, 0, 0],
+        joinedMembersTotal: 0,
+        walletBalance: 0,   // Commission Wallet
+        bonusBalance: 0,    // Bonus Wallet
+        totalIncome: 0,     // lifetime (wallet + bonus adds)
+        status: "active",
         createdAt: new Date().toISOString()
       };
-      ensureStructure(record);
-      list.push(record);
-      saveCustomers(list);
 
-      document.getElementById("custName").value = "";
-      document.getElementById("custMobile").value = "";
-      msg.textContent = "Customer सफलतापूर्वक बनाया गया ✔";
-      msg.style.color = "#389e0d";
+      customers.push(customer);
+      saveCustomers(customers);
 
-      renderCustomers();
+      document.getElementById("newName").value = "";
+      document.getElementById("newMobile").value = "";
+      msgSpan.innerText = "Customer सफलतापूर्वक बनाया गया ✔";
+
+      renderCustomerTable();
     }
 
-    // ---- BINARY ADD MEMBER ----
-    function addBinaryMember(custId, nodeKey, side) {
-      const list = getCustomers();
-      const idx = list.findIndex((c) => String(c.id) === String(custId));
+    /* ---------- Binary / Earnings Logic ---------- */
+
+    const PAIR_INCOME = 3; // ₹3 per pair
+
+    function addMember(customerId, where) {
+      // where: "main", "sub1"..."sub5"
+      const customers = loadCustomers();
+      const idx = customers.findIndex(c => c.id === customerId);
       if (idx === -1) return;
+      const c = customers[idx];
 
-      const cust = ensureStructure(list[idx]);
-      const node = cust.binary[nodeKey];
-      if (!node) return;
-
-      if (side === "L") node.left += 1;
-      else node.right += 1;
-
-      const oldPairs = node.pairs || 0;
-      const newPairs = Math.min(node.left, node.right);
-      const addedPairs = newPairs - oldPairs;
-      node.pairs = newPairs;
-
-      let income = addedPairs * PAIR_AMOUNT; // 3 रुपये प्रति pair
-      if (income > 0) {
-        if (nodeKey === "main") {
-          cust.walletBalance = (cust.walletBalance || 0) + income;
-          alert(
-            cust.name +
-              " की Main ID पर " +
-              addedPairs +
-              " नया pair complete हुआ। Commission Wallet में ₹" +
-              formatMoney(income) +
-              " जोड़े गए।"
-          );
-        } else {
-          cust.bonusBalance = (cust.bonusBalance || 0) + income;
-          alert(
-            cust.name +
-              " की " +
-              nodeKey.toUpperCase() +
-              " के नीचे " +
-              addedPairs +
-              " pair complete हुआ। Amount ₹" +
-              formatMoney(income) +
-              " Main ID के Bonus Wallet में गया।"
-          );
-        }
-      }
-
-      cust.joinedMembers = getJoinedTotal(cust);
-      list[idx] = cust;
-      saveCustomers(list);
-      renderCustomers();
-      if (currentTreeCustomerId === custId) {
-        renderTree(cust);
-      }
-    }
-
-    // ---- DELETE CUSTOMER ----
-    function deleteCustomer(custId) {
-      if (!confirm("क्या आप सच में इस customer को delete करना चाहते हैं?")) return;
-
-      const list = getCustomers();
-      const idx = list.findIndex((c) => String(c.id) === String(custId));
-      if (idx === -1) return;
-      const cust = list[idx];
-
-      const newList = list.filter((c) => String(c.id) !== String(custId));
-      saveCustomers(newList);
-
-      // संबंधित withdrawal requests भी हटा दें
-      let w = getWithdrawals();
-      w = w.filter((r) => r.mobile !== cust.mobile);
-      saveWithdrawals(w);
-
-      if (currentTreeCustomerId === custId) {
-        currentTreeCustomerId = null;
-        document.getElementById("treeCard").style.display = "none";
-      }
-
-      renderCustomers();
-      renderWithdrawals();
-    }
-
-    // ---- TREE VIEW ----
-    let currentTreeCustomerId = null;
-
-    function showTreeFor(custId) {
-      const list = getCustomers();
-      const cust = list.find((c) => String(c.id) === String(custId));
-      if (!cust) return;
-      currentTreeCustomerId = custId;
-      renderTree(ensureStructure(cust));
-    }
-
-    function renderTree(cust) {
-      const card = document.getElementById("treeCard");
-      const info = document.getElementById("treeInfo");
-      const content = document.getElementById("treeContent");
-
-      card.style.display = "block";
-
-      const totalJoined = getJoinedTotal(cust);
-      info.textContent =
-        cust.name +
-        " (" +
-        cust.mobile +
-        ") | Total Joined Members (पूरी tree): " +
-        totalJoined +
-        " | Commission Wallet: ₹" +
-        formatMoney(cust.walletBalance) +
-        " | Bonus Wallet: ₹" +
-        formatMoney(cust.bonusBalance);
-
-      const b = cust.binary;
-
-      content.innerHTML = `
-        <div class="tree-main">
-          <span>Main ID: ${cust.rjvcMainId}</span>
-        </div>
-        <div class="tree-subs">
-          ${cust.subIds
-            .map((sid, idx) => {
-              const key = "sub" + (idx + 1);
-              const node = b[key] || { left: 0, right: 0, pairs: 0 };
-              return `
-              <div class="tree-node">
-                <strong>Sub ID ${idx + 1}</strong>
-                ${sid}<br/>
-                L: ${node.left} | R: ${node.right} | Pairs: ${node.pairs}
-              </div>`;
-            })
-            .join("")}
-        </div>
-      `;
-    }
-
-    // ---- RENDER CUSTOMERS TABLE ----
-    function renderCustomers() {
-      const tbody = document.getElementById("customerTableBody");
-      const summary = document.getElementById("customerSummary");
-      const list = getCustomers().map((c) => ensureStructure(c));
-
-      let rows = "";
-      let totalComm = 0;
-      let totalBonus = 0;
-
-      list.forEach((cust) => {
-        const b = cust.binary;
-        const joined = getJoinedTotal(cust);
-        totalComm += cust.walletBalance || 0;
-        totalBonus += cust.bonusBalance || 0;
-
-        // MAIN ROW
-        rows += `
-          <tr>
-            <td><strong>Main ID</strong></td>
-            <td>${cust.rjvcMainId}</td>
-            <td>${cust.name}</td>
-            <td>${cust.mobile}</td>
-            <td>${b.main.left}</td>
-            <td>${b.main.right}</td>
-            <td>${b.main.pairs}</td>
-            <td class="money">₹${formatMoney(cust.walletBalance)}</td>
-            <td class="money">₹${formatMoney(cust.bonusBalance)}</td>
-            <td>
-              <button class="btn-secondary" onclick="addBinaryMember('${cust.id}','main','L')">+L(Main)</button>
-              <button class="btn-secondary" onclick="addBinaryMember('${cust.id}','main','R')">+R(Main)</button>
-              <button class="btn-secondary" onclick="showTreeFor('${cust.id}')">Tree</button>
-              <button class="btn-danger" onclick="deleteCustomer('${cust.id}')">Delete</button>
-              <div class="small">Total Members: ${joined}</div>
-            </td>
-          </tr>
-        `;
-
-        // SUB ROWS (1..5)
-        cust.subIds.forEach((sid, index) => {
-          const key = "sub" + (index + 1);
-          const node = b[key];
-          rows += `
-            <tr>
-              <td>Sub ID ${index + 1}</td>
-              <td>${sid}</td>
-              <td>${cust.name}</td>
-              <td>${cust.mobile}</td>
-              <td>${node.left}</td>
-              <td>${node.right}</td>
-              <td>${node.pairs}</td>
-              <td class="money">-</td>
-              <td class="money">-</td>
-              <td>
-                <button class="btn-secondary" onclick="addBinaryMember('${cust.id}','${key}','L')">+L(Sub ${index + 1})</button>
-                <button class="btn-secondary" onclick="addBinaryMember('${cust.id}','${key}','R')">+R(Sub ${index + 1})</button>
-              </td>
-            </tr>
-          `;
-        });
-      });
-
-      tbody.innerHTML = rows || `<tr><td colspan="10" class="small">अभी कोई customer नहीं है। ऊपर से नया customer create करें।</td></tr>`;
-
-      summary.textContent =
-        "Total Customers: " +
-        list.length +
-        " | कुल Commission Wallet: ₹" +
-        formatMoney(totalComm) +
-        " | कुल Bonus Wallet: ₹" +
-        formatMoney(totalBonus);
-    }
-
-    // ---- WITHDRAWALS ----
-    function renderWithdrawals() {
-      const tbody = document.getElementById("withdrawTableBody");
-      const list = getWithdrawals();
-      if (!list.length) {
-        tbody.innerHTML =
-          '<tr><td colspan="6" class="small">अभी कोई withdrawal request नहीं है।</td></tr>';
+      if (c.status === "blocked") {
+        alert("यह ID blocked है, पहले unblock करें।");
         return;
       }
-      let rows = "";
-      list
-        .slice()
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-        .forEach((w) => {
-          let cls = "status-pill";
-          if (w.status === "Pending") cls += " status-pending";
-          else if (w.status === "Rejected") cls += " status-rejected";
 
-          rows += `
-            <tr>
-              <td>${w.name || ""}</td>
-              <td>${w.mobile || ""}</td>
-              <td class="money">₹${formatMoney(w.amount)}</td>
-              <td>${w.source === "bonus" ? "Bonus" : "Commission"}</td>
-              <td><span class="${cls}">${w.status}</span></td>
-              <td>
-                ${
-                  w.status === "Pending"
-                    ? `
-                  <button class="btn-primary" onclick="setWithdrawalStatus('${w.id}','Approved')">Approve</button>
-                  <button class="btn-danger" onclick="setWithdrawalStatus('${w.id}','Rejected')">Reject</button>
-                `
-                    : "-"
-                }
-              </td>
-            </tr>
-          `;
-        });
-      tbody.innerHTML = rows;
-    }
+      c.joinedMembersTotal = c.joinedMembersTotal || 0;
 
-    function setWithdrawalStatus(id, status) {
-      const list = getWithdrawals();
-      const idx = list.findIndex((w) => String(w.id) === String(id));
-      if (idx === -1) return;
-      const w = list[idx];
-      if (w.status !== "Pending") return;
+      if (where === "main") {
+        const oldMembers = c.mainMembers || 0;
+        const oldPairs = Math.floor(oldMembers / 2);
+        const newMembers = oldMembers + 1;
+        const newPairs = Math.floor(newMembers / 2);
+        const addedPairs = newPairs - oldPairs;
 
-      w.status = status;
-      w.updatedAt = new Date().toISOString();
-      list[idx] = w;
-      saveWithdrawals(list);
-
-      if (status === "Rejected") {
-        // refund
-        const customers = getCustomers();
-        const cIdx = customers.findIndex((c) => c.mobile === w.mobile);
-        if (cIdx !== -1) {
-          const cust = ensureStructure(customers[cIdx]);
-          if (w.source === "bonus") {
-            cust.bonusBalance = (cust.bonusBalance || 0) + (w.amount || 0);
-          } else {
-            cust.walletBalance = (cust.walletBalance || 0) + (w.amount || 0);
-          }
-          customers[cIdx] = cust;
-          saveCustomers(customers);
-          renderCustomers();
+        c.mainMembers = newMembers;
+        if (addedPairs > 0) {
+          const inc = addedPairs * PAIR_INCOME;
+          c.walletBalance = (c.walletBalance || 0) + inc;
+          c.totalIncome = (c.totalIncome || 0) + inc;
         }
+        c.joinedMembersTotal += 1;
+      } else if (where.startsWith("sub")) {
+        const subIndex = parseInt(where.replace("sub", ""), 10) - 1;
+        if (subIndex < 0 || subIndex > 4) return;
+
+        if (!Array.isArray(c.subMembers)) {
+          c.subMembers = [0,0,0,0,0];
+        }
+
+        const oldMembers = c.subMembers[subIndex] || 0;
+        const oldPairs = Math.floor(oldMembers / 2);
+        const newMembers = oldMembers + 1;
+        const newPairs = Math.floor(newMembers / 2);
+        const addedPairs = newPairs - oldPairs;
+
+        c.subMembers[subIndex] = newMembers;
+        if (addedPairs > 0) {
+          const inc = addedPairs * PAIR_INCOME;
+          // Sub ID pairs → Bonus Wallet of Main ID
+          c.bonusBalance = (c.bonusBalance || 0) + inc;
+          c.totalIncome = (c.totalIncome || 0) + inc;
+        }
+        c.joinedMembersTotal += 1;
       }
 
+      customers[idx] = c;
+      saveCustomers(customers);
+      renderCustomerTable();
+      if (window.currentTreeCustomerId === customerId) {
+        showTree(customerId);
+      }
+
+      alert("नया member add हो गया (Binary pairs auto calculate हो गए)।");
+    }
+
+    function manualBonus(customerId) {
+      const customers = loadCustomers();
+      const idx = customers.findIndex(c => c.id === customerId);
+      if (idx === -1) return;
+      const c = customers[idx];
+
+      const val = prompt("Manual bonus amount (₹) दर्ज करें:", "0");
+      if (val === null) return;
+      const amount = parseFloat(val || "0");
+      if (isNaN(amount) || amount <= 0) {
+        alert("Valid amount दर्ज करें।");
+        return;
+      }
+      c.bonusBalance = (c.bonusBalance || 0) + amount;
+      c.totalIncome = (c.totalIncome || 0) + amount;
+      customers[idx] = c;
+      saveCustomers(customers);
+      renderCustomerTable();
+      alert("Manual bonus add हो गया।");
+    }
+
+    function toggleStatus(customerId) {
+      const customers = loadCustomers();
+      const idx = customers.findIndex(c => c.id === customerId);
+      if (idx === -1) return;
+      const c = customers[idx];
+
+      if (c.status === "active") {
+        if (!confirm("क्या आप इस customer को block करना चाहते हैं?")) return;
+        c.status = "blocked";
+      } else {
+        if (!confirm("क्या आप इस customer को फिर से active करना चाहते हैं?")) return;
+        c.status = "active";
+      }
+
+      customers[idx] = c;
+      saveCustomers(customers);
+      renderCustomerTable();
+    }
+
+    function deleteCustomer(customerId) {
+      if (!confirm("पूरा customer (Main + सभी Sub IDs) delete हो जाएगा। पक्का?")) return;
+      let customers = loadCustomers();
+      customers = customers.filter(c => c.id !== customerId);
+      saveCustomers(customers);
+
+      if (window.currentTreeCustomerId === customerId) {
+        document.getElementById("treeSection").style.display = "none";
+        window.currentTreeCustomerId = null;
+      }
+
+      renderCustomerTable();
+    }
+
+    /* ---------- Tree View ---------- */
+
+    window.currentTreeCustomerId = null;
+
+    function showTree(customerId) {
+      const customers = loadCustomers();
+      const c = customers.find(cu => cu.id === customerId);
+      if (!c) return;
+      window.currentTreeCustomerId = customerId;
+
+      const treeSec = document.getElementById("treeSection");
+      const info = document.getElementById("treeInfo");
+      const dia = document.getElementById("treeDiagram");
+      const pairInfo = document.getElementById("treePairsInfo");
+
+      treeSec.style.display = "block";
+
+      info.innerText =
+        c.name + " (" + c.mobile + ") की IDs का Tree – 1 Main + 5 Sub IDs.\n" +
+        "यह view केवल admin के लिए है, customer को नहीं दिखेगा।";
+
+      // diagram
+      const subMembers = c.subMembers || [0,0,0,0,0];
+
+      dia.innerHTML = `
+        <div>
+          <div class="tree-node-main">Main ID<br>${c.rjvcId}</div>
+          <div class="tree-line"></div>
+          <div class="tree-row">
+            <div>
+              <div class="tree-node-sub">Sub ID 1<br>${c.subIds[0]}</div>
+              <div class="tree-line" style="height:10px;"></div>
+              <div class="tree-node-sub">Sub ID 3<br>${c.subIds[2]}</div>
+              <div class="tree-line" style="height:10px;"></div>
+              <div class="tree-node-sub">Sub ID 5<br>${c.subIds[4]}</div>
+            </div>
+            <div style="width:30px;"></div>
+            <div>
+              <div class="tree-node-sub">Sub ID 2<br>${c.subIds[1]}</div>
+              <div class="tree-line" style="height:10px;"></div>
+              <div class="tree-node-sub">Sub ID 4<br>${c.subIds[3]}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const mainPairs = Math.floor((c.mainMembers || 0) / 2);
+      const p1 = Math.floor((subMembers[0] || 0) / 2);
+      const p2 = Math.floor((subMembers[1] || 0) / 2);
+      const p3 = Math.floor((subMembers[2] || 0) / 2);
+      const p4 = Math.floor((subMembers[3] || 0) / 2);
+      const p5 = Math.floor((subMembers[4] || 0) / 2);
+
+      pairInfo.innerHTML =
+        "<b>Binary Pair Detail:</b><br>" +
+        "Main ID Members: " + (c.mainMembers || 0) + " → Pairs: " + mainPairs +
+        " → Commission Wallet में: ₹" + formatNumber(mainPairs * PAIR_INCOME) + "<br>" +
+        "Sub ID 1 Members: " + (subMembers[0] || 0) + " → Pairs: " + p1 + "<br>" +
+        "Sub ID 2 Members: " + (subMembers[1] || 0) + " → Pairs: " + p2 + "<br>" +
+        "Sub ID 3 Members: " + (subMembers[2] || 0) + " → Pairs: " + p3 + "<br>" +
+        "Sub ID 4 Members: " + (subMembers[3] || 0) + " → Pairs: " + p4 + "<br>" +
+        "Sub ID 5 Members: " + (subMembers[4] || 0) + " → Pairs: " + p5 + "<br>" +
+        "इन सभी Sub IDs के pairs से बनने वाला सारा amount सिर्फ Main ID के Bonus Wallet में जुड़ता है (Commission Wallet पर नहीं आता)।";
+    }
+
+    /* ---------- Render Customer Table ---------- */
+
+    function renderCustomerTable() {
+      const tbody = document.querySelector("#customerTable tbody");
+      tbody.innerHTML = "";
+      const customers = loadCustomers();
+
+      customers.forEach(c => {
+        const commission = c.walletBalance || 0;
+        const bonus = c.bonusBalance || 0;
+        const jm = c.joinedMembersTotal || 0;
+        const subIds = c.subIds || [];
+
+        // MAIN ROW
+        const trMain = document.createElement("tr");
+        trMain.innerHTML = `
+          <td>Main ID</td>
+          <td>${c.rjvcId}</td>
+          <td>${c.name}</td>
+          <td>${c.mobile}</td>
+          <td>${jm}</td>
+          <td class="money">₹${formatNumber(commission)}</td>
+          <td class="money">₹${formatNumber(bonus)}</td>
+          <td class="actions-cell">
+            <span class="badge ${c.status === "active" ? "badge-active" : "badge-blocked"}">
+              ${c.status === "active" ? "Active" : "Blocked"}
+            </span><br/>
+            <button class="btn-soft" onclick="addMember(${c.id}, 'main')">+ Member (Main)</button>
+            <button class="btn-soft" onclick="addMember(${c.id}, 'sub1')">+ Member (Sub 1)</button>
+            <button class="btn-soft" onclick="addMember(${c.id}, 'sub2')">+ Member (Sub 2)</button>
+            <button class="btn-soft" onclick="addMember(${c.id}, 'sub3')">+ Member (Sub 3)</button>
+            <button class="btn-soft" onclick="addMember(${c.id}, 'sub4')">+ Member (Sub 4)</button>
+            <button class="btn-soft" onclick="addMember(${c.id}, 'sub5')">+ Member (Sub 5)</button>
+            <br/>
+            <button class="btn-secondary" onclick="manualBonus(${c.id})">Manual Bonus</button>
+            <button class="btn-secondary" onclick="showTree(${c.id})">Tree</button>
+            <button class="btn-secondary" onclick="toggleStatus(${c.id})">
+              ${c.status === "active" ? "Block" : "Unblock"}
+            </button>
+            <button class="btn-danger" onclick="deleteCustomer(${c.id})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(trMain);
+
+        // SUB ROWS (5)
+        for (let i = 0; i < 5; i++) {
+          const trSub = document.createElement("tr");
+          trSub.innerHTML = `
+            <td>Sub ID ${i+1}</td>
+            <td>${subIds[i] || ""}</td>
+            <td>${c.name}</td>
+            <td>${c.mobile}</td>
+            <td>${jm}</td>
+            <td class="money">₹${formatNumber(commission)}</td>
+            <td class="money">₹${formatNumber(bonus)}</td>
+            <td class="text-muted">Tree में ${subIds[i] || ""} के नीचे binary members count होगा।</td>
+          `;
+          tbody.appendChild(trSub);
+        }
+      });
+
       renderWithdrawals();
     }
 
-    // ---- INIT ----
-    window.addEventListener("load", function () {
-      // ensure structure for all existing customers
-      const list = getCustomers().map((c) => ensureStructure(c));
-      saveCustomers(list);
-      renderCustomers();
+    /* ---------- Withdrawals ---------- */
+
+    function renderWithdrawals() {
+      const tbody = document.querySelector("#withdrawTable tbody");
+      tbody.innerHTML = "";
+      const withdrawals = loadWithdrawals();
+      const customers = loadCustomers();
+
+      withdrawals.forEach(w => {
+        const tr = document.createElement("tr");
+        const cust = customers.find(c => c.id === w.customerId);
+        const name = w.name || (cust ? cust.name : "");
+        const mobile = w.mobile || (cust ? cust.mobile : "");
+        tr.innerHTML = `
+          <td>${name}</td>
+          <td>${mobile}</td>
+          <td class="money">₹${formatNumber(w.amount)}</td>
+          <td>${w.source === "bonus" ? "Bonus Wallet" : "Commission Wallet"}</td>
+          <td>${w.status}</td>
+          <td>
+            ${w.status === "Pending"
+              ? `<button class="btn-primary" onclick="approveWithdrawal(${w.id})">Approve</button>
+                 <button class="btn-danger" onclick="rejectWithdrawal(${w.id})">Reject</button>`
+              : "-"}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function approveWithdrawal(wid) {
+      const withdrawals = loadWithdrawals();
+      const idx = withdrawals.findIndex(w => w.id === wid);
+      if (idx === -1) return;
+      const w = withdrawals[idx];
+
+      if (w.status !== "Pending") return;
+
+      const customers = loadCustomers();
+      const cIdx = customers.findIndex(c => c.id === w.customerId);
+      if (cIdx === -1) {
+        alert("Customer record नहीं मिला, लेकिन request का status बदल दिया जाएगा।");
+      } else {
+        const c = customers[cIdx];
+        if (w.source === "bonus") {
+          c.bonusBalance = (c.bonusBalance || 0) - w.amount;
+          if (c.bonusBalance < 0) c.bonusBalance = 0;
+        } else {
+          c.walletBalance = (c.walletBalance || 0) - w.amount;
+          if (c.walletBalance < 0) c.walletBalance = 0;
+        }
+        customers[cIdx] = c;
+        saveCustomers(customers);
+      }
+
+      w.status = "Paid";
+      withdrawals[idx] = w;
+      saveWithdrawals(withdrawals);
+      renderCustomerTable();
+      alert("Withdrawal Approved किया गया।");
+    }
+
+    function rejectWithdrawal(wid) {
+      const withdrawals = loadWithdrawals();
+      const idx = withdrawals.findIndex(w => w.id === wid);
+      if (idx === -1) return;
+      const w = withdrawals[idx];
+
+      if (w.status !== "Pending") return;
+
+      if (!confirm("क्या आप इस withdrawal request को Reject करना चाहते हैं?")) return;
+      w.status = "Rejected";
+      withdrawals[idx] = w;
+      saveWithdrawals(withdrawals);
       renderWithdrawals();
+    }
+
+    /* ---------- Init ---------- */
+
+    window.addEventListener("load", function () {
+      renderCustomerTable();
     });
   </script>
 </body>
