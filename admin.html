@@ -147,6 +147,142 @@
     font-size:11px;
     color:#555;
   }
+
+  /* TREE VIEW – आपके sketch जैसा base + नीचे joint list */
+  .tree-row td {
+    padding-top:6px;
+    padding-bottom:16px;
+  }
+  .tree-card {
+    margin-top:4px;
+    padding:10px 8px 10px;
+    border-radius:12px;
+    background:#f5f5ff;
+    border:1px solid #e0e7ff;
+  }
+  .tree-title {
+    font-size:11px;
+    font-weight:600;
+    color:#1e3a8a;
+    margin-bottom:6px;
+  }
+  .tree {
+    width:100%;
+    max-width:340px;
+    margin:0 auto 8px;
+  }
+  .tree-level-1,
+  .tree-level-2,
+  .tree-level-3 {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+  }
+  .tree-node {
+    padding:4px 10px;
+    border-radius:14px;
+    background:#111827;
+    color:#f9fafb;
+    font-size:11px;
+    text-align:center;
+    min-width:80px;
+  }
+  .tree-node.small {
+    min-width:70px;
+    font-size:10px;
+  }
+
+  /* Main ID */
+  .tree-level-1 {
+    margin-bottom:16px;
+  }
+  .tree-level-1::after {
+    content:"";
+    position:absolute;
+    bottom:-12px;
+    left:50%;
+    transform:translateX(-50%);
+    width:2px;
+    height:12px;
+    background:#9ca3af;
+  }
+
+  /* Sub1 + Sub2 row */
+  .tree-level-2 {
+    justify-content:space-between;
+    margin:0 24px;
+    margin-bottom:18px;
+  }
+  .tree-branch {
+    position:relative;
+    flex:1;
+    display:flex;
+    justify-content:center;
+  }
+
+  /* Horizontal line between Sub1 और Sub2 (Main से निकला हुआ) */
+  .tree-level-2::before {
+    content:"";
+    position:absolute;
+    top:-12px;
+    left:15%;
+    right:15%;
+    height:2px;
+    background:#9ca3af;
+  }
+  /* Vertical lines Main से down */
+  .tree-branch::before {
+    content:"";
+    position:absolute;
+    top:-12px;
+    width:2px;
+    height:12px;
+    background:#9ca3af;
+  }
+
+  /* Sub1 के नीचे Sub3 के लिए vertical line */
+  .tree-sub1-wrap {
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .tree-sub1-wrap::after {
+    content:"";
+    position:absolute;
+    top:18px;
+    width:2px;
+    height:20px;
+    background:#9ca3af;
+  }
+
+  .tree-level-3 {
+    margin-top:4px;
+  }
+
+  .tree-links {
+    font-size:11px;
+    color:#111827;
+    margin-top:4px;
+  }
+  .tree-links-title {
+    font-weight:600;
+    margin-top:3px;
+  }
+  .tree-links ul {
+    margin:2px 0 4px 14px;
+    padding:0;
+  }
+  .tree-links li {
+    margin:0;
+    padding:0;
+    list-style-type:"• ";
+  }
+  .tree-links-empty {
+    font-size:10px;
+    color:#6b7280;
+  }
 </style>
 </head>
 
@@ -258,13 +394,39 @@ function createCustomer() {
     return;
   }
 
-  // यहाँ joinedMembers = 2 रखा है
-  // मतलब: Main ID के नीचे Sub ID 1 और Sub ID 2 पहले से जुड़े हुए माने जाएँगे
+  // किसके नीचे join करना है? (parent)
+  let parentMobile = prompt(
+    "किस customer के नीचे join करना है? (उसका mobile number लिखें)\nअगर यह सबसे ऊपर वाला (root) customer है तो खाली छोड़ दें।",
+    ""
+  );
+  parentMobile = (parentMobile || "").trim();
+  let parentNode = null;
+
+  if (parentMobile) {
+    let parentExists = customers.some(c => c.mobile === parentMobile);
+    if (!parentExists) {
+      alert("यह mobile किसी existing customer के लिए नहीं मिला।\nइसको अभी top (root) पर रखा जाएगा।");
+      parentMobile = null;
+      parentNode = null;
+    } else {
+      let node = prompt(
+        "किस ID के नीचे join करना है? (main / sub1 / sub2 / sub3)\nउदाहरण: main",
+        "main"
+      );
+      node = (node || "").toLowerCase().trim();
+      if (!["main","sub1","sub2","sub3"].includes(node)) {
+        alert("गलत ID type दिया गया। इसको main के नीचे मान लिया जाएगा।");
+        node = "main";
+      }
+      parentNode = node;
+    }
+  }
+
   customers.push({
     id: Date.now(),
     name,
     mobile,
-    joinedMembers: 2,       // 👉 शुरुआती 2 member (Sub ID 1 + Sub ID 2)
+    joinedMembers: 2,       // Sub ID 1 और Sub ID 2 already जुड़े माने जाएँगे
     state: "new",
     currentLevel: 0,
     nextLevel: 1,
@@ -272,15 +434,17 @@ function createCustomer() {
     nextLevelIncome: 0,
     totalIncome: 0,
     walletBalance: 0,       // Commission Wallet
-    bonusBalance: 0,        // Bonus Wallet
+    bonusBalance: 0,        // Bonus Wallet (Sub IDs से)
     isBlocked: false,
+    parentMobile: parentMobile || null,
+    parentNode: parentNode || null,  // main / sub1 / sub2 / sub3
     createdAt: new Date().toISOString()
   });
 
   saveCustomers(customers);
 
   document.getElementById("createMsg").innerText =
-    "Customer सफलतापूर्वक बनाया गया ✔️ (Main ID के नीचे 2 Sub IDs auto joined माने गए हैं)";
+    "Customer सफलतापूर्वक बनाया गया ✔️";
   document.getElementById("custName").value = "";
   document.getElementById("custMobile").value = "";
 
@@ -335,11 +499,42 @@ function editCustomer(mobile) {
   let bw = parseFloat(newBonus || "0");
   if (isNaN(bw) || bw < 0) bw = 0;
 
+  // Parent info भी बदल सकते हैं (optional)
+  let pMob = prompt(
+    "किस customer के नीचे joined है? (mobile)\nखाली छोड़ने पर top/root माना जाएगा।",
+    c.parentMobile || ""
+  );
+  pMob = (pMob || "").trim();
+
+  let pNode = c.parentNode || null;
+  if (pMob) {
+    if (!customers.some(x => x.mobile === pMob && x.mobile !== mobile)) {
+      alert("दिया गया parent mobile valid नहीं है (या खुद का number है)।\nइसको root माना जाएगा।");
+      pMob = null;
+      pNode = null;
+    } else {
+      let node = prompt(
+        "किस ID के नीचे join है? (main / sub1 / sub2 / sub3)",
+        c.parentNode || "main"
+      );
+      node = (node || "").toLowerCase().trim();
+      if (!["main","sub1","sub2","sub3"].includes(node)) {
+        alert("गलत ID type, main मान लिया जाएगा।");
+        node = "main";
+      }
+      pNode = node;
+    }
+  } else {
+    pNode = null;
+  }
+
   c.name = newName;
   c.mobile = newMobile;
   c.joinedMembers = jm;
   c.walletBalance = cw;
   c.bonusBalance = bw;
+  c.parentMobile = pMob || null;
+  c.parentNode = pNode || null;
 
   customers[idx] = c;
   saveCustomers(customers);
@@ -383,12 +578,14 @@ function addMembersTo(mobile, idType) {
   let msg = "";
 
   if (idType === "main") {
+    // Main ID → Commission Wallet
     c.walletBalance = (c.walletBalance || 0) + gross;
     msg =
       "Main ID के नीचे " + count + " नए members जोड़े गए।\n" +
       "कुल commission: ₹" + gross + "\n" +
       "Commission Wallet में ₹" + gross + " add हो गया।";
   } else {
+    // Sub IDs → 15% company, 85% Bonus Wallet
     const rate = 15;
     const companyPart = Math.round(gross * rate) / 100;
     const bonusNet = gross - companyPart;
@@ -406,6 +603,7 @@ function addMembersTo(mobile, idType) {
       "Main ID के Bonus Wallet में credit: ₹" + bonusNet;
   }
 
+  // पूरी tree के total members
   c.joinedMembers = (c.joinedMembers || 0) + count;
 
   customers[idx] = c;
@@ -470,9 +668,22 @@ function toggleBlock(mobile) {
   renderCustomers();
 }
 
-/* -------------------- SHOW CUSTOMER LIST (Main + 3 Sub rows) -------------------- */
+/* -------------------- CHILDREN INDEX (कौन किसके नीचे) -------------------- */
+function buildChildrenIndex(customers) {
+  const map = {};
+  customers.forEach(child => {
+    if (!child.parentMobile || !child.parentNode) return;
+    const key = child.parentMobile + "|" + child.parentNode;
+    if (!map[key]) map[key] = [];
+    map[key].push(child);
+  });
+  return map;
+}
+
+/* -------------------- SHOW CUSTOMER LIST + TREE -------------------- */
 function renderCustomers() {
   let customers = getCustomers();
+  let childrenIndex = buildChildrenIndex(customers);
   let tbody = document.querySelector("#customerTable tbody");
   tbody.innerHTML = "";
 
@@ -505,7 +716,7 @@ function renderCustomers() {
     `;
     tbody.appendChild(trMain);
 
-    // 2️⃣ Sub ID rows (1,2,3)
+    // 2️⃣ Sub ID rows (1,2,3) – info only
     for (let i = 1; i <= 3; i++) {
       let trSub = document.createElement("tr");
       trSub.className = "sub-row";
@@ -524,6 +735,77 @@ function renderCustomers() {
       `;
       tbody.appendChild(trSub);
     }
+
+    // 3️⃣ TREE VIEW – base sketch + नीचे joined customers list
+    const keyMain  = c.mobile + "|main";
+    const keySub1  = c.mobile + "|sub1";
+    const keySub2  = c.mobile + "|sub2";
+    const keySub3  = c.mobile + "|sub3";
+
+    const mainChildren = childrenIndex[keyMain]  || [];
+    const sub1Children = childrenIndex[keySub1]  || [];
+    const sub2Children = childrenIndex[keySub2]  || [];
+    const sub3Children = childrenIndex[keySub3]  || [];
+
+    function renderChildList(arr) {
+      if (!arr.length) {
+        return '<div class="tree-links-empty">कोई customer join नहीं है।</div>';
+      }
+      let html = "<ul>";
+      arr.forEach(ch => {
+        const childId = getBaseId(ch);
+        html += `<li>${childId} – ${ch.name || ""} (${ch.mobile || ""})</li>`;
+      });
+      html += "</ul>";
+      return html;
+    }
+
+    let trTree = document.createElement("tr");
+    trTree.className = "tree-row";
+    trTree.innerHTML = `
+      <td colspan="8">
+        <div class="tree-card">
+          <div class="tree-title">Tree View (सिर्फ Admin के लिए)</div>
+          <div class="tree">
+            <!-- Level 1: Main -->
+            <div class="tree-level-1">
+              <div class="tree-node">Main ID<br>${baseId}</div>
+            </div>
+
+            <!-- Level 2: Sub1 + Sub2 -->
+            <div class="tree-level-2">
+              <div class="tree-branch">
+                <div class="tree-sub1-wrap">
+                  <div class="tree-node small">Sub ID 1<br>${baseId}-1</div>
+                  <!-- Level 3: Sub3 नीचे -->
+                  <div class="tree-level-3">
+                    <div class="tree-node small">Sub ID 3<br>${baseId}-3</div>
+                  </div>
+                </div>
+              </div>
+              <div class="tree-branch">
+                <div class="tree-node small">Sub ID 2<br>${baseId}-2</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tree-links">
+            <div class="tree-links-title">Main ID के नीचे joint customers:</div>
+            ${renderChildList(mainChildren)}
+
+            <div class="tree-links-title">Sub ID 1 के नीचे joint customers:</div>
+            ${renderChildList(sub1Children)}
+
+            <div class="tree-links-title">Sub ID 2 के नीचे joint customers:</div>
+            ${renderChildList(sub2Children)}
+
+            <div class="tree-links-title">Sub ID 3 के नीचे joint customers:</div>
+            ${renderChildList(sub3Children)}
+          </div>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(trTree);
   });
 }
 
