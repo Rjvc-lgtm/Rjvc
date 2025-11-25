@@ -325,7 +325,7 @@
         <div class="col">
           <label>अभी तक कुल कितने सदस्य जुड़ चुके हैं?</label>
           <input id="joinedMembers" type="number" min="0" value="0" />
-          <div class="small">आपके direct + indirect + Sub ID सब मिलाकर कुल active members</div>
+          <div class="small">आपके direct + indirect दोनों, कुल active members</div>
         </div>
       </div>
     </div>
@@ -333,7 +333,7 @@
     <div class="section-card">
       <h2>Plan Settings</h2>
       <div class="subtitle">
-        यह सिर्फ calculation के लिए है। असली commission / bonus admin panel से manage होते हैं।
+        ये setting admin panel से भी change की जा सकती है। अभी आप चाहें तो यहाँ से देख सकते हैं।
       </div>
 
       <div class="row">
@@ -345,7 +345,7 @@
         <div class="col">
           <label>प्रति सदस्य commission (₹)</label>
           <input id="commissionPerMember" type="number" min="0" value="16" />
-          <div class="small">ये amount calculation table के लिए है</div>
+          <div class="small">ये amount हर member पर apply होगी (ग्राहक को table में अलग से नहीं दिखेगी)</div>
         </div>
       </div>
 
@@ -378,7 +378,7 @@
         Bonus Wallet से हर महीने withdrawal किया जा सकता है।  
         हर तीसरे महीने अगर आप अपने direct में कम से कम 1 नया member नहीं जोड़ते हैं  
         तो उस महीने का bonus कंपनी को चला जाएगा (customer को नहीं मिलेगा)।  
-        Bonus Wallet में जो amount दिखता है, वही withdrawal के समय bank में जाएगा
+        Bonus Wallet में जो amount दिखता है, वही withdrawal के समय bank में जाएगा  
         (Sub ID commission पर 15% company share पहले ही admin side पर adjust हो चुका होता है)।
       </div>
 
@@ -427,7 +427,7 @@
       </div>
 
       <div class="total-box" id="totalBox">
-        कुल कमाई (Plan के हिसाब से): ₹0
+        कुल कमाई: ₹0
       </div>
     </div>
   </div>
@@ -437,34 +437,7 @@
       return Number(n || 0).toLocaleString("en-IN");
     }
 
-    /* ---------- COMMON STORAGE HELPERS ---------- */
-    function getCustomersArray() {
-      try {
-        return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
-      } catch (e) {
-        return [];
-      }
-    }
-    function saveCustomersArray(list) {
-      localStorage.setItem("rjvc_customers", JSON.stringify(list));
-    }
-    function getSettings() {
-      try {
-        return JSON.parse(localStorage.getItem("rjvc_settings") || "{}");
-      } catch(e) {
-        return {};
-      }
-    }
-    function saveSettingsFromInputs() {
-      const s = getSettings();
-      s.levels = parseInt(document.getElementById("levels").value || "0", 10) || 0;
-      s.perMember = parseFloat(document.getElementById("commissionPerMember").value || "0") || 0;
-      s.startMembers = parseInt(document.getElementById("startMembers").value || "0", 10) || 0;
-      s.multiplier = parseInt(document.getElementById("multiplier").value || "0", 10) || 0;
-      localStorage.setItem("rjvc_settings", JSON.stringify(s));
-    }
-
-    /* ---------- BANK DETAILS ---------- */
+    // ---------- BANK DETAILS ----------
     function toggleBankSection() {
       const sec = document.getElementById("bankSection");
       if (sec.style.display === "none" || !sec.style.display) {
@@ -588,6 +561,7 @@
         return;
       }
 
+      // कटौती सही wallet से
       if (source === "bonus") {
         cust.bonusBalance = bonusWallet - amount;
       } else {
@@ -604,7 +578,7 @@
         name: name || cust.name || "",
         mobile,
         amount,
-        source,
+        source, // "commission" या "bonus"
         status: "Pending",
         createdAt: new Date().toISOString()
       });
@@ -614,10 +588,11 @@
       refreshWalletInfo();
     }
 
-    /* ---------- SETTINGS LOAD ---------- */
+    // ---------- SETTINGS / CUSTOMERS ----------
+
     function loadSettings() {
       try {
-        const s = getSettings();
+        const s = JSON.parse(localStorage.getItem("rjvc_settings") || "{}");
         if (s.levels) document.getElementById("levels").value = s.levels;
         if (s.perMember) document.getElementById("commissionPerMember").value = s.perMember;
         if (s.startMembers) document.getElementById("startMembers").value = s.startMembers;
@@ -627,55 +602,38 @@
       }
     }
 
-    /* ---------- MAIN CALCULATION ---------- */
-    function calculate() {
-      const mobile = (document.getElementById("customerMobile").value || "").trim();
-      let customerName = (document.getElementById("customerName").value || "").trim();
-      let joinedMembersInput = parseInt(document.getElementById("joinedMembers").value || "0", 10);
-
-      const customers = getCustomersArray();
-      const existing = customers.find(c => c.mobile === mobile);
-
-      // अगर admin panel में पहले से customer बना है तो उसका data उपयोग करें
-      if (existing) {
-        if (!customerName && existing.name) {
-          customerName = existing.name;
-          document.getElementById("customerName").value = existing.name;
-        }
-        if ((!joinedMembersInput || joinedMembersInput === 0) && existing.joinedMembers) {
-          joinedMembersInput = existing.joinedMembers;
-          document.getElementById("joinedMembers").value = existing.joinedMembers;
-        }
+    function getCustomersArray() {
+      try {
+        return JSON.parse(localStorage.getItem("rjvc_customers") || "[]");
+      } catch (e) {
+        return [];
       }
+    }
 
+    function saveCustomersArray(list) {
+      localStorage.setItem("rjvc_customers", JSON.stringify(list));
+    }
+
+    function calculate() {
       const levels = parseInt(document.getElementById("levels").value || "0", 10);
       const perMember = parseFloat(document.getElementById("commissionPerMember").value || "0");
       const startMembers = parseInt(document.getElementById("startMembers").value || "0", 10);
       const multiplier = parseInt(document.getElementById("multiplier").value || "2", 10);
-
-      saveSettingsFromInputs();
+      const customerName = (document.getElementById("customerName").value || "").trim();
+      const customerMobile = (document.getElementById("customerMobile").value || "").trim();
+      const joinedMembers = parseInt(document.getElementById("joinedMembers").value || "0", 10);
 
       const tbody = document.querySelector("#resultTable tbody");
       tbody.innerHTML = "";
 
-      // अगर setting गलत है तो बस 0 दिखाएँ
-      if (!levels || !perMember || !startMembers || !multiplier) {
-        document.getElementById("totalBox").innerText =
-          "कुल कमाई (Plan के हिसाब से): ₹0";
-        document.getElementById("summaryText").innerText =
-          "पहले ऊपर Plan Settings सही भरें (levels, per member, start, multiplier)।";
-        refreshWalletInfo();
-        return;
-      }
-
       let currentMembers = startMembers;
-      let totalIncomePlan = 0;
+      let totalIncome = 0;
       const levelInfo = [];
 
       for (let level = 1; level <= levels; level++) {
         const newMembers = currentMembers;
         const levelIncome = newMembers * perMember;
-        totalIncomePlan += levelIncome;
+        totalIncome += levelIncome;
 
         levelInfo.push({
           level,
@@ -696,278 +654,7 @@
       }
 
       document.getElementById("totalBox").innerText =
-        "कुल कमाई (Plan के हिसाब से): ₹" + formatNumber(totalIncomePlan);
+        "कुल कमाई: ₹" + formatNumber(totalIncome);
 
-      const summaryData = computeSummaryData(joinedMembersInput, levelInfo, perMember);
-      renderCustomerSummary(customerName, joinedMembersInput, levelInfo, perMember, summaryData);
-      saveCustomerRecord(customerName, mobile, joinedMembersInput, summaryData, totalIncomePlan);
-      refreshWalletInfo();
-    }
-
-    function computeSummaryData(joined, levelInfo, perMember) {
-      if (!levelInfo.length) return { state: "noLevels" };
-
-      if (!joined || joined <= 0) {
-        return {
-          state: "noMembers",
-          neededFirstLevel: levelInfo[0].members
-        };
-      }
-
-      let cumulative = 0;
-      let currentLevel = 0;
-      let nextLevel = 0;
-      let neededInNextLevel = 0;
-      let remainingForNext = 0;
-      let nextLevelIncome = 0;
-      const totalLevels = levelInfo.length;
-
-      for (let i = 0; i < totalLevels; i++) {
-        const levelMembers = levelInfo[i].members;
-        const level = levelInfo[i].level;
-        const prevCum = cumulative;
-        cumulative += levelMembers;
-
-        if (joined >= cumulative) {
-          currentLevel = level;
-        } else {
-          nextLevel = level;
-          const joinedInThisLevel = Math.max(0, joined - prevCum);
-          neededInNextLevel = levelMembers;
-          remainingForNext = Math.max(0, levelMembers - joinedInThisLevel);
-          nextLevelIncome = levelMembers * perMember;
-          break;
-        }
-      }
-
-      if (joined >= cumulative && nextLevel === 0) {
-        return {
-          state: "allComplete",
-          totalLevels
-        };
-      }
-
-      return {
-        state: "normal",
-        currentLevel,
-        nextLevel,
-        neededInNextLevel,
-        remainingForNext,
-        nextLevelIncome
-      };
-    }
-
-    function renderCustomerSummary(name, joined, levelInfo, perMember, summary) {
-      const summaryDiv = document.getElementById("summaryText");
-
-      if (!name && !joined) {
-        summaryDiv.innerText = "ऊपर ग्राहक का नाम, मोबाइल और अभी तक के सदस्य भरकर \"कैल्क्युलेट करें\" दबाएँ।";
-        return;
-      }
-
-      if (summary.state === "noMembers") {
-        summaryDiv.innerText =
-          (name ? (name + " जी, ") : "") +
-          "अभी तक कोई सदस्य join नहीं हुआ है। आप Level 1 के लिए " +
-          formatNumber(summary.neededFirstLevel) + " सदस्य की ज़रूरत है।";
-        return;
-      }
-
-      if (summary.state === "allComplete") {
-        summaryDiv.innerText =
-          (name ? (name + " जी, ") : "") +
-          "आपने दिए गए सभी " + summary.totalLevels +
-          " steps पूरा कर लिए हैं। अगला data नहीं है (ऊपर levels बढ़ाकर नया plan बना सकते हैं)।";
-        return;
-      }
-
-      if (summary.state !== "normal") {
-        summaryDiv.innerText = "डेटा उपलब्ध नहीं है।";
-        return;
-      }
-
-      let text = "";
-      if (name) {
-        text += name + " जी,\n";
-      }
-
-      text += "अभी तक आपकी पूरी tree में कुल " + formatNumber(joined) + " सदस्य जुड़ चुके हैं (Main + Sub IDs मिलाकर)।\n";
-
-      if (summary.currentLevel > 0) {
-        text += "आपने अभी तक Step " + summary.currentLevel + " पूरा कर लिया है।\n";
-      } else {
-        text += "आप अभी First step पर हैं (अभी कोई पूरा step नहीं हुआ है)।\n";
-      }
-
-      text += "\nNext Step: " + summary.nextLevel + "\n";
-      text += "इस step के लिए कुल सदस्य चाहिए: " + formatNumber(summary.neededInNextLevel) + "\n";
-      text += "आपको और सदस्य चाहिए: " + formatNumber(summary.remainingForNext) + "\n";
-      text += "जब यह step पूरा होगा तो इस से आपकी earning (plan के हिसाब से) होगी: ₹" + formatNumber(summary.nextLevelIncome) + "\n";
-
-      summaryDiv.innerText = text;
-    }
-
-    // अब wallet यहाँ से कभी update नहीं होगा, सिर्फ दिखाएँगे
-    function saveCustomerRecord(name, mobile, joined, summary, planIncome) {
-      if (!mobile) return;
-
-      const customers = getCustomersArray();
-      const idx = customers.findIndex(c => c.mobile === mobile);
-
-      if (idx === -1) {
-        const record = {
-          id: Date.now(),
-          name,
-          mobile,
-          joinedMembers: joined || 0,
-          state: summary.state,
-          currentLevel: summary.currentLevel || 0,
-          nextLevel: summary.nextLevel || null,
-          remainingForNext: summary.remainingForNext || 0,
-          nextLevelIncome: summary.nextLevelIncome || 0,
-          totalIncome: planIncome || 0,   // plan के हिसाब से theoretical income
-          walletBalance: 0,               // असली commission admin panel से
-          bonusBalance: 0,
-          isBlocked: false,
-          createdAt: new Date().toISOString()
-        };
-        customers.push(record);
-      } else {
-        const old = customers[idx];
-        customers[idx] = {
-          ...old,
-          name: name || old.name,
-          joinedMembers: joined || old.joinedMembers || 0,
-          state: summary.state,
-          currentLevel: summary.currentLevel || old.currentLevel || 0,
-          nextLevel: summary.nextLevel || old.nextLevel || null,
-          remainingForNext: summary.remainingForNext || old.remainingForNext || 0,
-          nextLevelIncome: summary.nextLevelIncome || old.nextLevelIncome || 0,
-          totalIncome: planIncome || old.totalIncome || 0
-          // walletBalance / bonusBalance जैसा admin ने रखा है वैसा ही रहेगा
-        };
-      }
-
-      saveCustomersArray(customers);
-    }
-
-    /* ---------- Wallet / Transfer ---------- */
-    function refreshWalletInfo() {
-      const mobile = (document.getElementById("customerMobile").value || "").trim();
-      const name = (document.getElementById("customerName").value || "").trim();
-      const box = document.getElementById("walletInfo");
-
-      if (!mobile) {
-        box.innerText = "पहले ऊपर अपना मोबाइल नंबर भरें और \"कैल्क्युलेट करें\" दबाएँ।";
-        return;
-      }
-
-      const customers = getCustomersArray();
-      const cust = customers.find(c => c.mobile === mobile);
-      if (!cust) {
-        box.innerText = "इस मोबाइल नंबर के लिए अभी कोई रिकॉर्ड नहीं मिला। पहले calculation करें या admin से ID बनवाएँ।";
-        return;
-      }
-
-      const commissionWallet = cust.walletBalance || 0;
-      const bonusWallet = cust.bonusBalance || 0;
-
-      box.innerText =
-        (name ? (name + " जी,\n") : "") +
-        "Commission Wallet Balance: ₹" + formatNumber(commissionWallet) +
-        "\nBonus Wallet Balance: ₹" + formatNumber(bonusWallet) +
-        "\nTotal calculated earning (Plan): ₹" + formatNumber(cust.totalIncome || 0);
-    }
-
-    function transferCommission() {
-      const fromMobile = (document.getElementById("customerMobile").value || "").trim();
-      const toMobile = (document.getElementById("transferToMobile").value || "").trim();
-      const amount = parseFloat(document.getElementById("transferAmount").value || "0");
-
-      if (!fromMobile) {
-        alert("पहले ऊपर अपना मोबाइल नंबर भरें और \"कैल्क्युलेट करें\" करें।");
-        return;
-      }
-      if (!toMobile) {
-        alert("जिस mobile पर भेजना है, वो नंबर भरें।");
-        return;
-      }
-      if (fromMobile === toMobile) {
-        alert("खुद के मोबाइल पर transfer की जरूरत नहीं है।");
-        return;
-      }
-      if (amount <= 0) {
-        alert("Valid transfer amount दर्ज करें।");
-        return;
-      }
-
-      const customers = getCustomersArray();
-      const fromIdx = customers.findIndex(c => c.mobile === fromMobile);
-      if (fromIdx === -1) {
-        alert("आपके mobile के लिए कोई wallet नहीं मिला। पहले calculation करें या admin से ID बनवाएँ।");
-        return;
-      }
-
-      const from = customers[fromIdx];
-      const fromWallet = from.walletBalance || 0; // सिर्फ commission wallet से transfer
-      if (fromWallet < amount) {
-        alert("आपके Commission Wallet में इतना balance नहीं है। Current balance: ₹" + formatNumber(fromWallet));
-        return;
-      }
-
-      let toIdx = customers.findIndex(c => c.mobile === toMobile);
-      if (toIdx === -1) {
-        const newCust = {
-          id: Date.now() + 1,
-          name: "Customer " + toMobile,
-          mobile: toMobile,
-          joinedMembers: 0,
-          state: "manual",
-          currentLevel: 0,
-          nextLevel: null,
-          remainingForNext: 0,
-          nextLevelIncome: 0,
-          totalIncome: 0,
-          walletBalance: 0,
-          bonusBalance: 0,
-          isBlocked: false,
-          createdAt: new Date().toISOString()
-        };
-        customers.push(newCust);
-        toIdx = customers.length - 1;
-      }
-
-      const to = customers[toIdx];
-
-      from.walletBalance = fromWallet - amount;
-      to.walletBalance = (to.walletBalance || 0) + amount;
-
-      customers[fromIdx] = from;
-      customers[toIdx] = to;
-
-      saveCustomersArray(customers);
-
-      alert("₹" + formatNumber(amount) + " सफलतापूर्वक " + toMobile + " पर transfer कर दिया गया है (Commission Wallet से)।");
-      refreshWalletInfo();
-      document.getElementById("transferAmount").value = "0";
-    }
-
-    function loadExample() {
-      document.getElementById("levels").value = 11;
-      document.getElementById("startMembers").value = 2;
-      document.getElementById("multiplier").value = 2;
-      document.getElementById("commissionPerMember").value = 16;
-      document.getElementById("customerName").value = "Demo Customer";
-      document.getElementById("customerMobile").value = "9811111111";
-      document.getElementById("joinedMembers").value = 100;
-      calculate();
-    }
-
-    window.addEventListener("load", function () {
-      loadSettings();
-      loadBankDetails();
-      // शुरुआती view खाली, auto calc नहीं
-    });
-  </script>
-</body>
-</html>
+      const summaryData = computeSummaryData(joinedMembers, levelInfo, perMember);
+      renderCustomerSummary(customerName, joinedMembers, le
