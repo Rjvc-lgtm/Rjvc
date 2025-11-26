@@ -255,7 +255,7 @@
   <!-- ============ नया Customer Create ============ -->
   <div class="section">
     <h2>नया Customer Create करें</h2>
-    <p>यहाँ से नया customer बनाइए। 1 Main + 5 Sub IDs अपने-आप बनेंगी।</p>
+    <p>यहाँ से नया customer बनाइए। 1 Main + 5 Sub IDs अपने-आप बनेंगी। Login सिर्फ नाम + password से होगा (mobile सिर्फ रिकॉर्ड के लिए है)।</p>
 
     <div class="form-row">
       <div class="form-col">
@@ -265,6 +265,10 @@
       <div class="form-col">
         <label for="custMobile">Mobile Number</label>
         <input id="custMobile" type="tel" maxlength="10" placeholder="10 digit number" />
+      </div>
+      <div class="form-col">
+        <label for="custPass">Login Password</label>
+        <input id="custPass" type="text" placeholder="जैसे: 1234" />
       </div>
       <div>
         <button class="btn-primary" onclick="createCustomer()">Create Customer</button>
@@ -327,13 +331,12 @@
     </div>
   </div>
 
-  <!-- ============ Withdrawal Requests (सरल Demo) ============ -->
+  <!-- ============ Withdrawal Requests (Approve / Reject) ============ -->
   <div class="section" style="margin-top:12px;">
     <h2>Withdrawal Requests (Approve / Reject)</h2>
     <p>
-      यह सूची customer side से की गई सभी withdrawal requests दिखा सकती है।
-      इस demo में हम सिर्फ localStorage key <code>rjvc_withdraw_requests</code> पढ़ रहे हैं।
-      अगर आपका customer page कुछ और key इस्तेमाल करता है तो उसे match कर लें।
+      यह सूची customer side से की गई सभी withdrawal requests दिखाती है।
+      Index page इन्हें localStorage key <code>rjvc_withdrawals</code> में सेव करता है।
     </p>
 
     <div style="overflow-x:auto;">
@@ -358,15 +361,19 @@
 
 <script>
   // ====== CONFIG ======
-  const STORAGE_KEY = "rjvc_admin_customers";
-  const WITHDRAW_KEY = "rjvc_withdraw_requests";
-  const PER_MEMBER_AMOUNT = 20;  // सिर्फ जानकारी के लिए
-  const PER_PAIR_AMOUNT = 3;     // हर 2 member का binary earning
+  const STORAGE_KEY    = "rjvc_admin_customers";
+  const WITHDRAWAL_KEY = "rjvc_withdrawals";   // index.html से same
+  const PER_MEMBER_AMOUNT = 20;                // info के लिए
+  const PER_PAIR_AMOUNT   = 3;                 // हर 2 member का binary earning
 
   let customers = [];
   let selectedMainId = null;
 
   // ---------- Helpers ----------
+  function formatNumber(n) {
+    return Number(n || 0).toLocaleString("en-IN");
+  }
+
   function loadCustomers() {
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
@@ -379,50 +386,58 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   }
 
-  function formatNumber(n) {
-    return Number(n || 0).toLocaleString("en-IN");
-  }
-
   function genMainId() {
     // RJVC + 4 digit simple random
     const num = Math.floor(1000 + Math.random() * 9000);
     return "RJVC" + num;
   }
 
+  // ---------- Login Guard ----------
+  function ensureAdminLoggedIn() {
+    const role = localStorage.getItem("rjvc_logged_in_role");
+    if (role !== "admin") {
+      // direct admin.html open ना कर सके, पहले login.html पर जाए
+      window.location.href = "login.html";
+    }
+  }
+
   // ---------- Customer Create ----------
   function createCustomer() {
     const nameInput = document.getElementById("custName");
     const mobileInput = document.getElementById("custMobile");
+    const passInput = document.getElementById("custPass");
     const msgEl = document.getElementById("createMsg");
 
     const name = (nameInput.value || "").trim();
     const mobile = (mobileInput.value || "").trim();
+    const password = (passInput.value || "").trim();
 
     msgEl.textContent = "";
     msgEl.className = "msg";
 
-    if (!name || !mobile || mobile.length !== 10) {
-      msgEl.textContent = "कृपया सही नाम और 10 digit mobile नंबर भरें।";
+    if (!name || !mobile || mobile.length !== 10 || !password) {
+      msgEl.textContent = "कृपया सही नाम, 10 digit mobile और password भरें।";
       msgEl.classList.add("msg-error");
       return;
     }
 
     const mainId = genMainId();
-
     const custId = Date.now();
+
     const ids = [
-      { type: "main", index: 0, code: mainId, members: 0, pairs: 0 },
-      { type: "sub", index: 1, code: mainId + "-1", members: 0, pairs: 0 },
-      { type: "sub", index: 2, code: mainId + "-2", members: 0, pairs: 0 },
-      { type: "sub", index: 3, code: mainId + "-3", members: 0, pairs: 0 },
-      { type: "sub", index: 4, code: mainId + "-4", members: 0, pairs: 0 },
-      { type: "sub", index: 5, code: mainId + "-5", members: 0, pairs: 0 }
+      { type: "main", index: 0, code: mainId,     members: 0, pairs: 0 },
+      { type: "sub",  index: 1, code: mainId+"-1", members: 0, pairs: 0 },
+      { type: "sub",  index: 2, code: mainId+"-2", members: 0, pairs: 0 },
+      { type: "sub",  index: 3, code: mainId+"-3", members: 0, pairs: 0 },
+      { type: "sub",  index: 4, code: mainId+"-4", members: 0, pairs: 0 },
+      { type: "sub",  index: 5, code: mainId+"-5", members: 0, pairs: 0 }
     ];
 
     const customer = {
       id: custId,
       name,
       mobile,
+      password,        // Customer login के लिए
       mainId,
       status: "active",
       createdAt: new Date().toISOString(),
@@ -440,6 +455,7 @@
 
     nameInput.value = "";
     mobileInput.value = "";
+    passInput.value = "";
   }
 
   // ---------- Binary / Wallet Calculation ----------
@@ -534,7 +550,6 @@
       `कुल Commission Wallet (सभी customers): <b>₹${formatNumber(totalCommission)}</b><br>` +
       `कुल Bonus Wallet (सभी customers): <b>₹${formatNumber(totalBonus)}</b>`;
 
-    // अगर कोई selected tree है तो उसे भी refresh कर दो
     if (selectedMainId) {
       showTreeForCustomer(selectedMainId, true);
     }
@@ -730,14 +745,14 @@
   // ---------- Withdrawal Requests (सरल) ----------
   function loadWithdrawRequests() {
     try {
-      return JSON.parse(localStorage.getItem(WITHDRAW_KEY) || "[]");
+      return JSON.parse(localStorage.getItem(WITHDRAWAL_KEY) || "[]");
     } catch (e) {
       return [];
     }
   }
 
   function saveWithdrawRequests(list) {
-    localStorage.setItem(WITHDRAW_KEY, JSON.stringify(list));
+    localStorage.setItem(WITHDRAWAL_KEY, JSON.stringify(list));
   }
 
   function renderWithdrawRequests() {
@@ -751,7 +766,7 @@
         <td>${req.name || "-"}</td>
         <td>${req.mobile || "-"}</td>
         <td>₹${formatNumber(req.amount || 0)}</td>
-        <td>${req.wallet || "-"}</td>
+        <td>${req.source === "bonus" ? "Bonus Wallet" : "Commission Wallet"}</td>
         <td>${req.status || "Pending"}</td>
         <td>
           <button class="btn-small btn-secondary"
@@ -782,6 +797,7 @@
 
   // ---------- Init ----------
   window.addEventListener("load", function () {
+    ensureAdminLoggedIn();
     customers = loadCustomers();
     renderCustomers();
     renderWithdrawRequests();
