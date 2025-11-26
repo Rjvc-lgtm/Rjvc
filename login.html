@@ -1,78 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Admin Login</title>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #eaf2ff;
-    margin: 0;
-    padding: 0;
-}
-.container {
-    max-width: 380px;
-    margin: 70px auto;
-    background: #fff;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
-}
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 8px;
-    border: 1px solid gray;
-}
-button {
-    width: 100%;
-    padding: 14px;
-    background: #0056ff;
-    color: #fff;
-    font-size: 18px;
-    border-radius: 8px;
-    border: none;
-}
-button:hover { background: #003fcc; }
-
-#error {
-    text-align: center;
-    color: red;
-    margin-top: 10px;
-}
-</style>
-</head>
-
-<body>
-<div class="container">
-    <h2>Admin Login</h2>
-
-    <input type="text" id="adminID" placeholder="Admin ID">
-    <input type="password" id="adminPass" placeholder="Password">
-
-    <button onclick="adminLogin()">Login</button>
-
-    <p id="error"></p>
-</div>
-
-<script>
-function adminLogin() {
-    let id = document.getElementById("adminID").value.trim();
-    let pass = document.getElementById("adminPass").value.trim();
-
-    // 🔐 Default Admin Login
-    if (id === "admin" && pass === "1234") {
-        window.location.href = "admin.html";  // redirect to admin panel
-    } else {
-        document.getElementById("error").innerText = "गलत ID या Password!";
+  <meta charset="UTF-8" />
+  <title>Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-}
-</script>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #e6ebff;
+    }
+    .wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px 20px 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    h1 {
+      text-align: center;
+      margin: 0 0 16px;
+      color: #12306b;
+      font-size: 24px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 4px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #222;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #c3c9ff;
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus {
+      border-color: #0056ff;
+      box-shadow: 0 0 0 2px rgba(0,86,255,0.15);
+    }
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 999px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #0056ff;
+      color: #fff;
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    .error {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 13px;
+      color: #d4380d;
+    }
+    .hint {
+      margin-top: 14px;
+      font-size: 11px;
+      color: #777;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <h1>Admin Login</h1>
+
+      <label for="adminID">Admin ID</label>
+      <input id="adminID" type="text" placeholder="जैसे: admin" />
+
+      <label for="adminPass">Password</label>
+      <input id="adminPass" type="password" placeholder="जैसे: 1234" />
+
+      <button onclick="adminLogin()">Login</button>
+
+      <div id="errorBox" class="error"></div>
+
+      <div class="hint">
+        Demo के लिए अभी login details ये हैं:<br>
+        <b>ID:</b> admin&nbsp;&nbsp;|&nbsp;&nbsp;<b>Password:</b> 1234
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function adminLogin() {
+      const id = document.getElementById("adminID").value.trim();
+      const pass = document.getElementById("adminPass").value.trim();
+      const errorBox = document.getElementById("errorBox");
+
+      // 🔐 FIXED CREDENTIALS
+      const ADMIN_ID = "admin";
+      const ADMIN_PASS = "1234";
+
+      if (id === ADMIN_ID && pass === ADMIN_PASS) {
+        // सफल login → admin panel पर भेजें
+        window.location.href = "admin.html";
+      } else {
+        errorBox.innerText = "गलत ID या Password!";
+      }
+    }
+  </script>
 </body>
 </html>
