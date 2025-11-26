@@ -11,731 +11,488 @@
     }
     body {
       margin: 0;
-      padding: 16px;
+      padding: 0;
       background: #e6ebff;
     }
+
+    /* Banner */
+    .banner-wrap {
+      width:100%;
+      text-align:center;
+      background:#000;
+    }
+    .banner-wrap img {
+      width:100%;
+      max-width:500px;
+      display:block;
+      margin:auto;
+      border-radius:0 0 20px 20px;
+    }
+
     .app {
       max-width: 900px;
       margin: 0 auto;
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 18px 18px 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      padding: 16px;
     }
-
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      margin-bottom: 8px;
+    .card {
+      background:#ffffff;
+      border-radius:20px;
+      padding:18px 18px 20px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.12);
+      margin-top:12px;
     }
-    .top-bar a {
-      color: #0d47a1;
-      text-decoration: none;
-      font-weight: 600;
+    h1,h2,h3 {
+      margin:0 0 8px;
+      color:#102a6b;
     }
-
-    h1 {
-      margin: 0;
-      font-size: 16px;
-      color: #102a6b;
+    p {
+      margin:0;
     }
-    h2 {
-      margin: 10px 0 4px;
-      font-size: 18px;
-      color: #102a6b;
-    }
-    .subtitle {
-      font-size: 12px;
-      color: #555;
-      margin-bottom: 8px;
-    }
-    .small {
-      font-size: 11px;
-      color: #777;
+    .muted {
+      font-size:13px;
+      color:#6b7280;
     }
 
     label {
-      font-size: 13px;
-      font-weight: 600;
-      display: block;
-      margin-bottom: 4px;
+      display:block;
+      font-size:14px;
+      margin-bottom:4px;
+      color:#1f2933;
     }
-    input, select {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 13px;
+    input {
+      width:100%;
+      padding:9px 11px;
+      border-radius:10px;
+      border:1px solid #cbd5ff;
+      font-size:14px;
+      outline:none;
     }
-
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 10px;
+    input:focus {
+      border-color:#2563eb;
+      box-shadow:0 0 0 2px rgba(37,99,235,0.25);
     }
-    .col {
-      flex: 1 1 150px;
-    }
-
-    button {
-      border: none;
-      padding: 9px 16px;
-      border-radius: 999px;
-      font-size: 14px;
-      cursor: pointer;
-      margin-right: 8px;
+    .btn {
+      border:none;
+      border-radius:999px;
+      padding:9px 16px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
     }
     .btn-primary {
-      background: #0066ff;
-      color: white;
+      background:#2563eb;
+      color:#fff;
     }
     .btn-secondary {
-      background: #e0e4ff;
-      color: #102a6b;
+      background:#e2e8ff;
+      color:#1f2937;
     }
     .btn-danger {
-      background: #ffebee;
-      color: #b71c1c;
+      background:#fee2e2;
+      color:#b91c1c;
     }
-
-    .section-card {
-      margin-top: 12px;
-      padding: 10px 10px 12px;
-      border-radius: 12px;
-      background: #f9f9ff;
-      border: 1px solid #dde2ff;
+    .btn-block {
+      width:100%;
+      justify-content:center;
     }
+    .mt-1 {margin-top:4px;}
+    .mt-2 {margin-top:8px;}
+    .mt-3 {margin-top:12px;}
+    .mt-4 {margin-top:16px;}
 
+    .wallet-row {
+      display:flex;
+      gap:12px;
+      margin-top:8px;
+      flex-wrap:wrap;
+    }
     .wallet-card {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 12px;
-      background: #f5f0ff;
-      border: 1px solid #d6c6ff;
-      font-size: 13px;
+      flex:1 1 180px;
+      border-radius:16px;
+      padding:12px 14px;
+      background:linear-gradient(135deg,#1e3a8a,#1d4ed8);
+      color:#e0ecff;
+    }
+    .wallet-card.bonus {
+      background:linear-gradient(135deg,#14532d,#166534);
+    }
+    .wallet-label {
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      opacity:.85;
+    }
+    .wallet-amount {
+      font-size:22px;
+      font-weight:800;
+      color:#f9fafb;
+      margin-top:4px;
+    }
+    .wallet-sub {
+      font-size:12px;
+      margin-top:2px;
+      opacity:.9;
     }
 
-    /* ====== Wallets को बड़ा और हाइलाइटेड दिखाने के लिए ====== */
-    .wallet-values {
-      display: flex;
-      flex-direction: column;   /* एक के नीचे एक */
-      gap: 10px;
-      margin-top: 10px;
+    .grid-two {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+    }
+    .small-card {
+      flex:1 1 160px;
+      border-radius:12px;
+      padding:10px;
+      background:#f3f4ff;
+      border:1px solid #dde2ff;
+      font-size:13px;
+    }
+    .small-label {
+      font-size:11px;
+      color:#6b7280;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .small-value {
+      margin-top:4px;
+      font-size:16px;
+      font-weight:600;
+      color:#111827;
     }
 
-    .wallet-pill {
-      padding: 12px 16px;       /* बड़ा padding */
-      border-radius: 14px;
-      background: #111827;
-      border: 1px solid #4f46e5;
-      font-size: 18px;          /* बड़ा font */
-      font-weight: 700;         /* मोटा text */
-      color: #f9fafb;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .logout-row {
+      display:flex;
+      justify-content:flex-end;
+      margin-top:10px;
     }
 
-    /* अलग-अलग रंग Commission / Bonus / Total के लिए */
-    #pillCommission {
-      background: #14532d;      /* गहरा हरा */
-      border-color: #22c55e;
+    .alert {
+      font-size:13px;
+      padding:8px 10px;
+      border-radius:10px;
+      margin-top:8px;
     }
-    #pillBonus {
-      background: #7c2d12;      /* गहरा ब्राउन/ऑरेंज */
-      border-color: #fdba74;
+    .alert-info {
+      background:#eff6ff;
+      border:1px solid #bfdbfe;
+      color:#1e3a8a;
     }
-    #pillTotal {
-      background: #1e293b;      /* गहरा ब्लू-ग्रे */
-      border-color: #38bdf8;
-    }
-
-    .menu-row {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-    .menu-btn {
-      border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 12px;
-      background: #f0f2ff;
-      border: 1px solid #ccd2ff;
-      color: #102a6b;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .menu-btn span.icon {
-      font-size: 15px;
+    .alert-warn {
+      background:#fff7ed;
+      border:1px solid #fed7aa;
+      color:#9a3412;
     }
 
-    .bank-card {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 12px;
-      background: #f2fffb;
-      border: 1px solid #bfeeda;
-      font-size: 12px;
-    }
-    .bank-card h3 {
-      margin-top: 0;
-      font-size: 14px;
-      margin-bottom: 4px;
-      color: #035b3c;
-    }
-    .badge-saved,
-    .badge-not {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 10px;
-      margin-left: 6px;
-    }
-    .badge-saved {
-      background: #d9f7be;
-      color: #135200;
-    }
-    .badge-not {
-      background: #fff1f0;
-      color: #a8071a;
-    }
-    .text-muted {
-      font-size: 11px;
-      color: #666;
-    }
-
-    .card {
-      margin-top: 14px;
-      padding: 10px;
-      border-radius: 12px;
-      background: #fff7e6;
-      border: 1px solid #ffe0a3;
-      font-size: 13px;
-      white-space: pre-line;
-    }
-    .card-title {
-      font-weight: 700;
-      margin-bottom: 4px;
+    @media (max-width:600px){
+      .card{border-radius:16px;}
+      .wallet-card{flex:1 1 100%;}
+      .small-card{flex:1 1 100%;}
     }
   </style>
 </head>
 <body>
-  <!-- RJVC GOLDEN-BLACK BANNER -->
-  <div style="width:100%; text-align:center;">
-    <img src="https://raw.githubusercontent.com/Rjvc-lgtm/Rjvc/refs/heads/main/file_0000000021547209af0c0dab6fb5e932.png"
-         alt="RJVC Banner" 
-         style="width:100%; max-width:500px; display:block; margin:auto; border-radius:0 0 20px 20px;">
-  </div>
 
-  <div class="app">
-    <div class="top-bar">
-      <h1>RJVC Customer Panel</h1>
-      <a href="javascript:void(0)" onclick="logout()">Logout</a>
+<!-- GOLDEN-BLACK BANNER TOP -->
+<div class="banner-wrap">
+  <img src="https://raw.githubusercontent.com/Rjvc-lgtm/Rjvc/refs/heads/main/file_0000000021547209af0c0dab6fb5e932.png"
+       alt="RJVC Banner">
+</div>
+
+<div class="app">
+
+  <!-- LOGIN CARD -->
+  <div id="loginCard" class="card">
+    <h2>Customer Login</h2>
+    <p class="muted">
+      अपना RJVC नाम और password डालें। Mobile number की ज़रूरत नहीं है।
+    </p>
+
+    <div class="mt-3">
+      <label>Customer Name</label>
+      <input id="loginName" placeholder="जैसे: Rajesh" />
+    </div>
+    <div class="mt-2">
+      <label>Password</label>
+      <input id="loginPassword" type="password" placeholder="Login password" />
     </div>
 
-    <!-- BANK / WITHDRAWAL MENU BUTTON -->
-    <div class="menu-row">
-      <button class="menu-btn" onclick="toggleBankSection()">
-        <span class="icon">☰</span>
-        Bank / Withdrawal Details
-      </button>
+    <button class="btn btn-primary btn-block mt-3" onclick="handleCustomerLogin()">
+      Login
+    </button>
+
+    <div id="loginError" class="alert alert-warn" style="display:none;">
+      गलत नाम या पासवर्ड। कृपया दुबारा जाँच कर के डालें।
     </div>
 
-    <!-- CUSTOMER DETAILS (read-only, login से आएँगे) -->
-    <div class="section-card">
-      <h2>Customer Details</h2>
-      <div class="subtitle">
-        यहाँ आपके RJVC ID की जानकारी है। यह data admin panel से auto आता है।
-      </div>
-      <div class="small">
-        नाम: <b id="custName">-</b><br>
-        Main RJVC ID: <b id="custMainId">-</b><br>
-        Mobile (पेमेण्ट / contact के लिए): <b id="custMobile">-</b>
-      </div>
-    </div>
-
-    <!-- WALLET / TRANSFER SECTION -->
-    <div class="wallet-card">
-      <div class="card-title">RJVC Wallets & Mobile Transfer</div>
-      <div id="walletInfo" class="subtitle">
-        Loading...
-      </div>
-
-      <div class="wallet-values">
-        <div class="wallet-pill" id="pillCommission">
-          <span>Commission Wallet</span>
-          <span id="pillCommissionValue">₹0</span>
-        </div>
-        <div class="wallet-pill" id="pillBonus">
-          <span>Bonus Wallet</span>
-          <span id="pillBonusValue">₹0</span>
-        </div>
-        <div class="wallet-pill" id="pillTotal">
-          <span>Total (Commission + Bonus)</span>
-          <span id="pillTotalValue">₹0</span>
-        </div>
-      </div>
-
-      <div class="small" style="margin-top:6px;">
-        • Commission Wallet – Binary / Direct earning यहाँ आती है।  
-        • Bonus Wallet – Sub IDs से आने वाला bonus + admin द्वारा दी गई bonus entry।  
-        • Bonus Wallet से हर महीने withdrawal किया जा सकता है (admin approval के बाद)।  
-      </div>
-
-      <div style="border-top:1px dashed #c0b2ff; margin:10px 0 8px;"></div>
-
-      <div class="small" style="margin-bottom:4px;">
-        नीचे से आप Commission Wallet का पैसा किसी दूसरे mobile की Commission Wallet में transfer कर सकते हैं।  
-        इस transfer के लिए admin approval की ज़रूरत नहीं है (सिर्फ mobile-to-mobile balance move होगा)।
-      </div>
-
-      <div class="row">
-        <div class="col">
-          <label>Transfer To Mobile (सिर्फ Commission Wallet से)</label>
-          <input id="transferToMobile" type="tel" placeholder="जैसे: 98xxxxxxxx" />
-        </div>
-        <div class="col">
-          <label>Amount to Transfer (₹)</label>
-          <input id="transferAmount" type="number" min="0" value="0" />
-        </div>
-      </div>
-      <button class="btn-secondary" onclick="transferCommission()">Transfer Commission</button>
-    </div>
-
-    <!-- BANK / WITHDRAWAL SECTION (toggle) -->
-    <div id="bankSection" class="bank-card" style="display:none;">
-      <h3>
-        Bank / Withdrawal Details
-        <span id="bankStatusBadge" class="badge-not">Details not saved</span>
-      </h3>
-      <div class="row">
-        <div class="col">
-          <label>Account Holder Name</label>
-          <input id="bank_holder" type="text" placeholder="Account पर लिखा नाम" />
-        </div>
-        <div class="col">
-          <label>Bank Name</label>
-          <input id="bank_name" type="text" placeholder="जैसे: SBI / HDFC" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <label>Account Number</label>
-          <input id="bank_account" type="text" placeholder="Account Number" />
-        </div>
-        <div class="col">
-          <label>IFSC Code</label>
-          <input id="bank_ifsc" type="text" placeholder="जैसे: SBIN0001234" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <label>UPI ID (optional)</label>
-          <input id="bank_upi" type="text" placeholder="जैसे: number@upi" />
-        </div>
-      </div>
-
-      <div style="border-top:1px dashed #bfeeda; margin:8px 0;"></div>
-
-      <div class="row">
-        <div class="col">
-          <label>Withdrawal Amount (₹)</label>
-          <input id="withdrawAmount" type="number" min="0" value="0" />
-        </div>
-        <div class="col">
-          <label>Amount किस wallet से काटें?</label>
-          <select id="withdrawSource">
-            <option value="commission">Commission Wallet</option>
-            <option value="bonus">Bonus Wallet</option>
-          </select>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="requestWithdrawal()">Request Bank Withdrawal</button>
-
-      <div class="text-muted" style="margin-top:6px;">
-        • यह details सिर्फ आपके इस mobile / browser में सुरक्षित रहेंगी।  
-        • Withdrawal request admin panel में जाएगी – वहाँ से <b>Approve</b> होने पर ही payment होगा।  
-        • Bonus Wallet का पैसा mobile-to-mobile transfer नहीं हो सकता, सिर्फ withdrawal के लिए है।
-      </div>
-      <div id="bankSummary" class="text-muted" style="margin-top:4px;"></div>
-    </div>
-
-    <!-- SUMMARY CARD -->
-    <div class="card">
-      <div class="card-title">Your Earning Summary</div>
-      <div id="summaryText">
-        Login के बाद यह जगह आपकी current earning और wallets का short report दिखाएगी।
-      </div>
+    <div class="alert alert-info mt-3">
+      <b>Note:</b> आपका नाम और password admin panel से बनाया जाता है।  
+      आप खुद से नया ID नहीं बना सकते, सिर्फ admin ही बना सकता है।
     </div>
   </div>
 
-  <script>
-    const ADMIN_CUSTOMER_KEY = "rjvc_admin_customers";
-    const WITHDRAWAL_KEY = "rjvc_withdrawals";
+  <!-- DASHBOARD CARD -->
+  <div id="dashboardCard" class="card" style="display:none;">
+    <h2 id="custTitle">RJVC Customer Panel</h2>
+    <p id="custSubtitle" class="muted"></p>
 
-    let currentCustomer = null;
+    <!-- Wallets -->
+    <div class="wallet-row mt-2">
+      <div class="wallet-card">
+        <div class="wallet-label">Commission Wallet</div>
+        <div id="commissionAmount" class="wallet-amount">₹0</div>
+        <div class="wallet-sub">
+          यह आपकी Main ID की direct earning है (binary pairs से).
+        </div>
+      </div>
 
-    function formatNumber(n) {
-      return Number(n || 0).toLocaleString("en-IN");
+      <div class="wallet-card bonus">
+        <div class="wallet-label">Bonus Wallet</div>
+        <div id="bonusAmount" class="wallet-amount">₹0</div>
+        <div class="wallet-sub">
+          आपकी पूरी sub ID network से आने वाली earning (service charge काटने के बाद)।
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-two">
+      <div class="small-card">
+        <div class="small-label">आपके नीचे कुल members</div>
+        <div id="statMembers" class="small-value">0</div>
+        <div class="muted" style="font-size:12px;margin-top:4px;">
+          पूरी tree में जितने लोग आपकी main ID से नीचे जुड़े हुए हैं (direct + indirect).
+        </div>
+      </div>
+      <div class="small-card">
+        <div class="small-label">कुल binary pairs</div>
+        <div id="statPairs" class="small-value">0</div>
+        <div class="muted" style="font-size:12px;margin-top:4px;">
+          हर 2 member = 1 pair. 1 pair पर 3₹ earning count हुई है।
+        </div>
+      </div>
+    </div>
+
+    <!-- Next level / pair info -->
+    <div class="grid-two">
+      <div class="small-card">
+        <div class="small-label">Next pair तक कितने member और?</div>
+        <div id="statNextPair" class="small-value">0</div>
+        <div class="muted" style="font-size:12px;margin-top:4px;">
+          अगला नया pair बनने के लिए आपको और इतने member चाहिए।
+        </div>
+      </div>
+      <div class="small-card">
+        <div class="small-label">कुल खाते में (Comm + Bonus)</div>
+        <div id="statTotal" class="small-value">₹0</div>
+        <div class="muted" style="font-size:12px;margin-top:4px;">
+          यह वो amount है जो अभी आपके दोनों wallets में दिख रहा है।
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-info mt-3">
+      <b>जानकारी:</b> आपकी sub IDs से जितनी भी earning आती है,  
+      वो सीधे आपकी Main ID के bonus wallet में जुड़ती है।  
+      System के अंदर 15% service charge auto-manage होता है,  
+      लेकिन आपको सिर्फ final bonus amount दिखता है।
+    </div>
+
+    <div class="logout-row">
+      <button class="btn btn-danger btn-sm" onclick="logoutCustomer()">Logout</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /********** Admin वाले tree से वही data पढ़ना **********/
+  const STORAGE_KEY = "binary_admin_tree_v3";
+  let nodes = {};
+  let rootId = null;
+  let loggedInRootId = null;
+
+  function loadTreeData() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      nodes = {};
+      rootId = null;
+      return;
     }
-
-    // ------------ LOGIN HANDLING / LOAD CUSTOMER -------------
-    function loadLoggedInCustomer() {
-      const role = localStorage.getItem("rjvc_logged_in_role");
-      const idStr = localStorage.getItem("rjvc_current_customer_id");
-
-      if (role !== "customer" || !idStr) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      let customers = [];
-      try {
-        customers = JSON.parse(localStorage.getItem(ADMIN_CUSTOMER_KEY) || "[]");
-      } catch (e) {
-        customers = [];
-      }
-
-      const cust = customers.find(c => String(c.id) === String(idStr));
-      if (!cust) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      currentCustomer = cust;
-
-      document.getElementById("custName").innerText = cust.name || "-";
-      document.getElementById("custMobile").innerText = cust.mobile || "-";
-      document.getElementById("custMainId").innerText = cust.mainId || (cust.rjvcId || "-");
-
-      refreshWalletInfo();
-      loadBankDetails();
-      renderSummary();
+    try {
+      const parsed = JSON.parse(raw);
+      nodes = parsed.nodes || {};
+      rootId = parsed.rootId || null;
+    } catch (e) {
+      console.error("Tree load error", e);
+      nodes = {};
+      rootId = null;
     }
+  }
 
-    function logout() {
-      localStorage.removeItem("rjvc_logged_in_role");
-      localStorage.removeItem("rjvc_current_customer_id");
-      window.location.href = "login.html";
+  function saveTreeData() {
+    // Normally index सिर्फ read करेगा, लेकिन अगर कभी future में update हो तो ये ready है
+    const payload = { nodes, rootId };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }
+
+  /********** Helpers (admin वाले जैसे ही) **********/
+  function countDesc(nodeId) {
+    const node = nodes[nodeId];
+    if (!node) return 0;
+    let c = 0;
+    if (node.left)  c += 1 + countDesc(node.left);
+    if (node.right) c += 1 + countDesc(node.right);
+    return c;
+  }
+
+  function findRootId(id) {
+    let cur = nodes[id];
+    if (!cur) return null;
+    while (cur.parent) {
+      cur = nodes[cur.parent];
+      if (!cur) break;
     }
+    return cur ? cur.id : null;
+  }
 
-    // ------------ WALLET HELPERS -------------
+  // यही recalcAll logic admin v3 वाला है (15% service charge अंदर)
+  function recalcAll() {
+    // reset
+    Object.values(nodes).forEach(node => {
+      const members = countDesc(node.id);
+      const pairs = Math.floor(members / 2);
+      node.members = members;
+      node.pairs = pairs;
+      node.commissionWallet = 0;
+      node.bonusWallet = 0;
+    });
 
-    function getCommissionWallet(c) {
-      if (!c) return 0;
-      if (typeof c.walletCommission !== "undefined") return Number(c.walletCommission || 0);
-      if (typeof c.commissionWallet !== "undefined") return Number(c.commissionWallet || 0);
-      return Number(c.wallet || 0);
-    }
+    // earning distribute
+    Object.values(nodes).forEach(node => {
+      const rawEarning = node.pairs * 3; // 1 pair = ₹3
+      const rootForThis = findRootId(node.id);
+      if (!rootForThis) return;
 
-    function setCommissionWallet(c, value) {
-      if (!c) return;
-      if (typeof c.walletCommission !== "undefined") {
-        c.walletCommission = value;
-      } else if (typeof c.commissionWallet !== "undefined") {
-        c.commissionWallet = value;
+      if (node.parent === null) {
+        // Main ID → पूरा amount commission wallet
+        nodes[rootForThis].commissionWallet += rawEarning;
       } else {
-        c.wallet = value;
+        // Sub ID → 15% कट, 85% bonus wallet
+        const serviceCharge = rawEarning * 0.15;
+        const bonusNet = rawEarning - serviceCharge;
+        nodes[rootForThis].bonusWallet += bonusNet;
       }
+    });
+  }
+
+  function formatMoney(n) {
+    return Number(n || 0).toLocaleString("en-IN", {maximumFractionDigits:2});
+  }
+
+  /********** Customer Login **********/
+  function handleCustomerLogin() {
+    const name = (document.getElementById("loginName").value || "").trim();
+    const pass = (document.getElementById("loginPassword").value || "").trim();
+    const err = document.getElementById("loginError");
+
+    loadTreeData();
+    recalcAll();
+
+    err.style.display = "none";
+
+    if (!name || !pass) {
+      err.textContent = "कृपया नाम और पासवर्ड दोनों भरें।";
+      err.style.display = "block";
+      return;
     }
 
-    function getBonusWallet(c) {
-      if (!c) return 0;
-      if (typeof c.walletBonus !== "undefined") return Number(c.walletBonus || 0);
-      if (typeof c.bonusWallet !== "undefined") return Number(c.bonusWallet || 0);
-      return 0;
+    // केवल main IDs (parent == null) को customer login मान रहे हैं
+    const list = Object.values(nodes);
+    const found = list.find(n =>
+      n.parent === null &&
+      n.name.toLowerCase() === name.toLowerCase() &&
+      n.password === pass
+    );
+
+    if (!found) {
+      err.textContent = "गलत नाम या पासवर्ड, या आपका ID main ID नहीं है।";
+      err.style.display = "block";
+      return;
     }
 
-    function setBonusWallet(c, value) {
-      if (!c) return;
-      if (typeof c.walletBonus !== "undefined") {
-        c.walletBonus = value;
-      } else {
-        c.bonusWallet = value;
-      }
+    loggedInRootId = found.id;
+    localStorage.setItem("rjvc_loggedInRootId", loggedInRootId);
+
+    showDashboard();
+  }
+
+  function logoutCustomer() {
+    loggedInRootId = null;
+    localStorage.removeItem("rjvc_loggedInRootId");
+    document.getElementById("dashboardCard").style.display = "none";
+    document.getElementById("loginCard").style.display = "block";
+    document.getElementById("loginName").value = "";
+    document.getElementById("loginPassword").value = "";
+  }
+
+  /********** Dashboard Fill **********/
+  function showDashboard() {
+    loadTreeData();
+    recalcAll();
+
+    if (!loggedInRootId || !nodes[loggedInRootId]) {
+      logoutCustomer();
+      return;
     }
 
-    function saveCurrentCustomer() {
-      if (!currentCustomer) return;
-      let customers = [];
-      try {
-        customers = JSON.parse(localStorage.getItem(ADMIN_CUSTOMER_KEY) || "[]");
-      } catch (e) {
-        customers = [];
-      }
-      const idx = customers.findIndex(c => String(c.id) === String(currentCustomer.id));
-      if (idx !== -1) {
-        customers[idx] = currentCustomer;
-        localStorage.setItem(ADMIN_CUSTOMER_KEY, JSON.stringify(customers));
-      }
+    const cust = nodes[loggedInRootId];
+
+    document.getElementById("custTitle").textContent =
+      "नमस्ते, " + cust.name + " जी";
+    document.getElementById("custSubtitle").textContent =
+      "यह आपका RJVC Smart Earning live panel है। नीचे आपका current commission और bonus दिख रहा है।";
+
+    const comm = cust.commissionWallet || 0;
+    const bonus = cust.bonusWallet || 0;
+    const members = cust.members || 0;
+    const pairs = cust.pairs || 0;
+    const total = comm + bonus;
+
+    // अगला pair तक कितने member और?
+    let nextNeed = 0;
+    if (members <= 0) {
+      nextNeed = 2; // पहले pair के लिए 2 member
+    } else if (members % 2 === 0) {
+      nextNeed = 2;
+    } else {
+      nextNeed = 1;
     }
 
-    function refreshWalletInfo() {
-      if (!currentCustomer) return;
+    document.getElementById("commissionAmount").textContent = "₹" + formatMoney(comm);
+    document.getElementById("bonusAmount").textContent = "₹" + formatMoney(bonus);
+    document.getElementById("statMembers").textContent = members;
+    document.getElementById("statPairs").textContent = pairs;
+    document.getElementById("statNextPair").textContent = nextNeed;
+    document.getElementById("statTotal").textContent = "₹" + formatMoney(total);
 
-      const cWallet = getCommissionWallet(currentCustomer);
-      const bWallet = getBonusWallet(currentCustomer);
-      const total = cWallet + bWallet;
+    document.getElementById("loginCard").style.display = "none";
+    document.getElementById("dashboardCard").style.display = "block";
+  }
 
-      const walletInfo = document.getElementById("walletInfo");
-      walletInfo.textContent =
-        (currentCustomer.name ? (currentCustomer.name + " जी, ") : "") +
-        "नीचे आपके RJVC wallets का balance दिया गया है। Commission / Bonus admin side से auto update होता है।";
-
-      document.getElementById("pillCommissionValue").innerText = "₹" + formatNumber(cWallet);
-      document.getElementById("pillBonusValue").innerText = "₹" + formatNumber(bWallet);
-      document.getElementById("pillTotalValue").innerText = "₹" + formatNumber(total);
+  /********** Auto-load on open **********/
+  window.addEventListener("load", function() {
+    const savedId = localStorage.getItem("rjvc_loggedInRootId");
+    if (savedId) {
+      loggedInRootId = savedId;
+      showDashboard();
     }
+  });
+</script>
 
-    function renderSummary() {
-      if (!currentCustomer) return;
-
-      const cWallet = getCommissionWallet(currentCustomer);
-      const bWallet = getBonusWallet(currentCustomer);
-      const total = cWallet + bWallet;
-
-      const summaryDiv = document.getElementById("summaryText");
-      let txt = "";
-
-      txt += (currentCustomer.name || "आप") + " जी,\n\n";
-      txt += "आपके RJVC ID (" + (currentCustomer.mainId || currentCustomer.rjvcId || "-") + ") के लिए:\n";
-      txt += "• Commission Wallet: ₹" + formatNumber(cWallet) + "\n";
-      txt += "• Bonus Wallet: ₹" + formatNumber(bWallet) + "\n";
-      txt += "• कुल उपलब्ध balance: ₹" + formatNumber(total) + "\n\n";
-      txt += "Binary pair / sub ID की पूरी calculation admin panel से होती है। "
-          + "यहाँ आप सिर्फ अपना balance देख सकते हैं, withdrawal request कर सकते हैं "
-          + "या Commission Wallet का कुछ हिस्सा दूसरे mobile की Commission Wallet में transfer कर सकते हैं।";
-
-      summaryDiv.innerText = txt;
-    }
-
-    // ------------ MOBILE TRANSFER (Commission Wallet only) -------------
-
-    function transferCommission() {
-      if (!currentCustomer) {
-        alert("पहले login करें।");
-        return;
-      }
-
-      const fromMobile = currentCustomer.mobile || "";
-      const toMobile = (document.getElementById("transferToMobile").value || "").trim();
-      const amount = parseFloat(document.getElementById("transferAmount").value || "0");
-
-      if (!toMobile) {
-        alert("जिस mobile पर भेजना है, वो नंबर भरें।");
-        return;
-      }
-      if (fromMobile && fromMobile === toMobile) {
-        alert("खुद के mobile पर transfer की जरूरत नहीं है।");
-        return;
-      }
-      if (amount <= 0) {
-        alert("Valid transfer amount दर्ज करें।");
-        return;
-      }
-
-      let customers = [];
-      try {
-        customers = JSON.parse(localStorage.getItem(ADMIN_CUSTOMER_KEY) || "[]");
-      } catch (e) {
-        customers = [];
-      }
-
-      const fromIdx = customers.findIndex(c => String(c.id) === String(currentCustomer.id));
-      if (fromIdx === -1) {
-        alert("आपके लिए कोई wallet record नहीं मिला (admin से contact करें)।");
-        return;
-      }
-
-      const fromCust = customers[fromIdx];
-      let fromWallet = getCommissionWallet(fromCust);
-
-      if (fromWallet < amount) {
-        alert("आपके Commission Wallet में इतना balance नहीं है।\nCurrent balance: ₹" + formatNumber(fromWallet));
-        return;
-      }
-
-      const toIdx = customers.findIndex(c => String(c.mobile) === toMobile);
-      if (toIdx === -1) {
-        alert("जिस mobile पर भेजना है, उस mobile के लिए कोई customer नहीं मिला (admin पहले customer create करे)।");
-        return;
-      }
-
-      const toCust = customers[toIdx];
-
-      fromWallet -= amount;
-      let toWallet = getCommissionWallet(toCust) + amount;
-
-      setCommissionWallet(fromCust, fromWallet);
-      setCommissionWallet(toCust, toWallet);
-
-      customers[fromIdx] = fromCust;
-      customers[toIdx] = toCust;
-      localStorage.setItem(ADMIN_CUSTOMER_KEY, JSON.stringify(customers));
-
-      if (String(currentCustomer.id) === String(fromCust.id)) {
-        currentCustomer = fromCust;
-      }
-
-      alert("₹" + formatNumber(amount) + " सफलतापूर्वक " + toMobile + " की Commission Wallet में transfer कर दिया गया है।");
-      document.getElementById("transferAmount").value = "0";
-      refreshWalletInfo();
-      renderSummary();
-    }
-
-    // ------------ BANK DETAILS / WITHDRAWAL -------------
-
-    function toggleBankSection() {
-      const sec = document.getElementById("bankSection");
-      if (sec.style.display === "none" || !sec.style.display) {
-        sec.style.display = "block";
-      } else {
-        sec.style.display = "none";
-      }
-    }
-
-    function bankStorageKey() {
-      if (!currentCustomer) return "rjvc_bank_details";
-      return "rjvc_bank_details_" + String(currentCustomer.id);
-    }
-
-    function loadBankDetails() {
-      const key = bankStorageKey();
-      let data = {};
-      try {
-        data = JSON.parse(localStorage.getItem(key) || "{}");
-      } catch (e) {
-        data = {};
-      }
-
-      const holder = document.getElementById("bank_holder");
-      const bankName = document.getElementById("bank_name");
-      const acc = document.getElementById("bank_account");
-      const ifsc = document.getElementById("bank_ifsc");
-      const upi = document.getElementById("bank_upi");
-      const badge = document.getElementById("bankStatusBadge");
-      const summary = document.getElementById("bankSummary");
-
-      if (data && (data.holderName || data.accountNumber)) {
-        holder.value = data.holderName || "";
-        bankName.value = data.bankName || "";
-        acc.value = data.accountNumber || "";
-        ifsc.value = data.ifsc || "";
-        upi.value = data.upi || "";
-
-        badge.className = "badge-saved";
-        badge.innerText = "Details saved";
-
-        summary.innerText =
-          "Saved Account: " +
-          (data.holderName || "") +
-          (data.bankName ? (" | Bank: " + data.bankName) : "") +
-          (data.accountNumber ? (" | A/C: " + data.accountNumber) : "");
-      } else {
-        badge.className = "badge-not";
-        badge.innerText = "Details not saved";
-        summary.innerText = "";
-      }
-    }
-
-    function saveBankDetailsOnly() {
-      const holder = (document.getElementById("bank_holder").value || "").trim();
-      const bankName = (document.getElementById("bank_name").value || "").trim();
-      const acc = (document.getElementById("bank_account").value || "").trim();
-      const ifsc = (document.getElementById("bank_ifsc").value || "").trim();
-      const upi = (document.getElementById("bank_upi").value || "").trim();
-
-      if (!holder || !bankName || !acc || !ifsc) {
-        alert("Account Holder Name, Bank Name, Account Number और IFSC भरना ज़रूरी है।");
-        return false;
-      }
-
-      const data = {
-        holderName: holder,
-        bankName,
-        accountNumber: acc,
-        ifsc,
-        upi
-      };
-
-      try {
-        localStorage.setItem(bankStorageKey(), JSON.stringify(data));
-      } catch (e) {
-        console.warn("Bank details save error", e);
-      }
-      loadBankDetails();
-      return true;
-    }
-
-    function requestWithdrawal() {
-      if (!currentCustomer) {
-        alert("पहले login करें।");
-        return;
-      }
-
-      const amount = parseFloat(document.getElementById("withdrawAmount").value || "0");
-      const source = document.getElementById("withdrawSource").value; // commission | bonus
-
-      if (amount <= 0) {
-        alert("Valid withdrawal amount दर्ज करें।");
-        return;
-      }
-
-      if (!saveBankDetailsOnly()) {
-        return;
-      }
-
-      let cWallet = getCommissionWallet(currentCustomer);
-      let bWallet = getBonusWallet(currentCustomer);
-      let available = source === "bonus" ? bWallet : cWallet;
-
-      if (available < amount) {
-        alert("चुने गए wallet में इतना balance नहीं है।\nCurrent balance: ₹" + formatNumber(available));
-        return;
-      }
-
-      if (source === "bonus") {
-        bWallet -= amount;
-        setBonusWallet(currentCustomer, bWallet);
-      } else {
-        cWallet -= amount;
-        setCommissionWallet(currentCustomer, cWallet);
-      }
-
-      saveCurrentCustomer();
-
-      let list = [];
-      try {
-        list = JSON.parse(localStorage.getItem(WITHDRAWAL_KEY) || "[]");
-      } catch (e) { list = []; }
-
-      list.push({
-        id: Date.now(),
-        customerId: currentCustomer.id,
-        name: currentCustomer.name || "",
-        mobile: currentCustomer.mobile || "",
-        amount: amount,
-        source: source,
-        status: "Pending",
-        createdAt: new Date().toISOString()
-      });
-
-      localStorage.setItem(WITHDRAWAL_KEY, JSON.stringify(list));
-
-      alert("Withdrawal request भेज दी गई है। Admin approval के बाद status 'Paid' हो जाएगी।");
-      refreshWalletInfo();
-      renderSummary();
-      document.getElementById("withdrawAmount").value = "0";
-    }
-
-    // ------------ INIT -------------
-    window.addEventListener("load", loadLoggedInCustomer);
-  </script>
 </body>
 </html>
