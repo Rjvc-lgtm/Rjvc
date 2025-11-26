@@ -1,100 +1,78 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RJVC Admin Login</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Login</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eaf2ff;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    max-width: 380px;
+    margin: 70px auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid gray;
+}
+button {
+    width: 100%;
+    padding: 14px;
+    background: #0056ff;
+    color: #fff;
+    font-size: 18px;
+    border-radius: 8px;
+    border: none;
+}
+button:hover { background: #003fcc; }
 
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #e8f0ff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .box {
-      background: white;
-      padding: 30px;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 350px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-    }
-    h2 {
-      margin-top: 0;
-      text-align: center;
-      font-size: 24px;
-      color: #003399;
-    }
-    label {
-      font-weight: 600;
-      font-size: 14px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 14px;
-      border-radius: 8px;
-      border: 1px solid #bbb;
-      font-size: 14px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #0066ff;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #004ccc;
-    }
-    #msg {
-      color: red;
-      text-align: center;
-      margin-top: 10px;
-      font-size: 14px;
-    }
-  </style>
+#error {
+    text-align: center;
+    color: red;
+    margin-top: 10px;
+}
+</style>
 </head>
 
 <body>
-  <div class="box">
+<div class="container">
     <h2>Admin Login</h2>
 
-    <label>Admin ID</label>
-    <input type="text" id="adminId" placeholder="Enter Admin ID">
+    <input type="text" id="adminID" placeholder="Admin ID">
+    <input type="password" id="adminPass" placeholder="Password">
 
-    <label>Password</label>
-    <input type="password" id="adminPass" placeholder="Enter Password">
+    <button onclick="adminLogin()">Login</button>
 
-    <button onclick="login()">Login</button>
-
-    <p id="msg"></p>
-  </div>
+    <p id="error"></p>
+</div>
 
 <script>
-function login() {
-  const id = document.getElementById("adminId").value.trim();
-  const pass = document.getElementById("adminPass").value.trim();
+function adminLogin() {
+    let id = document.getElementById("adminID").value.trim();
+    let pass = document.getElementById("adminPass").value.trim();
 
-  const correctId = "rjvcadmin";
-  const correctPass = "RJVC@2025";
-
-  if (id === correctId && pass === correctPass) {
-    // ✅ sessionStorage → tab / browser बंद होते ही auto logout
-    sessionStorage.setItem("rjvc_admin_logged", "yes");
-    window.location.href = "admin.html";
-  } else {
-    document.getElementById("msg").innerText = "गलत ID या Password!";
-  }
+    // 🔐 Default Admin Login
+    if (id === "admin" && pass === "1234") {
+        window.location.href = "admin.html";  // redirect to admin panel
+    } else {
+        document.getElementById("error").innerText = "गलत ID या Password!";
+    }
 }
 </script>
-
 </body>
 </html>
