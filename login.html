@@ -2,125 +2,131 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Login - RJVC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
     body {
       margin: 0;
-      padding: 0;
-      background: #e6ebff;
-    }
-    .wrapper {
-      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7ff;
       display: flex;
       align-items: center;
       justify-content: center;
+      min-height: 100vh;
     }
     .card {
-      width: 100%;
-      max-width: 420px;
-      background: #ffffff;
+      background: #fff;
+      padding: 32px 24px;
       border-radius: 16px;
-      padding: 24px 20px 28px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      width: min(420px, 100% - 32px);
+      text-align: center;
     }
     h1 {
-      text-align: center;
-      margin: 0 0 16px;
-      color: #12306b;
-      font-size: 24px;
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: #0b2b6b;
+      font-size: 26px;
+    }
+    .subtitle {
+      margin: 0 0 24px;
+      color: #555;
+      font-size: 14px;
     }
     label {
       display: block;
-      margin: 10px 0 4px;
-      font-weight: 600;
+      text-align: left;
+      margin-bottom: 6px;
       font-size: 14px;
-      color: #222;
+      color: #333;
     }
     input {
       width: 100%;
       padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #c3c9ff;
-      font-size: 14px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccd3ea;
+      box-sizing: border-box;
+      margin-bottom: 16px;
       outline: none;
     }
     input:focus {
-      border-color: #0056ff;
-      box-shadow: 0 0 0 2px rgba(0,86,255,0.15);
+      border-color: #2456f5;
+      box-shadow: 0 0 0 2px rgba(36,86,245,0.15);
     }
     button {
       width: 100%;
-      margin-top: 18px;
       padding: 12px;
+      font-size: 16px;
       border-radius: 999px;
       border: none;
-      font-size: 16px;
+      background: #2456f5;
+      color: #fff;
       font-weight: 600;
       cursor: pointer;
-      background: #0056ff;
-      color: #fff;
     }
     button:active {
-      transform: translateY(1px);
+      transform: scale(0.99);
     }
     .error {
-      margin-top: 10px;
-      text-align: center;
-      font-size: 13px;
-      color: #d4380d;
+      margin-top: 12px;
+      color: #d11a2a;
+      font-size: 14px;
+      display: none;
     }
     .hint {
-      margin-top: 14px;
-      font-size: 11px;
-      color: #777;
-      text-align: center;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="card">
-      <h1>Admin Login</h1>
+  <div class="card">
+    <h1>Admin Login</h1>
+    <p class="subtitle">RJVC Admin Panel में लॉगिन करें</p>
 
-      <label for="adminID">Admin ID</label>
-      <input id="adminID" type="text" placeholder="जैसे: admin" />
-
-      <label for="adminPass">Password</label>
-      <input id="adminPass" type="password" placeholder="जैसे: 1234" />
-
-      <button onclick="adminLogin()">Login</button>
-
-      <div id="errorBox" class="error"></div>
-
-      <div class="hint">
-        Demo के लिए अभी login details ये हैं:<br>
-        <b>ID:</b> admin&nbsp;&nbsp;|&nbsp;&nbsp;<b>Password:</b> 1234
+    <form id="adminLoginForm">
+      <div>
+        <label for="adminId">Admin ID</label>
+        <input id="adminId" type="text" placeholder="जैसे: admin" autocomplete="off" />
       </div>
-    </div>
+
+      <div>
+        <label for="adminPass">Password</label>
+        <input id="adminPass" type="password" placeholder="Password" />
+      </div>
+
+      <button type="submit">Login</button>
+
+      <p id="errorMsg" class="error">गलत ID या Password!</p>
+
+      <p class="hint">
+        Demo के लिए:<br />
+        ID: <b>admin</b> &nbsp; | &nbsp; Password: <b>1234</b>
+      </p>
+    </form>
   </div>
 
   <script>
-    function adminLogin() {
-      const id = document.getElementById("adminID").value.trim();
-      const pass = document.getElementById("adminPass").value.trim();
-      const errorBox = document.getElementById("errorBox");
+    // === यहाँ अपना admin ID / password सेट करें ===
+    const ADMIN_ID   = "admin";   // जो चाहें रख सकते हैं
+    const ADMIN_PASS = "1234";    // strong password भी रख सकते हैं
 
-      // 🔐 FIXED CREDENTIALS
-      const ADMIN_ID = "admin";
-      const ADMIN_PASS = "RJVC@2025";
+    document.getElementById("adminLoginForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const id   = document.getElementById("adminId").value.trim();
+      const pass = document.getElementById("adminPass").value;
 
       if (id === ADMIN_ID && pass === ADMIN_PASS) {
-        // सफल login → admin panel पर भेजें
-        window.location.href = "admin.html";
+        // सफल login → admin panel पर भेजो
+        localStorage.setItem("isAdminLoggedIn", "true");
+        window.location.href = "admin.html"; // यहाँ अपना admin वाला पेज नाम रखिए
       } else {
-        errorBox.innerText = "गलत ID या Password!";
+        document.getElementById("errorMsg").style.display = "block";
       }
-    }
+    });
   </script>
 </body>
 </html>
