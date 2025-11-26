@@ -1,445 +1,554 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RJVC – Admin MLM Tree</title>
+  <meta charset="UTF-8">
+  <title>RJVC – Full Tree (Admin Only)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #e6ebff;
+    }
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 18px 20px 26px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    h1 {
+      margin: 0 0 4px;
+      text-align: center;
+      color: #102a6b;
+    }
+    .sub {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    select {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #cbd5ff;
+      min-width: 260px;
+      font-size: 13px;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .panel {
+      flex: 1 1 260px;
+    }
+    h2 {
+      margin: 10px 0 6px;
+      font-size: 16px;
+      color: #102a6b;
+    }
+    .card {
+      background: #f9f9ff;
+      border-radius: 14px;
+      border: 1px solid #dde2ff;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .wallet {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    button {
+      border: none;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+      margin: 2px 2px;
+    }
+    .btn-add {
+      background: #0066ff;
+      color: white;
+    }
+    .btn-minus {
+      background: #ffe7ba;
+      color: #663c00;
+    }
+    .btn-reset {
+      background: #ffccc7;
+      color: #a8071a;
+    }
+    .btn-small {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
 
-<!-- ✅ Admin Security: सिर्फ admin को access -->
-<script>
-(function () {
-  const flag = sessionStorage.getItem("rjvc_admin_logged");
-  if (flag !== "yes") {
-    window.location.href = "login.html";
-  }
-})();
-</script>
+    /* ===== Tree layout big ===== */
+    .tree-wrap {
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .tree {
+      min-width: 700px;
+      text-align: center;
+      margin-top: 6px;
+    }
+    .tree-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+      margin-bottom: 14px;
+    }
+    .tree-node {
+      min-width: 140px;
+      background: #111827;
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 18px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.22);
+      font-size: 11px;
+    }
+    .tree-node.main {
+      background: #0b3b91;
+      font-weight: 600;
+    }
+    .node-title {
+      font-size: 11px;
+      opacity: 0.9;
+      margin-bottom: 2px;
+    }
+    .node-id {
+      font-size: 11px;
+      margin-bottom: 4px;
+      word-break: break-all;
+    }
+    .node-stats {
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+    .node-actions {
+      margin-top: 2px;
+    }
 
-<style>
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #eef2ff;
-    margin: 0;
-    padding: 0;
-  }
-  .header {
-    background: #1a73ff;
-    color: #fff;
-    padding: 14px;
-    text-align: center;
-    font-size: 20px;
-    font-weight: 600;
-  }
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 14px;
-  }
-  .card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    font-size: 14px;
-  }
-  .card h3 {
-    margin-top: 0;
-    font-size: 16px;
-    color: #003399;
-  }
-  label {
-    font-size: 13px;
-    font-weight: 600;
-    display: block;
-    margin-bottom: 3px;
-  }
-  input, select {
-    width: 100%;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #bbb;
-    font-size: 13px;
-  }
-  .row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 8px;
-  }
-  .col {
-    flex: 1 1 200px;
-  }
-  .btn {
-    display: inline-block;
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 13px;
-    margin-top: 6px;
-  }
-  .btn-primary {
-    background: #1a73ff;
-    color: #fff;
-  }
-  .btn-secondary {
-    background: #f0f2ff;
-    color: #102a6b;
-  }
-  .note {
-    font-size: 12px;
-    color: #666;
-    margin-top: 4px;
-  }
-  .tree-box {
-    max-height: 450px;
-    overflow: auto;
-    padding-left: 4px;
-    background: #f7f8ff;
-    border-radius: 10px;
-    border: 1px solid #dde3ff;
-  }
-  ul.tree {
-    list-style: none;
-    padding-left: 18px;
-  }
-  ul.tree li {
-    position: relative;
-    margin: 4px 0;
-    padding-left: 10px;
-  }
-  ul.tree li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 8px;
-    width: 8px;
-    height: 1px;
-    background: #999;
-  }
-  .main-node {
-    font-weight: 700;
-    color: #102a6b;
-  }
-  .sub-node {
-    font-weight: 500;
-    color: #555;
-  }
-  .id-tag {
-    font-size: 11px;
-    background: #e6f0ff;
-    padding: 2px 6px;
-    border-radius: 999px;
-    margin-left: 4px;
-  }
-  .mobile-tag {
-    font-size: 11px;
-    color: #444;
-    margin-left: 6px;
-  }
-</style>
+    .tree-line-h {
+      width: 160px;
+      height: 2px;
+      background: #cbd5ff;
+      margin: 0 auto 6px auto;
+    }
+    .tree-line-h-wide {
+      width: 260px;
+      height: 2px;
+      background: #cbd5ff;
+      margin: 0 auto 6px auto;
+    }
+    .tree-line-v {
+      width: 2px;
+      height: 20px;
+      background: #cbd5ff;
+      margin: 0 auto;
+    }
+    .tree-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @media (max-width: 600px) {
+      .tree {
+        min-width: 540px;
+      }
+      .tree-row {
+        gap: 26px;
+      }
+      .tree-node {
+        min-width: 120px;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<div class="header">RJVC – MLM Tree (Admin Only)</div>
-
-<div class="container">
-
-  <!-- नया member (Main + 3 Sub) -->
-  <div class="card">
-    <h3>नया Member जोड़ें (Main + 3 Sub IDs)</h3>
-    <div class="row">
-      <div class="col">
-        <label>नाम (Main ID)</label>
-        <input id="newName" type="text" placeholder="जैसे: Rajesh Parmar">
-      </div>
-      <div class="col">
-        <label>Mobile</label>
-        <input id="newMobile" type="tel" placeholder="10 digit mobile">
-      </div>
-      <div class="col">
-        <label>Parent (किसके नीचे लगाना है?)</label>
-        <select id="newParent">
-          <option value="">Top Level (कोई parent नहीं)</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn btn-primary" onclick="addMainWithSubs()">Create Main + 3 Sub</button>
-    <div class="note">
-      सिस्टम इस नाम के लिए 1 Main + 3 Sub IDs create करेगा।<br>
-      Customer को tree नहीं दिखेगी, ये केवल admin view है।
-    </div>
+<div class="app">
+  <h1>RJVC – Full Tree View</h1>
+  <div class="sub">
+    <b>Admin Only:</b> यह पेज सिर्फ admin के लिए है, customer को लिंक मत दिखाएँ।  
+    सारे data वही हैं जो <code>admin.html</code> में localStorage में सेव हैं।
   </div>
 
-  <!-- किसी node की position बदलें -->
-  <div class="card">
-    <h3>Tree में किसी ID की position बदलें</h3>
-    <div class="row">
-      <div class="col">
-        <label>कौन सा Member move करना है?</label>
-        <select id="moveNode"></select>
+  <!-- Customer chooser -->
+  <div style="text-align:center; margin-bottom:12px;">
+    <label style="font-size:12px; font-weight:600;">किस customer का Tree देखना है?</label><br>
+    <select id="customerSelect" onchange="onCustomerChange()">
+      <option value="">-- Customer चुनें --</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <div class="panel">
+      <h2>Tree View (Binary Layout)</h2>
+      <div class="tree-wrap">
+        <div id="treeArea" class="tree">
+          <!-- JS से tree आएगा -->
+        </div>
       </div>
-      <div class="col">
-        <label>New Parent चुनें</label>
-        <select id="newParentForMove">
-          <option value="">Top Level</option>
-        </select>
+    </div>
+
+    <div class="panel">
+      <h2>Details & Wallets</h2>
+      <div class="card">
+        <div id="custInfo" style="margin-bottom:6px; font-size:12px;">
+          पहले कोई customer चुनें।
+        </div>
+        <div id="walletInfo" class="wallet"></div>
       </div>
     </div>
-    <button class="btn btn-secondary" onclick="changeParent()">Update Position</button>
-    <div class="note">
-      आप Main या Sub किसी भी ID को tree में ऊपर–नीचे कहीं भी लगा सकते हैं।<br>
-      (Owner system में अलग से stored रहेगा, ये सिर्फ view है)
-    </div>
   </div>
-
-  <!-- Tree View -->
-  <div class="card">
-    <h3>पूरा MLM Tree (सिर्फ Admin के लिए)</h3>
-    <div id="treeBox" class="tree-box">
-      Tree data खाली है।
-    </div>
-    <div class="note">
-      यह tree सिर्फ structure दिखाने के लिए है।<br>
-      Commission, wallet, bonus आदि अलग data में चल रहे हैं।
-    </div>
-  </div>
-
-  <div style="margin-top:10px;">
-    <button class="btn btn-secondary" onclick="goAdmin()">⬅ Back to Admin Panel</button>
-  </div>
-
 </div>
 
 <script>
-// ====== STORAGE KEY ======
-const TREE_KEY = "rjvc_tree_members";
+  const STORAGE_KEY = "rjvc_admin_customers";
+  const PER_PAIR_AMOUNT = 3;   // 2 members = 1 pair = ₹3
 
-// ---- Helper: load/save ----
-function loadTree() {
-  try {
-    return JSON.parse(localStorage.getItem(TREE_KEY) || "[]");
-  } catch(e) {
-    console.warn("Tree load error", e);
-    return [];
-  }
-}
-function saveTree(list) {
-  localStorage.setItem(TREE_KEY, JSON.stringify(list));
-}
+  let customers = [];
+  let currentCustomer = null;  // पूरा object
+  let currentIds = null;       // normalize किया हुआ ids structure
 
-// Unique node ID (internal)
-function newNodeId() {
-  return "N" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-}
-
-// नया member: 1 Main + 3 Sub
-function addMainWithSubs() {
-  const name = (document.getElementById("newName").value || "").trim();
-  const mobile = (document.getElementById("newMobile").value || "").trim();
-  const parentId = document.getElementById("newParent").value || null;
-
-  if (!name || !mobile) {
-    alert("नाम और mobile दोनों भरें।");
-    return;
+  /* ---------- Storage Helpers ---------- */
+  function loadCustomers() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    } catch (e) {
+      return [];
+    }
   }
 
-  let tree = loadTree();
-
-  // सिर्फ warning: same mobile पहले से है तो
-  if (tree.some(n => n.mobile === mobile && n.type === "MAIN")) {
-    const ok = confirm("इस mobile के लिए पहले से Main ID मौजूद है. फिर भी नया main create करना है?");
-    if (!ok) return;
+  function saveCustomers(list) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   }
 
-  // Main node
-  const mainId = newNodeId();
-  const mainNode = {
-    id: mainId,
-    name: name,
-    label: name,
-    mobile: mobile,
-    type: "MAIN",
-    parentId: parentId,
-    createdAt: new Date().toISOString()
-  };
+  function formatNumber(n) {
+    return Number(n || 0).toLocaleString("en-IN");
+  }
 
-  // 3 Sub IDs
-  const sub1 = {
-    id: newNodeId(),
-    name: name + " 1",
-    label: name + " 1",
-    mobile: mobile,
-    type: "SUB",
-    parentId: mainId,
-    createdAt: new Date().toISOString()
-  };
-  const sub2 = {
-    id: newNodeId(),
-    name: name + " 2",
-    label: name + " 2",
-    mobile: mobile,
-    type: "SUB",
-    parentId: mainId,
-    createdAt: new Date().toISOString()
-  };
-  const sub3 = {
-    id: newNodeId(),
-    name: name + " 3",
-    label: name + " 3",
-    mobile: mobile,
-    type: "SUB",
-    parentId: mainId,
-    createdAt: new Date().toISOString()
-  };
+  /* ---------- Pair / Wallet Calculation (admin.js जैसा ही) ---------- */
+  function recalcPairsAndWallets(customer) {
+    customer.walletCommission = 0;
+    customer.walletBonus = 0;
+    if (!customer.ids) return;
 
-  tree.push(mainNode, sub1, sub2, sub3);
-  saveTree(tree);
+    customer.ids.forEach(id => {
+      const members = Number(id.members || 0);
+      const pairs = Math.floor(members / 2);
+      id.pairs = pairs;
 
-  document.getElementById("newName").value = "";
-  document.getElementById("newMobile").value = "";
+      const earning = pairs * PER_PAIR_AMOUNT;
+      if (id.type === "main") {
+        customer.walletCommission += earning;
+      } else if (id.type === "sub") {
+        customer.walletBonus += earning;
+      }
+    });
+  }
 
-  alert("Main + 3 Sub IDs create हो गईं।");
-  refreshUI();
-}
+  function normalizeIds(cust) {
+    const res = {
+      main:  { code: cust.mainId || "" },
+      sub1:  { code: "" },
+      sub2:  { code: "" },
+      sub3:  { code: "" },
+      sub4:  { code: "" },
+      sub5:  { code: "" },
+      mainm: 0, mainp: 0,
+      sub1m: 0, sub1p: 0,
+      sub2m: 0, sub2p: 0,
+      sub3m: 0, sub3p: 0,
+      sub4m: 0, sub4p: 0,
+      sub5m: 0, sub5p: 0
+    };
 
-// Dropdowns में list भरना
-function refreshDropdowns(tree) {
-  const parentSel = document.getElementById("newParent");
-  const moveNodeSel = document.getElementById("moveNode");
-  const parentForMoveSel = document.getElementById("newParentForMove");
-
-  parentSel.innerHTML = '<option value="">Top Level (कोई parent नहीं)</option>';
-  moveNodeSel.innerHTML = "";
-  parentForMoveSel.innerHTML = '<option value="">Top Level</option>';
-
-  tree.forEach(n => {
-    const label = (n.type === "MAIN" ? "★ " : "— ") + n.name + " (" + (n.mobile || "") + ")";
-
-    // नए member के parent select के लिए
-    const opt1 = document.createElement("option");
-    opt1.value = n.id;
-    opt1.textContent = label;
-    parentSel.appendChild(opt1);
-
-    // किस node को move करना है
-    const opt2 = document.createElement("option");
-    opt2.value = n.id;
-    opt2.textContent = label;
-    moveNodeSel.appendChild(opt2);
-
-    // किसके नीचे लगाना है
-    const opt3 = document.createElement("option");
-    opt3.value = n.id;
-    opt3.textContent = label;
-    parentForMoveSel.appendChild(opt3);
-  });
-}
-
-// Tree HTML बनाना
-function buildTreeHTML(nodes, parentId) {
-  const children = nodes.filter(n => n.parentId === parentId);
-  if (!children.length) return "";
-
-  const ul = document.createElement("ul");
-  ul.className = "tree";
-
-  children.forEach(ch => {
-    const li = document.createElement("li");
-    li.className = ch.type === "MAIN" ? "main-node" : "sub-node";
-
-    const textSpan = document.createElement("span");
-    textSpan.textContent = ch.name;
-    li.appendChild(textSpan);
-
-    const tag = document.createElement("span");
-    tag.className = "id-tag";
-    tag.textContent = ch.type === "MAIN" ? "MAIN" : "SUB";
-    li.appendChild(tag);
-
-    if (ch.mobile) {
-      const m = document.createElement("span");
-      m.className = "mobile-tag";
-      m.textContent = "📱 " + ch.mobile;
-      li.appendChild(m);
+    if (cust.ids && Array.isArray(cust.ids)) {
+      cust.ids.forEach(id => {
+        if (id.type === "main") {
+          res.main.code = id.code;
+          res.mainm = id.members || 0;
+          res.mainp = id.pairs || 0;
+        } else if (id.type === "sub") {
+          if (id.index === 1) { res.sub1.code = id.code; res.sub1m = id.members || 0; res.sub1p = id.pairs || 0; }
+          if (id.index === 2) { res.sub2.code = id.code; res.sub2m = id.members || 0; res.sub2p = id.pairs || 0; }
+          if (id.index === 3) { res.sub3.code = id.code; res.sub3m = id.members || 0; res.sub3p = id.pairs || 0; }
+          if (id.index === 4) { res.sub4.code = id.code; res.sub4m = id.members || 0; res.sub4p = id.pairs || 0; }
+          if (id.index === 5) { res.sub5.code = id.code; res.sub5m = id.members || 0; res.sub5p = id.pairs || 0; }
+        }
+      });
     }
 
-    const childTree = buildTreeHTML(nodes, ch.id);
-    if (childTree) li.appendChild(childTree);
+    // default codes
+    if (!res.main.code && cust.mainId) res.main.code = cust.mainId;
+    if (!res.sub1.code && cust.mainId) res.sub1.code = cust.mainId + "-1";
+    if (!res.sub2.code && cust.mainId) res.sub2.code = cust.mainId + "-2";
+    if (!res.sub3.code && cust.mainId) res.sub3.code = cust.mainId + "-3";
+    if (!res.sub4.code && cust.mainId) res.sub4.code = cust.mainId + "-4";
+    if (!res.sub5.code && cust.mainId) res.sub5.code = cust.mainId + "-5";
 
-    ul.appendChild(li);
+    return res;
+  }
+
+  /* ---------- Tree Page Controls (Add / Minus / Reset) ---------- */
+  function updateIdMembers(kind, index, delta) {
+    if (!currentCustomer || !currentCustomer.ids) return;
+
+    let target = null;
+    if (kind === "main") {
+      target = currentCustomer.ids.find(i => i.type === "main");
+    } else {
+      target = currentCustomer.ids.find(i => i.type === "sub" && i.index === index);
+    }
+    if (!target) return;
+
+    const newVal = Math.max(0, Number(target.members || 0) + delta);
+    target.members = newVal;
+
+    // recalc + save back
+    recalcPairsAndWallets(currentCustomer);
+    const idx = customers.findIndex(c => c.id === currentCustomer.id);
+    if (idx !== -1) customers[idx] = currentCustomer;
+    saveCustomers(customers);
+
+    // refresh screen
+    loadCurrentCustomer(currentCustomer.mainId);
+  }
+
+  function resetIdMembers(kind, index) {
+    if (!confirm("क्या इस ID के सारे members reset (0) करना चाहते हैं?")) return;
+    if (!currentCustomer || !currentCustomer.ids) return;
+
+    let target = null;
+    if (kind === "main") {
+      target = currentCustomer.ids.find(i => i.type === "main");
+    } else {
+      target = currentCustomer.ids.find(i => i.type === "sub" && i.index === index);
+    }
+    if (!target) return;
+
+    target.members = 0;
+    recalcPairsAndWallets(currentCustomer);
+    const idx = customers.findIndex(c => c.id === currentCustomer.id);
+    if (idx !== -1) customers[idx] = currentCustomer;
+    saveCustomers(customers);
+
+    loadCurrentCustomer(currentCustomer.mainId);
+  }
+
+  /* ---------- Rendering ---------- */
+  function renderTree() {
+    const treeArea = document.getElementById("treeArea");
+    const walletInfo = document.getElementById("walletInfo");
+    const custInfo = document.getElementById("custInfo");
+
+    if (!currentCustomer || !currentIds) {
+      treeArea.innerHTML = "<div style='font-size:12px; padding:8px;'>पहले ऊपर से कोई customer चुनें।</div>";
+      walletInfo.innerHTML = "";
+      custInfo.innerHTML = "पहले ऊपर से कोई customer चुनें।";
+      return;
+    }
+
+    const c = currentCustomer;
+    const ids = currentIds;
+
+    custInfo.innerHTML =
+      "<b>" + c.name + "</b> (" + c.mobile +
+      ")<br>Main ID: <b>" + ids.main.code + "</b>";
+
+    walletInfo.innerHTML =
+      "Commission Wallet: ₹" + formatNumber(c.walletCommission || 0) +
+      "<br>Bonus Wallet: ₹" + formatNumber(c.walletBonus || 0) +
+      "<br><br><i>Rule:</i> हर 2 members = 1 pair, 1 pair पर ₹" + PER_PAIR_AMOUNT +
+      " binary earning. Main ID की earning Commission Wallet में जाती है, " +
+      "Sub IDs की earning Bonus Wallet में जाती है।";
+
+    treeArea.innerHTML = `
+      <div class="tree-row">
+        <div class="tree-node main">
+          <div class="node-title">Main ID</div>
+          <div class="node-id">${ids.main.code}</div>
+          <div class="node-stats">
+            Members: ${ids.mainm || 0} &nbsp; | &nbsp;
+            Pairs: ${ids.mainp || 0}
+          </div>
+          <div class="node-actions">
+            <button class="btn-add btn-small"
+              onclick="updateIdMembers('main', 0, +1)">+ Member</button>
+            <button class="btn-minus btn-small"
+              onclick="updateIdMembers('main', 0, -1)">- Member</button>
+            <button class="btn-reset btn-small"
+              onclick="resetIdMembers('main', 0)">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tree-line-v"></div>
+      <div class="tree-line-h-wide"></div>
+
+      <div class="tree-row">
+        <div class="tree-node">
+          <div class="node-title">Sub ID 1</div>
+          <div class="node-id">${ids.sub1.code}</div>
+          <div class="node-stats">
+            Members: ${ids.sub1m || 0} | Pairs: ${ids.sub1p || 0}
+          </div>
+          <div class="node-actions">
+            <button class="btn-add btn-small"
+              onclick="updateIdMembers('sub', 1, +1)">+ Member</button>
+            <button class="btn-minus btn-small"
+              onclick="updateIdMembers('sub', 1, -1)">- Member</button>
+            <button class="btn-reset btn-small"
+              onclick="resetIdMembers('sub', 1)">Reset</button>
+          </div>
+        </div>
+
+        <div class="tree-node">
+          <div class="node-title">Sub ID 2</div>
+          <div class="node-id">${ids.sub2.code}</div>
+          <div class="node-stats">
+            Members: ${ids.sub2m || 0} | Pairs: ${ids.sub2p || 0}
+          </div>
+          <div class="node-actions">
+            <button class="btn-add btn-small"
+              onclick="updateIdMembers('sub', 2, +1)">+ Member</button>
+            <button class="btn-minus btn-small"
+              onclick="updateIdMembers('sub', 2, -1)">- Member</button>
+            <button class="btn-reset btn-small"
+              onclick="resetIdMembers('sub', 2)">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tree-row">
+        <div class="tree-col">
+          <div class="tree-line-v"></div>
+          <div class="tree-line-h"></div>
+          <div class="tree-node">
+            <div class="node-title">Sub ID 3</div>
+            <div class="node-id">${ids.sub3.code}</div>
+            <div class="node-stats">
+              Members: ${ids.sub3m || 0} | Pairs: ${ids.sub3p || 0}
+            </div>
+            <div class="node-actions">
+              <button class="btn-add btn-small"
+                onclick="updateIdMembers('sub', 3, +1)">+ Member</button>
+              <button class="btn-minus btn-small"
+                onclick="updateIdMembers('sub', 3, -1)">- Member</button>
+              <button class="btn-reset btn-small"
+                onclick="resetIdMembers('sub', 3)">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tree-col">
+          <div class="tree-line-v"></div>
+          <div class="tree-line-h-wide"></div>
+          <div class="tree-row">
+            <div class="tree-node">
+              <div class="node-title">Sub ID 4</div>
+              <div class="node-id">${ids.sub4.code}</div>
+              <div class="node-stats">
+                Members: ${ids.sub4m || 0} | Pairs: ${ids.sub4p || 0}
+              </div>
+              <div class="node-actions">
+                <button class="btn-add btn-small"
+                  onclick="updateIdMembers('sub', 4, +1)">+ Member</button>
+                <button class="btn-minus btn-small"
+                  onclick="updateIdMembers('sub', 4, -1)">- Member</button>
+                <button class="btn-reset btn-small"
+                  onclick="resetIdMembers('sub', 4)">Reset</button>
+              </div>
+            </div>
+
+            <div class="tree-node">
+              <div class="node-title">Sub ID 5</div>
+              <div class="node-id">${ids.sub5.code}</div>
+              <div class="node-stats">
+                Members: ${ids.sub5m || 0} | Pairs: ${ids.sub5p || 0}
+              </div>
+              <div class="node-actions">
+                <button class="btn-add btn-small"
+                  onclick="updateIdMembers('sub', 5, +1)">+ Member</button>
+                <button class="btn-minus btn-small"
+                  onclick="updateIdMembers('sub', 5, -1)">- Member</button>
+                <button class="btn-reset btn-small"
+                  onclick="resetIdMembers('sub', 5)">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---------- Customer selection ---------- */
+  function loadCurrentCustomer(mainId) {
+    currentCustomer = customers.find(c => c.mainId === mainId) || null;
+    if (currentCustomer) {
+      recalcPairsAndWallets(currentCustomer);
+      currentIds = normalizeIds(currentCustomer);
+    } else {
+      currentIds = null;
+    }
+    renderTree();
+  }
+
+  function onCustomerChange() {
+    const sel = document.getElementById("customerSelect");
+    const val = sel.value;
+    if (!val) {
+      currentCustomer = null;
+      currentIds = null;
+      renderTree();
+      return;
+    }
+    loadCurrentCustomer(val);
+  }
+
+  function populateCustomerSelect() {
+    const sel = document.getElementById("customerSelect");
+    sel.innerHTML = '<option value="">-- Customer चुनें --</option>';
+
+    customers.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.mainId;
+      opt.textContent = c.name + " (" + c.mobile + ") – " + c.mainId;
+      sel.appendChild(opt);
+    });
+  }
+
+  /* ---------- Init ---------- */
+  window.addEventListener("load", function () {
+    customers = loadCustomers();
+    populateCustomerSelect();
+
+    // अगर URL में ?id=RJVCXXXX आया है तो उसे auto select करें
+    const params = new URLSearchParams(window.location.search);
+    const idFromUrl = params.get("id");
+    if (idFromUrl) {
+      const sel = document.getElementById("customerSelect");
+      const option = Array.from(sel.options).find(o => o.value === idFromUrl);
+      if (option) {
+        sel.value = idFromUrl;
+        loadCurrentCustomer(idFromUrl);
+      }
+    } else {
+      renderTree();
+    }
   });
-
-  return ul;
-}
-
-function renderTree(tree) {
-  const box = document.getElementById("treeBox");
-  box.innerHTML = "";
-
-  if (!tree.length) {
-    box.textContent = "Tree data खाली है। पहले Main member जोड़ें।";
-    return;
-  }
-
-  const rootTree = buildTreeHTML(tree, null);
-  if (rootTree) box.appendChild(rootTree);
-  else box.textContent = "Tree में कोई root node नहीं है।";
-}
-
-// किसी node को दूसरे parent के नीचे लगाना
-function isDescendant(rootId, maybeChildId, tree) {
-  const queue = [rootId];
-  while (queue.length) {
-    const current = queue.shift();
-    const children = tree.filter(n => n.parentId === current).map(n => n.id);
-    if (children.includes(maybeChildId)) return true;
-    queue.push(...children);
-  }
-  return false;
-}
-
-function changeParent() {
-  const nodeId = document.getElementById("moveNode").value;
-  const newParentId = document.getElementById("newParentForMove").value || null;
-
-  if (!nodeId) {
-    alert("पहले कौनसा member move करना है वो चुनें।");
-    return;
-  }
-
-  let tree = loadTree();
-  const node = tree.find(n => n.id === nodeId);
-  if (!node) {
-    alert("Member नहीं मिला।");
-    return;
-  }
-
-  if (newParentId && isDescendant(nodeId, newParentId, tree)) {
-    alert("किसी member को उसके ही नीचे दुबारा नहीं लगा सकते।");
-    return;
-  }
-
-  node.parentId = newParentId;
-  saveTree(tree);
-  alert("Position update हो गई।");
-  refreshUI();
-}
-
-// UI refresh
-function refreshUI() {
-  const tree = loadTree();
-  refreshDropdowns(tree);
-  renderTree(tree);
-}
-
-function goAdmin() {
-  window.location.href = "admin.html";
-}
-
-window.addEventListener("load", refreshUI);
 </script>
-
 </body>
 </html>
