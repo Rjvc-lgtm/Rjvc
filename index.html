@@ -229,10 +229,7 @@
       गलत नाम या पासवर्ड। कृपया दुबारा जाँच कर के डालें।
     </div>
 
-    <div class="alert alert-info mt-3">
-      <b>Note:</b> आपका नाम और password admin panel से बनाया जाता है।  
-      आप खुद से नया ID नहीं बना सकते, सिर्फ admin ही बना सकता है।
-    </div>
+    <div id="loginInfo" class="alert alert-info mt-3" style="display:none;"></div>
   </div>
 
   <!-- DASHBOARD CARD -->
@@ -310,37 +307,37 @@
 </div>
 
 <script>
-  /********** Admin वाले tree से वही data पढ़ना **********/
-  const STORAGE_KEY = "binary_admin_tree_v3";
+  /********** Admin वाले tree से data पढ़ना (v1/v2/v3 सभी से) **********/
   let nodes = {};
   let rootId = null;
   let loggedInRootId = null;
 
+  function rawLoad(key){
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch(e){
+      return null;
+    }
+  }
+
   function loadTreeData() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
+    // पहले v3, फिर v2, फिर v1 से try
+    let parsed = rawLoad("binary_admin_tree_v3")
+             || rawLoad("binary_admin_tree_v2")
+             || rawLoad("binary_admin_tree_v1");
+
+    if (!parsed) {
       nodes = {};
       rootId = null;
       return;
     }
-    try {
-      const parsed = JSON.parse(raw);
-      nodes = parsed.nodes || {};
-      rootId = parsed.rootId || null;
-    } catch (e) {
-      console.error("Tree load error", e);
-      nodes = {};
-      rootId = null;
-    }
+    nodes = parsed.nodes || {};
+    rootId = parsed.rootId || null;
   }
 
-  function saveTreeData() {
-    // Normally index सिर्फ read करेगा, लेकिन अगर कभी future में update हो तो ये ready है
-    const payload = { nodes, rootId };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }
-
-  /********** Helpers (admin वाले जैसे ही) **********/
+  /********** Helpers **********/
   function countDesc(nodeId) {
     const node = nodes[nodeId];
     if (!node) return 0;
@@ -360,7 +357,6 @@
     return cur ? cur.id : null;
   }
 
-  // यही recalcAll logic admin v3 वाला है (15% service charge अंदर)
   function recalcAll() {
     // reset
     Object.values(nodes).forEach(node => {
@@ -372,17 +368,17 @@
       node.bonusWallet = 0;
     });
 
-    // earning distribute
+    // earning distribute (15% service charge sub IDs पर)
     Object.values(nodes).forEach(node => {
-      const rawEarning = node.pairs * 3; // 1 pair = ₹3
+      const rawEarning = (node.pairs || 0) * 3; // 1 pair = ₹3
       const rootForThis = findRootId(node.id);
-      if (!rootForThis) return;
+      if (!rootForThis || !nodes[rootForThis]) return;
 
       if (node.parent === null) {
-        // Main ID → पूरा amount commission wallet
+        // Main ID
         nodes[rootForThis].commissionWallet += rawEarning;
       } else {
-        // Sub ID → 15% कट, 85% bonus wallet
+        // Sub ID
         const serviceCharge = rawEarning * 0.15;
         const bonusNet = rawEarning - serviceCharge;
         nodes[rootForThis].bonusWallet += bonusNet;
@@ -399,11 +395,24 @@
     const name = (document.getElementById("loginName").value || "").trim();
     const pass = (document.getElementById("loginPassword").value || "").trim();
     const err = document.getElementById("loginError");
-
-    loadTreeData();
-    recalcAll();
+    const info = document.getElementById("loginInfo");
 
     err.style.display = "none";
+    info.style.display = "none";
+
+    loadTreeData();
+
+    // अगर admin data ही नहीं है
+    if (!nodes || Object.keys(nodes).length === 0 || !rootId) {
+      info.innerHTML =
+        "इस device / browser में अभी admin वाला data नहीं मिला।<br>" +
+        "कृपया पहले <b>उसी browser</b> में <b>admin panel</b> खोलकर कम से कम एक Main ID बनाइये,<br>" +
+        "फिर दुबारा customer login ट्राय कीजिये।";
+      info.style.display = "block";
+      return;
+    }
+
+    recalcAll();
 
     if (!name || !pass) {
       err.textContent = "कृपया नाम और पासवर्ड दोनों भरें।";
@@ -411,23 +420,34 @@
       return;
     }
 
-    // केवल main IDs (parent == null) को customer login मान रहे हैं
+    // सिर्फ main IDs पर login allow
     const list = Object.values(nodes);
     const found = list.find(n =>
       n.parent === null &&
+      n.name &&
       n.name.toLowerCase() === name.toLowerCase() &&
       n.password === pass
     );
 
     if (!found) {
-      err.textContent = "गलत नाम या पासवर्ड, या आपका ID main ID नहीं है।";
+      // check कि नाम तो मिला लेकिन password गलत है?
+      const sameNameMain = list.find(n =>
+        n.parent === null &&
+        n.name &&
+        n.name.toLowerCase() === name.toLowerCase()
+      );
+
+      if (sameNameMain && sameNameMain.password !== pass) {
+        err.textContent = "पासवर्ड मेल नहीं खा रहा। वही पासवर्ड डालें जो admin ने सेट किया है।";
+      } else {
+        err.textContent = "गलत नाम या पासवर्ड, या आपका ID main ID नहीं है।";
+      }
       err.style.display = "block";
       return;
     }
 
     loggedInRootId = found.id;
     localStorage.setItem("rjvc_loggedInRootId", loggedInRootId);
-
     showDashboard();
   }
 
@@ -443,12 +463,12 @@
   /********** Dashboard Fill **********/
   function showDashboard() {
     loadTreeData();
-    recalcAll();
-
-    if (!loggedInRootId || !nodes[loggedInRootId]) {
+    if (!nodes || Object.keys(nodes).length === 0 || !loggedInRootId || !nodes[loggedInRootId]) {
       logoutCustomer();
       return;
     }
+
+    recalcAll();
 
     const cust = nodes[loggedInRootId];
 
@@ -463,10 +483,9 @@
     const pairs = cust.pairs || 0;
     const total = comm + bonus;
 
-    // अगला pair तक कितने member और?
     let nextNeed = 0;
     if (members <= 0) {
-      nextNeed = 2; // पहले pair के लिए 2 member
+      nextNeed = 2;
     } else if (members % 2 === 0) {
       nextNeed = 2;
     } else {
