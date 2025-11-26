@@ -239,7 +239,9 @@
       <div class="subtitle">
         यहाँ से आप Member add कर सकते हैं, Commission / Bonus देख सकते हैं
         और Tree View सिर्फ admin के लिए है (customer को नहीं दिखेगा)।  
-        हर member 20 रुपये देता है, जिसका 15% = ₹3 per member binary earning माना गया है।
+        हर customer 20 रुपये देता है। हर <b>2 member (1 pair)</b> पर
+        15% = <b>₹3</b> binary earning auto calculate होती है।  
+        हर बार "+ Members" बटन दबाने पर 1 नया member जुड़ जाएगा।
       </div>
       <div style="max-height: 320px; overflow:auto;">
         <table>
@@ -250,7 +252,7 @@
               <th>Name</th>
               <th>Mobile</th>
               <th>Members<br>(This ID)</th>
-              <th>Pairs<br>(= Members)</th>
+              <th>Pairs<br>(= Members/2)</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -311,7 +313,7 @@
   <script>
     const STORAGE_KEY = "rjvc_admin_customers";
     const WITHDRAW_KEY = "rjvc_withdrawals";
-    const PER_MEMBER_AMOUNT = 3; // 20 रुपये का 15%
+    const PER_PAIR_AMOUNT = 3; // 1 pair (2 members) पर 3 रुपये
 
     function loadCustomers() {
       try {
@@ -367,12 +369,12 @@
       const baseCode = randomRJVCCode(allCodes);
 
       const ids = [
-        { type: "main", index: 0, code: baseCode, members: 0, pairs: 0 },
-        { type: "sub", index: 1, code: baseCode + "-1", members: 0, pairs: 0 },
-        { type: "sub", index: 2, code: baseCode + "-2", members: 0, pairs: 0 },
-        { type: "sub", index: 3, code: baseCode + "-3", members: 0, pairs: 0 },
-        { type: "sub", index: 4, code: baseCode + "-4", members: 0, pairs: 0 },
-        { type: "sub", index: 5, code: baseCode + "-5", members: 0, pairs: 0 }
+        { type: "main", index: 0, code: baseCode,     members: 0, pairs: 0 },
+        { type: "sub",  index: 1, code: baseCode + "-1", members: 0, pairs: 0 },
+        { type: "sub",  index: 2, code: baseCode + "-2", members: 0, pairs: 0 },
+        { type: "sub",  index: 3, code: baseCode + "-3", members: 0, pairs: 0 },
+        { type: "sub",  index: 4, code: baseCode + "-4", members: 0, pairs: 0 },
+        { type: "sub",  index: 5, code: baseCode + "-5", members: 0, pairs: 0 }
       ];
 
       const customer = {
@@ -404,10 +406,10 @@
 
       customer.ids.forEach(id => {
         const members = Number(id.members || 0);
-        const pairs = members; // यहाँ 1 member = 1 pair माना गया है
+        const pairs = Math.floor(members / 2); // 2 members = 1 pair
         id.pairs = pairs;
 
-        const earning = pairs * PER_MEMBER_AMOUNT;
+        const earning = pairs * PER_PAIR_AMOUNT;
 
         if (id.type === "main") {
           customer.walletCommission += earning;
@@ -417,18 +419,11 @@
       });
     }
 
+    // *** यह function अब auto 1 member add करता है, कोई prompt नहीं ***
     function addMembers(customerId, kind, index) {
       const customers = loadCustomers();
       const ci = customers.findIndex(c => c.id === customerId);
       if (ci === -1) return;
-
-      const howManyStr = prompt("कितने नये member add करने हैं? (Number)");
-      if (howManyStr === null) return;
-      const howMany = parseInt(howManyStr, 10);
-      if (!howMany || howMany <= 0) {
-        alert("कृपया valid संख्या डालें।");
-        return;
-      }
 
       const cust = customers[ci];
       if (!cust.ids) return;
@@ -441,7 +436,8 @@
       }
       if (!target) return;
 
-      target.members = Number(target.members || 0) + howMany;
+      // हर click पर 1 नया member auto add
+      target.members = Number(target.members || 0) + 1;
 
       recalcPairsAndWallets(cust);
       customers[ci] = cust;
@@ -487,11 +483,10 @@
       let totalBonus = 0;
 
       customers.forEach(cust => {
-        recalcPairsAndWallets(cust); // safety
+        recalcPairsAndWallets(cust);
         totalCommission += cust.walletCommission || 0;
         totalBonus += cust.walletBonus || 0;
 
-        // पहले main row
         const mainId = cust.ids.find(i => i.type === "main");
         const mainTr = document.createElement("tr");
         mainTr.innerHTML = `
@@ -521,7 +516,6 @@
         `;
         tbody.appendChild(mainTr);
 
-        // फिर 5 sub IDs
         const subIds = cust.ids.filter(i => i.type === "sub")
                                .sort((a,b)=>a.index-b.index);
 
@@ -561,7 +555,6 @@
         sub3:  { code: "" },
         sub4:  { code: "" },
         sub5:  { code: "" },
-        // members & pairs भी store करेंगे
         sub1m: 0, sub2m: 0, sub3m: 0, sub4m: 0, sub5m: 0,
         sub1p: 0, sub2p: 0, sub3p: 0, sub4p: 0, sub5p: 0,
         mainm: 0, mainp: 0
@@ -633,18 +626,15 @@
 
       const area = document.getElementById("binaryTreeArea");
       area.innerHTML = `
-        <!-- Main -->
         <div class="tree-row">
           <div class="tree-node main">
             Main ID<br>${ids.main.code}
           </div>
         </div>
 
-        <!-- line main -> (sub1, sub2) -->
         <div class="tree-line-v"></div>
         <div class="tree-line-h-wide"></div>
 
-        <!-- Sub 1 & Sub 2 -->
         <div class="tree-row">
           <div class="tree-node sub">
             Sub ID 1<br>${ids.sub1.code}
@@ -654,7 +644,6 @@
           </div>
         </div>
 
-        <!-- Sub 1 के नीचे Sub 3 ; Sub 2 के नीचे Sub 4 & Sub 5 -->
         <div class="tree-row">
           <div class="tree-col">
             <div class="tree-line-v"></div>
@@ -683,18 +672,18 @@
       detail.innerHTML = `
         <div style="font-weight:600; margin-bottom:4px;">Binary Pair Detail:</div>
         <div>Main ID Members: ${ids.mainm || 0}
-          → Pairs: ${ids.mainp || ids.mainm || 0}
-          → Commission Wallet में: ₹${formatNumber((cust.walletCommission || 0))}</div>
+          → Pairs: ${ids.mainp || 0}
+          → Commission Wallet में: ₹${formatNumber(cust.walletCommission || 0)}</div>
         <div>Sub ID 1 Members: ${ids.sub1m || 0}
-          → Pairs: ${ids.sub1p || ids.sub1m || 0}</div>
+          → Pairs: ${ids.sub1p || 0}</div>
         <div>Sub ID 2 Members: ${ids.sub2m || 0}
-          → Pairs: ${ids.sub2p || ids.sub2m || 0}</div>
+          → Pairs: ${ids.sub2p || 0}</div>
         <div>Sub ID 3 Members: ${ids.sub3m || 0}
-          → Pairs: ${ids.sub3p || ids.sub3m || 0}</div>
+          → Pairs: ${ids.sub3p || 0}</div>
         <div>Sub ID 4 Members: ${ids.sub4m || 0}
-          → Pairs: ${ids.sub4p || ids.sub4m || 0}</div>
+          → Pairs: ${ids.sub4p || 0}</div>
         <div>Sub ID 5 Members: ${ids.sub5m || 0}
-          → Pairs: ${ids.sub5p || ids.sub5m || 0}</div>
+          → Pairs: ${ids.sub5p || 0}</div>
         <div style="margin-top:4px;">
           इन सभी Sub IDs के pairs से बनने वाला सारा amount
           सिर्फ Main ID के Bonus Wallet में जुड़ता है
@@ -755,7 +744,6 @@
       });
     }
 
-    // ===== On Load =====
     window.addEventListener("load", function () {
       renderCustomers();
       renderWithdrawals();
