@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>RJVC PLAN</title>
+  <title>RJVC Smart Earning</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
@@ -20,29 +20,6 @@
       margin: 0 auto;
       padding: 16px;
     }
-    h1 {
-      text-align: center;
-      margin: 8px 0 16px;
-      color: #111827;
-    }
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 10px 0;
-      border-radius: 999px;
-      border: none;
-      background: #e5e7eb;
-      font-size: 15px;
-    }
-    .tab-btn.active {
-      background: #1d4ed8;
-      color: #fff;
-      font-weight: 600;
-    }
     .card {
       background: #fff;
       border-radius: 16px;
@@ -50,7 +27,7 @@
       box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15);
       margin-bottom: 16px;
     }
-    .card h2 {
+    h2 {
       margin: 0 0 12px;
       font-size: 18px;
     }
@@ -88,10 +65,6 @@
       background: #fff;
       border: 1px solid #d1d5db;
     }
-    .btn-danger {
-      background: #dc2626;
-      color: #fff;
-    }
     .btn-sm {
       padding: 6px 12px;
       font-size: 13px;
@@ -100,33 +73,10 @@
     .mt-8 { margin-top: 8px; }
     .mt-12 { margin-top: 12px; }
     .mt-16 { margin-top: 16px; }
-    .flex {
-      display: flex;
-      align-items: center;
-    }
     .flex-between {
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-    .gap-8 { gap: 8px; }
-    .gap-4 { gap: 4px; }
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      background: #e5e7eb;
-    }
-    .badge-success {
-      background: #dcfce7;
-      color: #166534;
-    }
-    .badge-danger {
-      background: #fee2e2;
-      color: #b91c1c;
     }
     .wallet {
       border-radius: 16px;
@@ -164,26 +114,8 @@
       font-size: 12px;
       color: #6b7280;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    th, td {
-      padding: 6px 4px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    th { text-align: left; background: #f9fafb; }
-    @media (max-width: 640px) {
-      th:nth-child(3), td:nth-child(3) { display: none; }
-    }
     .error {
       color: #b91c1c;
-      font-size: 13px;
-      margin-top: 4px;
-    }
-    .success {
-      color: #166534;
       font-size: 13px;
       margin-top: 4px;
     }
@@ -191,14 +123,6 @@
 </head>
 <body>
   <div class="page">
-    <h1>RJVC PLAN</h1>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <button id="tabCustomer" class="tab-btn active">Customer Login</button>
-      <button id="tabAdmin" class="tab-btn">Admin Login</button>
-    </div>
-
     <!-- CUSTOMER LOGIN CARD -->
     <div id="customerLoginCard" class="card">
       <h2>Customer Login</h2>
@@ -215,7 +139,7 @@
     <!-- CUSTOMER DASHBOARD -->
     <div id="customerDashboardCard" class="card" style="display:none;">
       <div class="flex-between">
-        <h2>Customer Dashboard</h2>
+        <h2>RJVC Customer Dashboard</h2>
         <button id="custLogoutBtn" class="btn btn-outline btn-sm">Logout</button>
       </div>
       <div class="small" id="custWelcome"></div>
@@ -229,7 +153,7 @@
       <div class="wallet wallet-bonus">
         <div class="wallet-label">BONUS WALLET</div>
         <div class="wallet-amount" id="custBonusWallet">₹0</div>
-        <div class="small">पूरी sub IDs network से आने वाली earning (service charge कटने के बाद)</div>
+        <div class="small">Sub IDs network / Binary से आने वाली earning (service charge के बाद)</div>
       </div>
 
       <div class="stat-box">
@@ -254,72 +178,6 @@
         <div class="stat-label">कुल खाते में (COMM + BONUS)</div>
         <div><span id="custTotalAmount">₹0</span></div>
         <div class="small">ये वही amount है जो अभी आपके दोनों wallets में दिख रही है।</div>
-      </div>
-    </div>
-
-    <!-- ADMIN LOGIN CARD -->
-    <div id="adminLoginCard" class="card" style="display:none;">
-      <h2>Admin Login</h2>
-      <label>Admin ID</label>
-      <input id="adminIdInput" type="text" placeholder="admin" />
-
-      <label class="mt-8">Password</label>
-      <input id="adminPassInput" type="password" placeholder="1234" />
-
-      <button id="adminLoginBtn" class="btn btn-primary mt-12" style="width:100%;">Login</button>
-      <div id="adminLoginMsg" class="error" style="display:none;"></div>
-    </div>
-
-    <!-- ADMIN DASHBOARD -->
-    <div id="adminDashboardCard" class="card" style="display:none;">
-      <div class="flex-between">
-        <h2>Admin Panel</h2>
-        <button id="adminLogoutBtn" class="btn btn-outline btn-sm">Logout</button>
-      </div>
-
-      <!-- Create Customer -->
-      <div class="card" style="margin-top:12px; padding:12px;">
-        <h3 style="margin:0 0 8px; font-size:16px;">नया Customer Create करें</h3>
-        <label>Customer Name</label>
-        <input id="newCustName" type="text" placeholder="जैसे: Rajesh" />
-
-        <label class="mt-8">Customer Password</label>
-        <input id="newCustPass" type="password" placeholder="Login password (जैसे: 1234)" />
-
-        <button id="createCustBtn" class="btn btn-primary mt-12">Create Customer</button>
-        <div id="createCustMsg" class="success" style="display:none;"></div>
-      </div>
-
-      <!-- Customers List -->
-      <div class="mt-16">
-        <div class="flex-between">
-          <h3 style="margin:0 0 6px; font-size:16px;">Customer List</h3>
-          <span class="small" id="adminTotalUsers">0 customers</span>
-        </div>
-        <div class="small">यहाँ से आप customers देख सकते हैं, members जोड़ सकते हैं, या block कर सकते हैं।</div>
-
-        <div style="overflow-x:auto; margin-top:8px;">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Members</th>
-                <th>Pairs</th>
-                <th>Comm</th>
-                <th>Bonus</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="usersTableBody">
-              <!-- rows dynamically -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="small mt-12">
-        नोट: हर customer के लिए अभी simple binary count चल रहा है – हर 2 member = 1 pair, 1 pair पर ₹3 earning.
-        इस earning पर सिस्टम के अंदर से 15% service charge manage होता है, customer को सिर्फ final bonus दिखता है।
       </div>
     </div>
   </div>
@@ -349,43 +207,15 @@
     const usersCol = db.collection("Users");
 
     // ============================
-    //  UI Helper Functions
-    // ============================
-    const tabCustomer = document.getElementById("tabCustomer");
-    const tabAdmin = document.getElementById("tabAdmin");
-    const customerLoginCard = document.getElementById("customerLoginCard");
-    const adminLoginCard = document.getElementById("adminLoginCard");
-    const customerDashboardCard = document.getElementById("customerDashboardCard");
-    const adminDashboardCard = document.getElementById("adminDashboardCard");
-
-    function showCustomerTab() {
-      tabCustomer.classList.add("active");
-      tabAdmin.classList.remove("active");
-      customerLoginCard.style.display = "block";
-      adminLoginCard.style.display = "none";
-      customerDashboardCard.style.display = currentCustomer ? "block" : "none";
-      adminDashboardCard.style.display = "none";
-    }
-
-    function showAdminTab() {
-      tabAdmin.classList.add("active");
-      tabCustomer.classList.remove("active");
-      adminLoginCard.style.display = "block";
-      customerLoginCard.style.display = "none";
-      customerDashboardCard.style.display = "none";
-      adminDashboardCard.style.display = currentAdminLoggedIn ? "block" : "none";
-    }
-
-    tabCustomer.addEventListener("click", showCustomerTab);
-    tabAdmin.addEventListener("click", showAdminTab);
-
-    // ============================
     //  CUSTOMER LOGIN / DASHBOARD
     // ============================
     const custNameInput = document.getElementById("custNameInput");
     const custPassInput = document.getElementById("custPassInput");
     const custLoginBtn = document.getElementById("custLoginBtn");
     const custLoginMsg = document.getElementById("custLoginMsg");
+
+    const customerLoginCard = document.getElementById("customerLoginCard");
+    const customerDashboardCard = document.getElementById("customerDashboardCard");
 
     const custLogoutBtn = document.getElementById("custLogoutBtn");
     const custWelcome = document.getElementById("custWelcome");
@@ -396,8 +226,8 @@
     const custNextNeed = document.getElementById("custNextNeed");
     const custTotalAmount = document.getElementById("custTotalAmount");
 
-    let currentCustomer = null;      // Firestore doc snapshot
-    let currentCustomerUnsub = null; // onSnapshot unsubscribe
+    let currentCustomer = null;
+    let currentCustomerUnsub = null;
 
     function formatRupees(x) {
       return "₹" + (x || 0);
@@ -414,8 +244,8 @@
       currentCustomerUnsub = usersCol.doc(docId).onSnapshot((snap) => {
         if (!snap.exists) return;
         currentCustomer = snap;
-
         const data = snap.data();
+
         const name = data.name || "";
         const comm = data.commissionWallet || 0;
         const bonus = data.bonusWallet || 0;
@@ -477,200 +307,6 @@
       customerDashboardCard.style.display = "none";
       customerLoginCard.style.display = "block";
     });
-
-    // ============================
-    //  ADMIN LOGIN / DASHBOARD
-    // ============================
-    const adminIdInput = document.getElementById("adminIdInput");
-    const adminPassInput = document.getElementById("adminPassInput");
-    const adminLoginBtn = document.getElementById("adminLoginBtn");
-    const adminLoginMsg = document.getElementById("adminLoginMsg");
-    const adminLogoutBtn = document.getElementById("adminLogoutBtn");
-
-    const newCustName = document.getElementById("newCustName");
-    const newCustPass = document.getElementById("newCustPass");
-    const createCustBtn = document.getElementById("createCustBtn");
-    const createCustMsg = document.getElementById("createCustMsg");
-
-    const usersTableBody = document.getElementById("usersTableBody");
-    const adminTotalUsers = document.getElementById("adminTotalUsers");
-
-    let currentAdminLoggedIn = false;
-    let adminUsersUnsub = null;
-
-    adminLoginBtn.addEventListener("click", () => {
-      const id = adminIdInput.value.trim();
-      const pass = adminPassInput.value.trim();
-      adminLoginMsg.style.display = "none";
-
-      if (id === "admin" && pass === "1234") {
-        currentAdminLoggedIn = true;
-        adminLoginCard.style.display = "none";
-        adminDashboardCard.style.display = "block";
-        subscribeUsersList();
-      } else {
-        adminLoginMsg.textContent = "गलत ID या Password!";
-        adminLoginMsg.style.display = "block";
-      }
-    });
-
-    adminLogoutBtn.addEventListener("click", () => {
-      currentAdminLoggedIn = false;
-      if (adminUsersUnsub) adminUsersUnsub();
-      adminUsersUnsub = null;
-      adminDashboardCard.style.display = "none";
-      adminLoginCard.style.display = "block";
-    });
-
-    function subscribeUsersList() {
-      if (adminUsersUnsub) adminUsersUnsub();
-      adminUsersUnsub = usersCol.orderBy("name").onSnapshot((snap) => {
-        usersTableBody.innerHTML = "";
-        let count = 0;
-        snap.forEach((doc) => {
-          count++;
-          const data = doc.data();
-          const tr = document.createElement("tr");
-
-          const members = data.totalMembers || 0;
-          const pairs = data.totalPairs || 0;
-          const comm = data.commissionWallet || 0;
-          const bonus = data.bonusWallet || 0;
-          const isBlocked = !!data.isBlocked;
-
-          tr.innerHTML = `
-            <td>${data.name || ""}</td>
-            <td>${members}</td>
-            <td>${pairs}</td>
-            <td>${comm}</td>
-            <td>${bonus}</td>
-            <td>
-              <button class="btn btn-sm btn-primary" data-action="add" data-id="${doc.id}" ${isBlocked ? "disabled" : ""}>+ Member</button>
-              <button class="btn btn-sm btn-outline" data-action="toggleBlock" data-id="${doc.id}">
-                ${isBlocked ? "Unblock" : "Block"}
-              </button>
-            </td>
-          `;
-          usersTableBody.appendChild(tr);
-        });
-        adminTotalUsers.textContent = count + " customers";
-      });
-    }
-
-    // Create new customer
-    createCustBtn.addEventListener("click", async () => {
-      const name = newCustName.value.trim();
-      const pass = newCustPass.value.trim();
-      createCustMsg.style.display = "none";
-
-      if (!name || !pass) {
-        createCustMsg.textContent = "Name और Password दोनों जरूरी हैं।";
-        createCustMsg.className = "error";
-        createCustMsg.style.display = "block";
-        return;
-      }
-
-      try {
-        // check duplicate name (optional)
-        const existing = await usersCol.where("name", "==", name).limit(1).get();
-        if (!existing.empty) {
-          createCustMsg.textContent = "ये नाम पहले से registered है।";
-          createCustMsg.className = "error";
-          createCustMsg.style.display = "block";
-          return;
-        }
-
-        await usersCol.add({
-          name,
-          password: pass,
-          commissionWallet: 0,
-          bonusWallet: 0,
-          totalMembers: 0,
-          totalPairs: 0,
-          isBlocked: false,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        newCustName.value = "";
-        newCustPass.value = "";
-        createCustMsg.textContent = "Customer सफलतापूर्वक बनाया गया।";
-        createCustMsg.className = "success";
-        createCustMsg.style.display = "block";
-      } catch (err) {
-        createCustMsg.textContent = "Error: " + err.message;
-        createCustMsg.className = "error";
-        createCustMsg.style.display = "block";
-      }
-    });
-
-    // Handle table button clicks (add member / block)
-    usersTableBody.addEventListener("click", async (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      const id = btn.getAttribute("data-id");
-      const action = btn.getAttribute("data-action");
-      if (!id || !action) return;
-
-      if (action === "add") {
-        await addMemberToUser(id);
-      } else if (action === "toggleBlock") {
-        await toggleBlockUser(id);
-      }
-    });
-
-    async function addMemberToUser(userId) {
-      try {
-        const ref = usersCol.doc(userId);
-        const snap = await ref.get();
-        if (!snap.exists) return;
-        const data = snap.data();
-        if (data.isBlocked) {
-          alert("ये customer blocked है।");
-          return;
-        }
-
-        let members = (data.totalMembers || 0) + 1;
-        let oldPairs = data.totalPairs || 0;
-        let newPairs = Math.floor(members / 2) - oldPairs;
-        let totalPairs = oldPairs + (newPairs > 0 ? newPairs : 0);
-
-        let comm = data.commissionWallet || 0;
-        let bonus = data.bonusWallet || 0;
-
-        if (newPairs > 0) {
-          const earningPerPair = 3; // ₹3 per pair (20 रुपये का 15%)
-          const gross = newPairs * earningPerPair;
-          const serviceCharge = Math.round(gross * 0.15); // 15% service charge
-          const net = gross - serviceCharge;
-          // मान लेते हैं पूरी binary earning Bonus Wallet में जाती है
-          bonus += net;
-        }
-
-        await ref.update({
-          totalMembers: members,
-          totalPairs: totalPairs,
-          commissionWallet: comm,
-          bonusWallet: bonus
-        });
-      } catch (err) {
-        alert("Error: " + err.message);
-      }
-    }
-
-    async function toggleBlockUser(userId) {
-      try {
-        const ref = usersCol.doc(userId);
-        const snap = await ref.get();
-        if (!snap.exists) return;
-        const isBlocked = !!snap.data().isBlocked;
-        await ref.update({ isBlocked: !isBlocked });
-      } catch (err) {
-        alert("Error: " + err.message);
-      }
-    }
-
-    // Default: show customer tab
-    showCustomerTab();
   </script>
 </body>
 </html>
