@@ -25,6 +25,7 @@
     .mt-4{margin-top:16px;}
     .flex{display:flex;}
     .between{justify-content:space-between;align-items:center;}
+    .wrap{flex-wrap:wrap;}
     .small{font-size:12px;color:#6b7280;}
     .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#e5f3ff;color:#1d4ed8;}
     table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -40,8 +41,27 @@
     .pill-pending{background:#fef3c7;color:#92400e;}
     .pill-paid{background:#dcfce7;color:#166534;}
     .pill-rejected{background:#fee2e2;color:#991b1b;}
+
+    /* TREE VIEW STYLES */
+    .tree-panel{background:#020617;color:#e5e7eb;border-radius:16px;padding:12px;margin-top:8px;}
+    .tree-header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+    .tree-root-info{font-size:13px;margin-top:4px;}
+    .tree-level{margin:8px 0;text-align:center;}
+    .tree-node-wrap{display:inline-block;margin:6px;}
+    .tree-node{
+      padding:6px 10px;
+      border-radius:12px;
+      background:#111827;
+      border:1px solid #4b5563;
+      font-size:12px;
+      min-width:120px;
+    }
+    .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
+    .tree-node-name{font-weight:600;}
+    .tree-node-meta{font-size:10px;color:#9ca3af;margin-top:2px;}
+
     @media(max-width:720px){
-      .flex.wrap{flex-wrap:wrap;}
+      table{font-size:12px;}
     }
   </style>
 </head>
@@ -62,7 +82,8 @@
     <button id="adminLoginBtn" class="btn btn-primary mt-3" style="width:100%;">Login</button>
     <div id="adminLoginMsg" class="error" style="display:none;"></div>
     <p class="small" style="margin-top:12px;">
-      फिलहाल default: <b>ID: admin</b>, <b>Password: 1234</b>
+      फिलहाल default: <b>ID: admin</b>, <b>Password: 1234</b>  
+      (कोड में ऊपर बदल सकते हैं)
     </p>
   </div>
 </div>
@@ -70,11 +91,12 @@
 <!-- ADMIN DASHBOARD PAGE -->
 <div id="adminPage" style="display:none;">
   <div class="page">
+    <!-- HEADER -->
     <div class="card flex between">
       <div>
         <h2>RJVC Admin Panel</h2>
         <div class="small">
-          यहाँ से आप customers बना सकते हैं, उनकी members / pairs / wallets और withdrawal requests manage कर सकते हैं।
+          यहाँ से आप Customers, Binary earning और Withdrawal requests manage कर सकते हैं।
         </div>
       </div>
       <button id="adminLogoutBtn" class="btn btn-secondary btn-sm">Logout</button>
@@ -178,7 +200,26 @@
       </div>
     </div>
 
-    <!-- NOTE: आगे चलकर यहाँ Binary Tree View भी जोड़ा जाएगा -->
+    <!-- BINARY TREE VIEW (AUTO) -->
+    <div class="card">
+      <div class="tree-panel">
+        <div class="tree-header">
+          <div>
+            <div style="font-size:13px;color:#a5b4fc;">Binary Tree View (Auto from Firebase)</div>
+            <div id="treeRootInfo" class="tree-root-info">
+              अभी tree खाली है। पहले कोई customer बनाएँ।
+            </div>
+          </div>
+        </div>
+        <div id="treeViewArea" style="margin-top:10px;font-size:12px;">
+          अभी tree खाली है।
+        </div>
+        <p class="small" style="margin-top:6px;">
+          यह tree सिर्फ view के लिए है, data सीधे Firebase से आता है।  
+          हर नयी ID पहले list से manage होगी; अगला step चाहें तो tree से भी +Member / Edit / Delete जोड़ सकते हैं।
+        </p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -314,13 +355,17 @@
   const totalPairsEl = document.getElementById("totalPairs");
   const totalBonusEl = document.getElementById("totalBonus");
 
+  const treeViewArea = document.getElementById("treeViewArea");
+  const treeRootInfo = document.getElementById("treeRootInfo");
+
   function subscribeUsersList() {
     if (adminUsersUnsub) adminUsersUnsub();
-    adminUsersUnsub = usersCol.orderBy("name").onSnapshot((snap) => {
+    adminUsersUnsub = usersCol.orderBy("createdAt","asc").onSnapshot((snap) => {
       usersTableBody.innerHTML = "";
       let count = 0;
       let sumPairs = 0;
       let sumBonus = 0;
+      const usersList = [];
 
       snap.forEach((doc) => {
         count++;
@@ -333,6 +378,15 @@
 
         sumPairs += pairs;
         sumBonus += bonus;
+
+        usersList.push({
+          id: doc.id,
+          name: data.name || "",
+          members,
+          pairs,
+          bonus,
+          createdAt: data.createdAt || null
+        });
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -356,6 +410,8 @@
       adminTotalUsers.textContent = count + " customers";
       totalPairsEl.textContent = sumPairs;
       totalBonusEl.textContent = "₹" + sumBonus;
+
+      renderTree(usersList);
     });
   }
 
@@ -436,6 +492,54 @@
   }
 
   // ============================
+  //  TREE VIEW (AUTO)
+  // ============================
+  function renderTree(usersList) {
+    if (!treeViewArea || !treeRootInfo) return;
+
+    if (!usersList.length) {
+      treeRootInfo.textContent = "अभी tree खाली है। पहले कोई customer बनाएँ।";
+      treeViewArea.textContent = "";
+      return;
+    }
+
+    // Root = सबसे पहला customer (सबसे पहले बना)
+    const rootUser = usersList[0];
+    treeRootInfo.innerHTML =
+      `Root: <b>${rootUser.name}</b> (Members: ${rootUser.members}, Pairs: ${rootUser.pairs}, Bonus: ₹${rootUser.bonus})`;
+
+    let html = "";
+    let index = 0;
+    let level = 0;
+    const maxLevels = 4; // ज़्यादा levels दिखाने हों तो बढ़ा सकते हैं
+
+    while (index < usersList.length && level < maxLevels) {
+      const count = Math.pow(2, level);
+      const levelUsers = usersList.slice(index, index + count);
+
+      html += `<div class="tree-level">`;
+      levelUsers.forEach((u) => {
+        html += `
+          <div class="tree-node-wrap">
+            <div class="tree-node ${u.id === rootUser.id ? "tree-node-main" : ""}">
+              <div class="tree-node-name">${u.name}</div>
+              <div class="tree-node-meta">
+                M:${u.members} · P:${u.pairs} · ₹${u.bonus}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+
+      index += count;
+      level++;
+    }
+
+    treeViewArea.innerHTML = html;
+  }
+
+  // ============================
   //  WITHDRAWAL REQUESTS
   // ============================
   const withdrawTableBody = document.getElementById("withdrawTableBody");
@@ -486,7 +590,6 @@
     if (action === "paid") {
       await markWithdrawalStatus(wid, "Paid");
     } else if (action === "reject") {
-      // reject पर हम bonus वापस दे सकते हैं (optional)
       if (confirm("Reject करने पर amount वापस Bonus Wallet में जोड़ना है?")) {
         await rejectAndRefund(wid);
       } else {
