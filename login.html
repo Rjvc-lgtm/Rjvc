@@ -2,131 +2,396 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Login - RJVC</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RJVC Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f7ff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .card {
-      background: #fff;
-      padding: 32px 24px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      width: min(420px, 100% - 32px);
-      text-align: center;
-    }
-    h1 {
-      margin-top: 0;
-      margin-bottom: 8px;
-      color: #0b2b6b;
-      font-size: 26px;
-    }
-    .subtitle {
-      margin: 0 0 24px;
-      color: #555;
-      font-size: 14px;
-    }
-    label {
-      display: block;
-      text-align: left;
-      margin-bottom: 6px;
-      font-size: 14px;
-      color: #333;
-    }
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      font-size: 15px;
-      border-radius: 8px;
-      border: 1px solid #ccd3ea;
-      box-sizing: border-box;
-      margin-bottom: 16px;
-      outline: none;
-    }
-    input:focus {
-      border-color: #2456f5;
-      box-shadow: 0 0 0 2px rgba(36,86,245,0.15);
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 999px;
-      border: none;
-      background: #2456f5;
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    button:active {
-      transform: scale(0.99);
-    }
-    .error {
-      margin-top: 12px;
-      color: #d11a2a;
-      font-size: 14px;
-      display: none;
-    }
-    .hint {
-      margin-top: 16px;
-      font-size: 12px;
-      color: #888;
-    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto;}
+    body{margin:0;background:#f2f5ff;color:#111827;}
+    h1,h2,h3{margin:0 0 8px;}
+    .page{max-width:1000px;margin:0 auto;padding:16px;}
+    .card{background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:16px;margin-bottom:16px;}
+    label{display:block;font-size:14px;margin-bottom:4px;}
+    input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #c5cbe3;font-size:15px;}
+    input:focus{outline:none;border-color:#2952ff;box-shadow:0 0 0 2px rgba(41,82,255,.18);}
+    .btn{border:none;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:500;cursor:pointer;}
+    .btn-primary{background:#2952ff;color:#fff;}
+    .btn-secondary{background:#e2e7ff;color:#172554;}
+    .btn-danger{background:#fee2e2;color:#991b1b;}
+    .btn-sm{padding:6px 10px;font-size:12px;}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
+    .mt-2{margin-top:8px;}
+    .mt-3{margin-top:12px;}
+    .mt-4{margin-top:16px;}
+    .flex{display:flex;}
+    .between{justify-content:space-between;align-items:center;}
+    .small{font-size:12px;color:#6b7280;}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#e5f3ff;color:#1d4ed8;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th,td{padding:6px 4px;border-bottom:1px solid #e5e7eb;text-align:left;}
+    th{font-size:12px;text-transform:uppercase;color:#6b7280;}
+    .wallets{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
+    .wallet-box{flex:1 1 140px;background:#eff6ff;border-radius:14px;padding:10px 12px;}
+    .wallet-title{font-size:12px;color:#4b5563;}
+    .wallet-value{font-size:18px;font-weight:700;color:#1d4ed8;}
+    .error{color:#dc2626;font-size:13px;margin-top:6px;}
+    .success{color:#166534;font-size:13px;margin-top:6px;}
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Admin Login</h1>
-    <p class="subtitle">RJVC Admin Panel में लॉगिन करें</p>
 
-    <form id="adminLoginForm">
-      <div>
-        <label for="adminId">Admin ID</label>
-        <input id="adminId" type="text" placeholder="जैसे: admin" autocomplete="off" />
-      </div>
-
-      <div>
-        <label for="adminPass">Password</label>
-        <input id="adminPass" type="password" placeholder="Password" />
-      </div>
-
-      <button type="submit">Login</button>
-
-      <p id="errorMsg" class="error">गलत ID या Password!</p>
-
-      <p class="hint">
-        Demo के लिए:<br />
-        ID: <b>admin</b> &nbsp; | &nbsp; Password: <b>1234</b>
-      </p>
-    </form>
+<!-- ADMIN LOGIN PAGE -->
+<div id="loginPage" class="page">
+  <div class="card" style="max-width:420px;margin:40px auto;">
+    <h1 style="text-align:center;">RJVC Admin Login</h1>
+    <p class="small" style="text-align:center;margin-bottom:16px;">
+      यह पेज सिर्फ admin के लिए है। Customer को यह link न दें।
+    </p>
+    <label>Admin ID</label>
+    <input id="adminIdInput" placeholder="जैसे: admin" />
+    <div class="mt-2"></div>
+    <label>Password</label>
+    <input id="adminPassInput" type="password" placeholder="जैसे: 1234" />
+    <button id="adminLoginBtn" class="btn btn-primary mt-3" style="width:100%;">Login</button>
+    <div id="adminLoginMsg" class="error" style="display:none;"></div>
+    <p class="small" style="margin-top:12px;">
+      फिलहाल default: <b>ID: admin</b>, <b>Password: 1234</b>  
+      (आगे चलकर इसे भी Firebase से control कर सकते हैं)
+    </p>
   </div>
+</div>
 
-  <script>
-    // === यहाँ अपना admin ID / password सेट करें ===
-    const ADMIN_ID   = "admin";   // जो चाहें रख सकते हैं
-    const ADMIN_PASS = "1234";    // strong password भी रख सकते हैं
+<!-- ADMIN DASHBOARD PAGE -->
+<div id="adminPage" style="display:none;">
+  <div class="page">
+    <div class="card flex between">
+      <div>
+        <h2>RJVC Admin Panel</h2>
+        <div class="small">
+          यहाँ से आप customers बना सकते हैं, उनकी members/pairs और wallets देख सकते हैं।
+        </div>
+      </div>
+      <button id="adminLogoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+    </div>
 
-    document.getElementById("adminLoginForm").addEventListener("submit", function (e) {
-      e.preventDefault();
+    <!-- CREATE CUSTOMER -->
+    <div class="card">
+      <h3>नया Customer Create करें</h3>
+      <div class="flex" style="gap:10px;flex-wrap:wrap;margin-top:8px;">
+        <div style="flex:1 1 200px;">
+          <label>Customer Name</label>
+          <input id="newCustName" placeholder="जैसे: Rajesh" />
+        </div>
+        <div style="flex:1 1 200px;">
+          <label>Customer Password</label>
+          <input id="newCustPass" placeholder="जैसे: 1234" />
+        </div>
+      </div>
+      <button id="createCustBtn" class="btn btn-primary mt-3">Create Customer</button>
+      <div id="createCustMsg" class="success" style="display:none;"></div>
+      <p class="small" style="margin-top:6px;">
+        यह customer सीधे RJVC Customer Login (index.html) से name + password डालकर login कर पाएगा।
+      </p>
+    </div>
 
-      const id   = document.getElementById("adminId").value.trim();
-      const pass = document.getElementById("adminPass").value;
+    <!-- CUSTOMERS LIST -->
+    <div class="card">
+      <div class="flex between">
+        <div>
+          <h3>Customer List</h3>
+          <div class="small">यहाँ से आप total members बढ़ा सकते हैं और binary pairs से bonus दे सकते हैं।</div>
+        </div>
+        <span class="badge" id="adminTotalUsers">0 customers</span>
+      </div>
 
-      if (id === ADMIN_ID && pass === ADMIN_PASS) {
-        // सफल login → admin panel पर भेजो
-        localStorage.setItem("isAdminLoggedIn", "true");
-        window.location.href = "admin.html"; // यहाँ अपना admin वाला पेज नाम रखिए
-      } else {
-        document.getElementById("errorMsg").style.display = "block";
+      <div class="wallets">
+        <div class="wallet-box">
+          <div class="wallet-title">कुल Pairs (सभी customers)</div>
+          <div id="totalPairs" class="wallet-value">0</div>
+        </div>
+        <div class="wallet-box">
+          <div class="wallet-title">कुल Bonus Wallet (₹)</div>
+          <div id="totalBonus" class="wallet-value">₹0</div>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;margin-top:10px;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Members</th>
+              <th>Pairs</th>
+              <th>Comm Wallet</th>
+              <th>Bonus Wallet</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <!-- JS से rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:6px;">
+        Logic: हर 2 member = 1 pair.  
+        1 pair की binary earning = 3₹ (20₹ का 15%).  
+        यह earnings Bonus Wallet में जाती है, जिसमें 15% service charge पहले ही adjust माना गया है।
+      </p>
+    </div>
+
+    <!-- NOTE: यहाँ आगे चलकर Binary Tree View भी जोड़ा जा सकता है -->
+  </div>
+</div>
+
+<!-- Firebase CDN Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+
+<script>
+  // ============================
+  //  Firebase Configuration
+  // ============================
+  const firebaseConfig = {
+    apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+    authDomain: "rjvc-plan.firebaseapp.com",
+    projectId: "rjvc-plan",
+    storageBucket: "rjvc-plan.firebasestorage.app",
+    messagingSenderId: "265431528728",
+    appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d",
+    measurementId: "G-1Y7PN96H93"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  try { firebase.analytics(); } catch (e) {}
+  const db = firebase.firestore();
+  const usersCol = db.collection("Users");
+
+  // ============================
+  //  ADMIN LOGIN
+  // ============================
+  const ADMIN_ID = "admin";
+  const ADMIN_PASSWORD = "1234";
+
+  const loginPage = document.getElementById("loginPage");
+  const adminPage = document.getElementById("adminPage");
+
+  const adminIdInput = document.getElementById("adminIdInput");
+  const adminPassInput = document.getElementById("adminPassInput");
+  const adminLoginBtn = document.getElementById("adminLoginBtn");
+  const adminLoginMsg = document.getElementById("adminLoginMsg");
+  const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+
+  let currentAdminLoggedIn = false;
+  let adminUsersUnsub = null;
+
+  adminLoginBtn.addEventListener("click", () => {
+    const id = adminIdInput.value.trim();
+    const pass = adminPassInput.value.trim();
+    adminLoginMsg.style.display = "none";
+
+    if (id === ADMIN_ID && pass === ADMIN_PASSWORD) {
+      currentAdminLoggedIn = true;
+      loginPage.style.display = "none";
+      adminPage.style.display = "block";
+      subscribeUsersList();
+    } else {
+      adminLoginMsg.textContent = "गलत ID या Password!";
+      adminLoginMsg.style.display = "block";
+    }
+  });
+
+  adminLogoutBtn.addEventListener("click", () => {
+    currentAdminLoggedIn = false;
+    if (adminUsersUnsub) adminUsersUnsub();
+    adminUsersUnsub = null;
+    adminPage.style.display = "none";
+    loginPage.style.display = "block";
+    adminPassInput.value = "";
+  });
+
+  // ============================
+  //  CREATE CUSTOMER
+  // ============================
+  const newCustName = document.getElementById("newCustName");
+  const newCustPass = document.getElementById("newCustPass");
+  const createCustBtn = document.getElementById("createCustBtn");
+  const createCustMsg = document.getElementById("createCustMsg");
+
+  createCustBtn.addEventListener("click", async () => {
+    const name = newCustName.value.trim();
+    const pass = newCustPass.value.trim();
+    createCustMsg.style.display = "none";
+
+    if (!name || !pass) {
+      createCustMsg.textContent = "Name और Password दोनों जरूरी हैं।";
+      createCustMsg.className = "error";
+      createCustMsg.style.display = "block";
+      return;
+    }
+
+    try {
+      const existing = await usersCol.where("name", "==", name).limit(1).get();
+      if (!existing.empty) {
+        createCustMsg.textContent = "ये नाम पहले से registered है।";
+        createCustMsg.className = "error";
+        createCustMsg.style.display = "block";
+        return;
       }
+
+      await usersCol.add({
+        name,
+        password: pass,
+        commissionWallet: 0,
+        bonusWallet: 0,
+        totalMembers: 0,
+        totalPairs: 0,
+        isBlocked: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      newCustName.value = "";
+      newCustPass.value = "";
+      createCustMsg.textContent = "Customer सफलतापूर्वक बनाया गया।";
+      createCustMsg.className = "success";
+      createCustMsg.style.display = "block";
+    } catch (err) {
+      createCustMsg.textContent = "Error: " + err.message;
+      createCustMsg.className = "error";
+      createCustMsg.style.display = "block";
+    }
+  });
+
+  // ============================
+  //  USERS LIST + EARNING
+  // ============================
+  const usersTableBody = document.getElementById("usersTableBody");
+  const adminTotalUsers = document.getElementById("adminTotalUsers");
+  const totalPairsEl = document.getElementById("totalPairs");
+  const totalBonusEl = document.getElementById("totalBonus");
+
+  function subscribeUsersList() {
+    if (adminUsersUnsub) adminUsersUnsub();
+    adminUsersUnsub = usersCol.orderBy("name").onSnapshot((snap) => {
+      usersTableBody.innerHTML = "";
+      let count = 0;
+      let sumPairs = 0;
+      let sumBonus = 0;
+
+      snap.forEach((doc) => {
+        count++;
+        const data = doc.data();
+        const members = data.totalMembers || 0;
+        const pairs = data.totalPairs || 0;
+        const comm = data.commissionWallet || 0;
+        const bonus = data.bonusWallet || 0;
+        const isBlocked = !!data.isBlocked;
+
+        sumPairs += pairs;
+        sumBonus += bonus;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${count}</td>
+          <td>${data.name || ""}</td>
+          <td>${members}</td>
+          <td>${pairs}</td>
+          <td>₹${comm}</td>
+          <td>₹${bonus}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" data-action="add" data-id="${doc.id}" ${isBlocked ? "disabled" : ""}>+ Member</button>
+            <button class="btn btn-sm btn-secondary" data-action="toggleBlock" data-id="${doc.id}">
+              ${isBlocked ? "Unblock" : "Block"}
+            </button>
+            <button class="btn btn-sm btn-danger" data-action="delete" data-id="${doc.id}">Del</button>
+          </td>
+        `;
+        usersTableBody.appendChild(tr);
+      });
+
+      adminTotalUsers.textContent = count + " customers";
+      totalPairsEl.textContent = sumPairs;
+      totalBonusEl.textContent = "₹" + sumBonus;
     });
-  </script>
+  }
+
+  usersTableBody.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const id = btn.getAttribute("data-id");
+    const action = btn.getAttribute("data-action");
+    if (!id || !action) return;
+
+    if (action === "add") {
+      await addMemberToUser(id);
+    } else if (action === "toggleBlock") {
+      await toggleBlockUser(id);
+    } else if (action === "delete") {
+      await deleteUser(id);
+    }
+  });
+
+  async function addMemberToUser(userId) {
+    try {
+      const ref = usersCol.doc(userId);
+      const snap = await ref.get();
+      if (!snap.exists) return;
+      const data = snap.data();
+      if (data.isBlocked) {
+        alert("ये customer blocked है।");
+        return;
+      }
+
+      let members = (data.totalMembers || 0) + 1;
+      let oldPairs = data.totalPairs || 0;
+      let newPairs = Math.floor(members / 2) - oldPairs;
+      let totalPairs = oldPairs + (newPairs > 0 ? newPairs : 0);
+
+      let comm = data.commissionWallet || 0;
+      let bonus = data.bonusWallet || 0;
+
+      if (newPairs > 0) {
+        const earningPerPair = 3; // ₹3 per pair
+        const gross = newPairs * earningPerPair;
+        const serviceCharge = Math.round(gross * 0.15); // 15% service charge (hidden)
+        const net = gross - serviceCharge;
+        // Binary earning Bonus Wallet में जाएगी
+        bonus += net;
+      }
+
+      await ref.update({
+        totalMembers: members,
+        totalPairs: totalPairs,
+        commissionWallet: comm,
+        bonusWallet: bonus
+      });
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+
+  async function toggleBlockUser(userId) {
+    try {
+      const ref = usersCol.doc(userId);
+      const snap = await ref.get();
+      if (!snap.exists) return;
+      const isBlocked = !!snap.data().isBlocked;
+      await ref.update({ isBlocked: !isBlocked });
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+
+  async function deleteUser(userId) {
+    if (!confirm("क्या आप इस customer को delete करना चाहते हैं?")) return;
+    try {
+      await usersCol.doc(userId).delete();
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+</script>
 </body>
 </html>
