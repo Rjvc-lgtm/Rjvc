@@ -119,6 +119,19 @@
       font-size: 13px;
       margin-top: 4px;
     }
+    .success {
+      color: #166534;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .col {
+      flex: 1 1 180px;
+    }
   </style>
 </head>
 <body>
@@ -180,6 +193,59 @@
         <div class="small">ये वही amount है जो अभी आपके दोनों wallets में दिख रही है।</div>
       </div>
     </div>
+
+    <!-- WITHDRAWAL & BANK DETAILS -->
+    <div id="withdrawCard" class="card" style="display:none;">
+      <h2>Bank Withdrawal (Bonus Wallet)</h2>
+      <div class="small">
+        यहाँ से आप Bonus Wallet से withdrawal request भेज सकते हैं।  
+        Request जाने पर amount आपके bonus wallet से reduce हो जाएगा और status <b>Pending</b> रहेगा,  
+        जब तक admin approve करके <b>Paid</b नहीं कर देता।
+      </div>
+
+      <div class="row mt-12">
+        <div class="col">
+          <label>Account Holder Name</label>
+          <input id="bankHolderInput" type="text" placeholder="Account पर लिखा नाम" />
+        </div>
+        <div class="col">
+          <label>Bank Name</label>
+          <input id="bankNameInput" type="text" placeholder="जैसे: SBI / HDFC" />
+        </div>
+      </div>
+
+      <div class="row mt-8">
+        <div class="col">
+          <label>Account Number</label>
+          <input id="bankAccountInput" type="text" placeholder="Account Number" />
+        </div>
+        <div class="col">
+          <label>IFSC Code</label>
+          <input id="bankIfscInput" type="text" placeholder="जैसे: SBIN0001234" />
+        </div>
+      </div>
+
+      <div class="row mt-8">
+        <div class="col">
+          <label>UPI ID (optional)</label>
+          <input id="bankUpiInput" type="text" placeholder="जैसे: number@upi" />
+        </div>
+        <div class="col">
+          <label>Withdrawal Amount (Bonus से) ₹</label>
+          <input id="withdrawAmountInput" type="number" min="0" value="0" />
+        </div>
+      </div>
+
+      <button id="withdrawBtn" class="btn btn-primary mt-12" style="width:100%;">Withdrawal Request भेजें</button>
+      <div id="withdrawMsg" class="success" style="display:none;"></div>
+
+      <div class="small mt-8">
+        नोट:  
+        • Request भेजते ही amount आपके Bonus Wallet से घट जाएगा।  
+        • Admin approval के बाद status "Paid" होगा और payment आपके bank/UPI में होगी.  
+        • अगर admin reject करता है, तो amount वापस Bonus Wallet में वापस जोड़ा जा सकता है (Admin panel से)।  
+      </div>
+    </div>
   </div>
 
   <!-- Firebase CDN Scripts (v8) -->
@@ -205,6 +271,7 @@
     try { firebase.analytics(); } catch (e) {}
     const db = firebase.firestore();
     const usersCol = db.collection("Users");
+    const withdrawalsCol = db.collection("Withdrawals");
 
     // ============================
     //  CUSTOMER LOGIN / DASHBOARD
@@ -216,6 +283,7 @@
 
     const customerLoginCard = document.getElementById("customerLoginCard");
     const customerDashboardCard = document.getElementById("customerDashboardCard");
+    const withdrawCard = document.getElementById("withdrawCard");
 
     const custLogoutBtn = document.getElementById("custLogoutBtn");
     const custWelcome = document.getElementById("custWelcome");
@@ -226,8 +294,19 @@
     const custNextNeed = document.getElementById("custNextNeed");
     const custTotalAmount = document.getElementById("custTotalAmount");
 
+    // Withdrawal DOM
+    const bankHolderInput = document.getElementById("bankHolderInput");
+    const bankNameInput = document.getElementById("bankNameInput");
+    const bankAccountInput = document.getElementById("bankAccountInput");
+    const bankIfscInput = document.getElementById("bankIfscInput");
+    const bankUpiInput = document.getElementById("bankUpiInput");
+    const withdrawAmountInput = document.getElementById("withdrawAmountInput");
+    const withdrawBtn = document.getElementById("withdrawBtn");
+    const withdrawMsg = document.getElementById("withdrawMsg");
+
     let currentCustomer = null;
     let currentCustomerUnsub = null;
+    let currentCustomerId = null;
 
     function formatRupees(x) {
       return "₹" + (x || 0);
@@ -241,6 +320,7 @@
 
     function subscribeCustomerDoc(docId) {
       if (currentCustomerUnsub) currentCustomerUnsub();
+      currentCustomerId = docId;
       currentCustomerUnsub = usersCol.doc(docId).onSnapshot((snap) => {
         if (!snap.exists) return;
         currentCustomer = snap;
@@ -262,6 +342,7 @@
 
         customerLoginCard.style.display = "none";
         customerDashboardCard.style.display = "block";
+        withdrawCard.style.display = "block";
       });
     }
 
@@ -302,10 +383,98 @@
       if (currentCustomerUnsub) currentCustomerUnsub();
       currentCustomerUnsub = null;
       currentCustomer = null;
+      currentCustomerId = null;
       custNameInput.value = "";
       custPassInput.value = "";
       customerDashboardCard.style.display = "none";
+      withdrawCard.style.display = "none";
       customerLoginCard.style.display = "block";
+    });
+
+    // ============================
+    //  WITHDRAWAL REQUEST
+    // ============================
+    withdrawBtn.addEventListener("click", async () => {
+      withdrawMsg.style.display = "none";
+
+      if (!currentCustomer || !currentCustomerId) {
+        withdrawMsg.textContent = "पहले login करें।";
+        withdrawMsg.className = "error";
+        withdrawMsg.style.display = "block";
+        return;
+      }
+
+      const holder = bankHolderInput.value.trim();
+      const bankName = bankNameInput.value.trim();
+      const account = bankAccountInput.value.trim();
+      const ifsc = bankIfscInput.value.trim();
+      const upi = bankUpiInput.value.trim();
+      const amount = parseFloat(withdrawAmountInput.value || "0");
+
+      if (!holder || !bankName || !account || !ifsc) {
+        withdrawMsg.textContent = "Account Holder, Bank Name, Account Number और IFSC जरूरी हैं।";
+        withdrawMsg.className = "error";
+        withdrawMsg.style.display = "block";
+        return;
+      }
+      if (amount <= 0) {
+        withdrawMsg.textContent = "Valid withdrawal amount डालें।";
+        withdrawMsg.className = "error";
+        withdrawMsg.style.display = "block";
+        return;
+      }
+
+      try {
+        // latest data from Firestore
+        const userSnap = await usersCol.doc(currentCustomerId).get();
+        if (!userSnap.exists) {
+          withdrawMsg.textContent = "User data नहीं मिला।";
+          withdrawMsg.className = "error";
+          withdrawMsg.style.display = "block";
+          return;
+        }
+        const data = userSnap.data();
+        const name = data.name || "";
+        let bonus = data.bonusWallet || 0;
+
+        if (bonus < amount) {
+          withdrawMsg.textContent = "Bonus Wallet में इतना balance नहीं है। Current: " + formatRupees(bonus);
+          withdrawMsg.className = "error";
+          withdrawMsg.style.display = "block";
+          return;
+        }
+
+        // 1) bonus wallet से amount घटाना
+        bonus = bonus - amount;
+        await usersCol.doc(currentCustomerId).update({
+          bonusWallet: bonus
+        });
+
+        // 2) Withdrawal request create करना
+        await withdrawalsCol.add({
+          userId: currentCustomerId,
+          customerName: name,
+          amount: amount,
+          walletType: "bonus",
+          bankHolder: holder,
+          bankName: bankName,
+          bankAccount: account,
+          bankIfsc: ifsc,
+          bankUpi: upi,
+          status: "Pending",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        withdrawAmountInput.value = "0";
+        withdrawMsg.textContent = "Withdrawal request भेज दी गई है (status: Pending).";
+        withdrawMsg.className = "success";
+        withdrawMsg.style.display = "block";
+
+      } catch (err) {
+        withdrawMsg.textContent = "Error: " + err.message;
+        withdrawMsg.className = "error";
+        withdrawMsg.style.display = "block";
+      }
     });
   </script>
 </body>
