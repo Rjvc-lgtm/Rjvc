@@ -2,18 +2,19 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>Binary Tree Admin Panel</title>
+  <title>RJVC Admin Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
     *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto;}
-    body{margin:0;background:#f2f5ff;}
+    body{margin:0;background:#f2f5ff;color:#111827;}
     h1,h2,h3{margin:0 0 8px;}
-    .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-    .card{background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:24px;max-width:480px;width:100%;}
+    .page{max-width:1100px;margin:0 auto;padding:16px;}
+    .card{background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:16px;margin-bottom:16px;}
     label{display:block;font-size:14px;margin-bottom:4px;}
     input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #c5cbe3;font-size:15px;}
     input:focus{outline:none;border-color:#2952ff;box-shadow:0 0 0 2px rgba(41,82,255,.18);}
-    .btn{border:none;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer;}
+    .btn{border:none;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:500;cursor:pointer;}
     .btn-primary{background:#2952ff;color:#fff;}
     .btn-secondary{background:#e2e7ff;color:#172554;}
     .btn-danger{background:#fee2e2;color:#991b1b;}
@@ -24,495 +25,526 @@
     .mt-4{margin-top:16px;}
     .flex{display:flex;}
     .between{justify-content:space-between;align-items:center;}
-    .center{text-align:center;}
+    .small{font-size:12px;color:#6b7280;}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#e5f3ff;color:#1d4ed8;}
     table{width:100%;border-collapse:collapse;font-size:13px;}
     th,td{padding:6px 4px;border-bottom:1px solid #e5e7eb;text-align:left;}
     th{font-size:12px;text-transform:uppercase;color:#6b7280;}
-    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#e5f3ff;color:#1d4ed8;}
-    .wrap{max-width:1100px;width:100%;margin:24px auto;}
-    .panel{background:#fff;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:18px;margin-bottom:18px;}
-    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:12px;}
-    .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:6px;}
     .wallets{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
     .wallet-box{flex:1 1 140px;background:#eff6ff;border-radius:14px;padding:10px 12px;}
     .wallet-title{font-size:12px;color:#4b5563;}
     .wallet-value{font-size:18px;font-weight:700;color:#1d4ed8;}
     .error{color:#dc2626;font-size:13px;margin-top:6px;}
-
-    .tree-level{margin:8px 0;text-align:center;}
-    .tree-node-wrap{display:inline-block;margin:6px;text-align:center;}
-    .tree-node{
-      padding:6px 10px;
-      border-radius:12px;
-      background:#111827;
-      border:1px solid #4b5563;
-      font-size:12px;
-      min-width:120px;
-    }
-    .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
-    .tree-node-name{font-weight:600;}
-    .tree-node-meta{font-size:10px;color:#9ca3af;margin-top:2px;}
-    .tree-node-actions{margin-top:6px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
-    .tree-node-actions .btn-sm{padding:4px 6px;font-size:10px;}
-
+    .success{color:#166534;font-size:13px;margin-top:6px;}
+    .pill{padding:2px 8px;border-radius:999px;font-size:11px;display:inline-block;}
+    .pill-pending{background:#fef3c7;color:#92400e;}
+    .pill-paid{background:#dcfce7;color:#166534;}
+    .pill-rejected{background:#fee2e2;color:#991b1b;}
     @media(max-width:720px){
-      .wrap{padding:0 6px;}
-      .panel{padding:12px;}
-      table{font-size:12px;}
+      .flex.wrap{flex-wrap:wrap;}
     }
   </style>
 </head>
 <body>
 
-<!-- LOGIN PAGE -->
+<!-- ADMIN LOGIN PAGE -->
 <div id="loginPage" class="page">
-  <div class="card">
-    <h1 class="center">Admin Login</h1>
-    <p class="center" style="font-size:13px;color:#6b7280;margin-bottom:16px;">
-      नीचे ID और Password डालें।
+  <div class="card" style="max-width:420px;margin:40px auto;">
+    <h1 style="text-align:center;">RJVC Admin Login</h1>
+    <p class="small" style="text-align:center;margin-bottom:16px;">
+      यह पेज सिर्फ admin के लिए है। Customer को यह link न दें।
     </p>
     <label>Admin ID</label>
-    <input id="adminId" placeholder="जैसे: admin" />
+    <input id="adminIdInput" placeholder="जैसे: admin" />
     <div class="mt-2"></div>
     <label>Password</label>
-    <input id="adminPass" type="password" placeholder="जैसे: 1234" />
-    <button class="btn btn-primary mt-3" style="width:100%;" onclick="handleAdminLogin()">
-      Login
-    </button>
-    <div id="loginError" class="error" style="display:none;">गलत ID या Password</div>
-    <p style="margin-top:12px;font-size:12px;color:#6b7280;">
-      अभी के लिए default login: <b>ID: admin</b>, <b>Password: 1234</b>  
-      (कोड में ऊपर बदल सकते हैं)
+    <input id="adminPassInput" type="password" placeholder="जैसे: 1234" />
+    <button id="adminLoginBtn" class="btn btn-primary mt-3" style="width:100%;">Login</button>
+    <div id="adminLoginMsg" class="error" style="display:none;"></div>
+    <p class="small" style="margin-top:12px;">
+      फिलहाल default: <b>ID: admin</b>, <b>Password: 1234</b>
     </p>
   </div>
 </div>
 
-<!-- ADMIN PAGE -->
+<!-- ADMIN DASHBOARD PAGE -->
 <div id="adminPage" style="display:none;">
-  <div class="wrap">
-    <div class="panel flex between">
+  <div class="page">
+    <div class="card flex between">
       <div>
-        <h2>Binary Tree Admin</h2>
-        <div style="font-size:13px;color:#4b5563;">
-          हर customer 20₹ देता है, 2 members (1 pair) पर <b>3₹</b> binary earning auto calculate होगी।
+        <h2>RJVC Admin Panel</h2>
+        <div class="small">
+          यहाँ से आप customers बना सकते हैं, उनकी members / pairs / wallets और withdrawal requests manage कर सकते हैं।
         </div>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+      <button id="adminLogoutBtn" class="btn btn-secondary btn-sm">Logout</button>
     </div>
 
-    <!-- CREATE CUSTOMER ROOT -->
-    <div class="panel">
-      <h3>नया Customer बनाएं (Root level)</h3>
-      <div class="flex" style="gap:10px;flex-wrap:wrap;margin-top:8px;">
+    <!-- CREATE CUSTOMER -->
+    <div class="card">
+      <h3>नया Customer Create करें</h3>
+      <div class="flex wrap" style="gap:10px;margin-top:8px;">
         <div style="flex:1 1 200px;">
           <label>Customer Name</label>
-          <input id="newName" placeholder="जैसे: Rajesh" />
+          <input id="newCustName" placeholder="जैसे: Rajesh" />
         </div>
         <div style="flex:1 1 200px;">
-          <label>Customer Password (Login के लिए)</label>
-          <input id="newPass" placeholder="जैसे: 1234" />
+          <label>Customer Password</label>
+          <input id="newCustPass" placeholder="जैसे: 1234" />
         </div>
       </div>
-      <button class="btn btn-primary mt-3" onclick="createRootCustomer()">
-        Root में नया Customer जोड़ें
-      </button>
-      <p style="font-size:12px;color:#6b7280;margin-top:6px;">
-        Root में नया customer add होगा। बाद में Tree view में किसी भी node पर 
-        <b>+Member / Edit / Delete</b> से पूरा binary tree manage कर सकते हैं।
+      <button id="createCustBtn" class="btn btn-primary mt-3">Create Customer</button>
+      <div id="createCustMsg" class="success" style="display:none;"></div>
+      <p class="small" style="margin-top:6px;">
+        यह customer सीधे RJVC Customer Login (index.html) से name + password डालकर login कर पाएगा।
       </p>
     </div>
 
-    <!-- CUSTOMER LIST -->
-    <div class="panel">
+    <!-- CUSTOMERS LIST -->
+    <div class="card">
       <div class="flex between">
-        <h3>Customer List (Tree Nodes)</h3>
-        <span class="badge" id="totalCustomersBadge">0 Customers</span>
+        <div>
+          <h3>Customer List</h3>
+          <div class="small">यहाँ से आप total members बढ़ा सकते हैं और binary pairs से bonus दे सकते हैं।</div>
+        </div>
+        <span class="badge" id="adminTotalUsers">0 customers</span>
       </div>
+
       <div class="wallets">
         <div class="wallet-box">
-          <div class="wallet-title">कुल Pairs (पूरा Tree)</div>
+          <div class="wallet-title">कुल Pairs (सभी customers)</div>
           <div id="totalPairs" class="wallet-value">0</div>
         </div>
         <div class="wallet-box">
-          <div class="wallet-title">कुल Commission Wallet (₹)</div>
-          <div id="totalCommission" class="wallet-value">₹0</div>
+          <div class="wallet-title">कुल Bonus Wallet (₹)</div>
+          <div id="totalBonus" class="wallet-value">₹0</div>
         </div>
       </div>
-      <div class="mt-3" style="overflow-x:auto;">
+
+      <div style="overflow-x:auto;margin-top:10px;">
         <table>
           <thead>
             <tr>
               <th>#</th>
               <th>Name</th>
-              <th>Members<br/>(नीचे)</th>
+              <th>Members</th>
               <th>Pairs</th>
-              <th>Commission<br/>(₹)</th>
+              <th>Comm Wallet</th>
+              <th>Bonus Wallet</th>
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody id="customerTableBody">
-            <!-- JS से rows -->
+          <tbody id="usersTableBody">
+            <!-- JS rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:6px;">
+        Logic: हर 2 member = 1 pair.  
+        1 pair की binary earning = 3₹ (20₹ का लगभग 15%).  
+        यह earnings Bonus Wallet में जाती है, जिसमें 15% service charge पहले ही adjust माना गया है (customer को सिर्फ final bonus दिखता है)।
+      </p>
+    </div>
+
+    <!-- WITHDRAWAL REQUESTS -->
+    <div class="card">
+      <div class="flex between">
+        <div>
+          <h3>Withdrawal Requests</h3>
+          <div class="small">यहाँ से आप Pending requests को Paid / Rejected कर सकते हैं। Amount पहले ही Bonus Wallet से कट चुका होता है।</div>
+        </div>
+        <span class="badge" id="totalWithdrawBadge">0 requests</span>
+      </div>
+
+      <div style="overflow-x:auto;margin-top:10px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Wallet</th>
+              <th>Bank</th>
+              <th>Account</th>
+              <th>IFSC</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="withdrawTableBody">
+            <!-- JS rows -->
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- TREE VIEW (3-option वाला सेक्शन) -->
-    <div class="tree-panel">
-      <div class="flex between">
-        <div>
-          <div class="tree-root-label">Binary Tree View</div>
-          <div id="treeRootInfo" style="font-size:13px;margin-bottom:4px;">
-            अभी कोई root select नहीं है।
-          </div>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">
-          सिर्फ Root दिखाओ
-        </button>
-      </div>
-      <div id="treeViewArea" style="margin-top:10px;font-size:12px;">
-        अभी tree खाली है।
-      </div>
-    </div>
-
+    <!-- NOTE: आगे चलकर यहाँ Binary Tree View भी जोड़ा जाएगा -->
   </div>
 </div>
 
+<!-- Firebase CDN Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+
 <script>
-  /************ ADMIN LOGIN CONFIG ************/
+  // ============================
+  //  Firebase Configuration
+  // ============================
+  const firebaseConfig = {
+    apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+    authDomain: "rjvc-plan.firebaseapp.com",
+    projectId: "rjvc-plan",
+    storageBucket: "rjvc-plan.firebasestorage.app",
+    messagingSenderId: "265431528728",
+    appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d",
+    measurementId: "G-1Y7PN96H93"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  try { firebase.analytics(); } catch (e) {}
+  const db = firebase.firestore();
+  const usersCol = db.collection("Users");
+  const withdrawalsCol = db.collection("Withdrawals");
+
+  // ============================
+  //  ADMIN LOGIN
+  // ============================
   const ADMIN_ID = "admin";
   const ADMIN_PASSWORD = "1234";
 
-  /************ DATA STRUCTURE ************/
-  let nodes = {};      // id -> node
-  let rootId = null;   // सबसे ऊपर वाला root
-  let currentTreeRootId = null; // अभी tree किससे शुरू हो रहा है
+  const loginPage = document.getElementById("loginPage");
+  const adminPage = document.getElementById("adminPage");
 
-  function createNode(id, name, password) {
-    return {
-      id,
-      name,
-      password,
-      left: null,
-      right: null,
-      parent: null,
-      members: 0,
-      pairs: 0,
-      commission: 0
-    };
-  }
+  const adminIdInput = document.getElementById("adminIdInput");
+  const adminPassInput = document.getElementById("adminPassInput");
+  const adminLoginBtn = document.getElementById("adminLoginBtn");
+  const adminLoginMsg = document.getElementById("adminLoginMsg");
+  const adminLogoutBtn = document.getElementById("adminLogoutBtn");
 
-  /************ LOGIN ************/
-  function handleAdminLogin() {
-    const id = document.getElementById("adminId").value.trim();
-    const pass = document.getElementById("adminPass").value.trim();
-    const err = document.getElementById("loginError");
+  let currentAdminLoggedIn = false;
+  let adminUsersUnsub = null;
+  let adminWithdrawUnsub = null;
+
+  adminLoginBtn.addEventListener("click", () => {
+    const id = adminIdInput.value.trim();
+    const pass = adminPassInput.value.trim();
+    adminLoginMsg.style.display = "none";
 
     if (id === ADMIN_ID && pass === ADMIN_PASSWORD) {
-      err.style.display = "none";
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("adminPage").style.display = "block";
-      loadData();
-      renderAll();
+      currentAdminLoggedIn = true;
+      loginPage.style.display = "none";
+      adminPage.style.display = "block";
+      subscribeUsersList();
+      subscribeWithdrawals();
     } else {
-      err.style.display = "block";
+      adminLoginMsg.textContent = "गलत ID या Password!";
+      adminLoginMsg.style.display = "block";
     }
-  }
+  });
 
-  function logout() {
-    document.getElementById("adminPage").style.display = "none";
-    document.getElementById("loginPage").style.display = "flex";
-    document.getElementById("adminPass").value = "";
-  }
+  adminLogoutBtn.addEventListener("click", () => {
+    currentAdminLoggedIn = false;
+    if (adminUsersUnsub) adminUsersUnsub();
+    if (adminWithdrawUnsub) adminWithdrawUnsub();
+    adminUsersUnsub = null;
+    adminWithdrawUnsub = null;
+    adminPage.style.display = "none";
+    loginPage.style.display = "block";
+    adminPassInput.value = "";
+  });
 
-  /************ STORAGE ************/
-  const STORAGE_KEY = "binary_admin_tree_v2";
+  // ============================
+  //  CREATE CUSTOMER
+  // ============================
+  const newCustName = document.getElementById("newCustName");
+  const newCustPass = document.getElementById("newCustPass");
+  const createCustBtn = document.getElementById("createCustBtn");
+  const createCustMsg = document.getElementById("createCustMsg");
 
-  function saveData() {
-    const payload = { nodes, rootId };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }
+  createCustBtn.addEventListener("click", async () => {
+    const name = newCustName.value.trim();
+    const pass = newCustPass.value.trim();
+    createCustMsg.style.display = "none";
 
-  function loadData() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw);
-      nodes = parsed.nodes || {};
-      rootId = parsed.rootId || null;
-    } catch (e) {
-      console.error("Load error", e);
-    }
-    recalcAll();
-  }
-
-  /************ CREATE ROOT CUSTOMER ************/
-  function createRootCustomer() {
-    const name = document.getElementById("newName").value.trim();
-    const pass = document.getElementById("newPass").value.trim();
     if (!name || !pass) {
-      alert("Name और Password दोनों भरें");
+      createCustMsg.textContent = "Name और Password दोनों जरूरी हैं।";
+      createCustMsg.className = "error";
+      createCustMsg.style.display = "block";
       return;
     }
 
-    const id = "CUST_" + Date.now();
-    const node = createNode(id, name, pass);
-
-    if (!rootId) {
-      rootId = id;
-    }
-    nodes[id] = node;
-
-    document.getElementById("newName").value = "";
-    document.getElementById("newPass").value = "";
-
-    recalcAll();
-    saveData();
-    renderAll();
-  }
-
-  /************ ADD MEMBER (Left / Right, बीच में भी) ************/
-  function addMember(parentId, side) {
-    const parent = nodes[parentId];
-    if (!parent) {
-      alert("Parent नहीं मिला");
-      return;
-    }
-
-    const name = prompt("नया member का नाम?");
-    if (!name) return;
-    const pass = prompt("उसका login password?");
-    if (!pass) return;
-
-    const newId = "CUST_" + Date.now();
-    const newNode = createNode(newId, name, pass);
-    nodes[newId] = newNode;
-
-    const existingChildId = parent[side];
-
-    newNode.parent = parentId;
-    parent[side] = newId;
-
-    if (existingChildId) {
-      const existingChild = nodes[existingChildId];
-      if (!newNode.left) {
-        newNode.left = existingChildId;
-      } else if (!newNode.right) {
-        newNode.right = existingChildId;
-      } else {
-        alert("नया node already दो बच्चे रखता है!");
+    try {
+      const existing = await usersCol.where("name", "==", name).limit(1).get();
+      if (!existing.empty) {
+        createCustMsg.textContent = "ये नाम पहले से registered है।";
+        createCustMsg.className = "error";
+        createCustMsg.style.display = "block";
+        return;
       }
-      existingChild.parent = newId;
+
+      await usersCol.add({
+        name,
+        password: pass,
+        commissionWallet: 0,
+        bonusWallet: 0,
+        totalMembers: 0,
+        totalPairs: 0,
+        isBlocked: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      newCustName.value = "";
+      newCustPass.value = "";
+      createCustMsg.textContent = "Customer सफलतापूर्वक बनाया गया।";
+      createCustMsg.className = "success";
+      createCustMsg.style.display = "block";
+    } catch (err) {
+      createCustMsg.textContent = "Error: " + err.message;
+      createCustMsg.className = "error";
+      createCustMsg.style.display = "block";
     }
+  });
 
-    recalcAll();
-    saveData();
-    renderAll();
-    currentTreeRootId = parentId;
-    renderTree();
-  }
+  // ============================
+  //  USERS LIST + EARNING
+  // ============================
+  const usersTableBody = document.getElementById("usersTableBody");
+  const adminTotalUsers = document.getElementById("adminTotalUsers");
+  const totalPairsEl = document.getElementById("totalPairs");
+  const totalBonusEl = document.getElementById("totalBonus");
 
-  // Tree से call होगा – पहले पूछेगा Left या Right
-  function treeAddMember(parentId) {
-    const choice = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
-    if (!choice) return;
-    const c = choice.trim().toLowerCase();
-    let side = null;
-    if (c === "l" || c === "1") side = "left";
-    else if (c === "r" || c === "2") side = "right";
-    else {
-      alert("गलत choice, L/1 या R/2 लिखें");
-      return;
-    }
-    addMember(parentId, side);
-  }
+  function subscribeUsersList() {
+    if (adminUsersUnsub) adminUsersUnsub();
+    adminUsersUnsub = usersCol.orderBy("name").onSnapshot((snap) => {
+      usersTableBody.innerHTML = "";
+      let count = 0;
+      let sumPairs = 0;
+      let sumBonus = 0;
 
-  /************ EDIT / DELETE ************/
-  function editCustomer(id) {
-    const n = nodes[id];
-    if (!n) return;
-    const newName = prompt("नया नाम?", n.name);
-    if (!newName) return;
-    n.name = newName;
-    recalcAll();
-    saveData();
-    renderAll();
-    renderTree();
-  }
+      snap.forEach((doc) => {
+        count++;
+        const data = doc.data();
+        const members = data.totalMembers || 0;
+        const pairs = data.totalPairs || 0;
+        const comm = data.commissionWallet || 0;
+        const bonus = data.bonusWallet || 0;
+        const isBlocked = !!data.isBlocked;
 
-  function deleteCustomer(id) {
-    const n = nodes[id];
-    if (!n) return;
-    if (!confirm(`क्या आप "${n.name}" को delete करना चाहते हैं? उसके नीचे का सारा subtree भी delete होगा।`)) {
-      return;
-    }
+        sumPairs += pairs;
+        sumBonus += bonus;
 
-    if (rootId === id) {
-      rootId = null;
-      nodes = {};
-      currentTreeRootId = null;
-      saveData();
-      renderAll();
-      return;
-    }
-
-    const p = nodes[n.parent];
-    if (p) {
-      if (p.left === id) p.left = null;
-      if (p.right === id) p.right = null;
-    }
-
-    function deleteSubTree(nodeId) {
-      const node = nodes[nodeId];
-      if (!node) return;
-      if (node.left) deleteSubTree(node.left);
-      if (node.right) deleteSubTree(node.right);
-      delete nodes[nodeId];
-    }
-    deleteSubTree(id);
-
-    recalcAll();
-    saveData();
-    renderAll();
-    renderTree();
-  }
-
-  /************ CALCULATIONS ************/
-  function countDesc(nodeId) {
-    const node = nodes[nodeId];
-    if (!node) return 0;
-    let c = 0;
-    if (node.left)  c += 1 + countDesc(node.left);
-    if (node.right) c += 1 + countDesc(node.right);
-    return c;
-  }
-
-  function recalcAll() {
-    let totalPairs = 0;
-    let totalComm = 0;
-
-    Object.values(nodes).forEach(node => {
-      const members = countDesc(node.id);
-      const pairs = Math.floor(members / 2);
-      const commission = pairs * 3;
-
-      node.members = members;
-      node.pairs = pairs;
-      node.commission = commission;
-
-      totalPairs += pairs;
-      totalComm += commission;
-    });
-
-    document.getElementById("totalPairs").textContent = totalPairs;
-    document.getElementById("totalCommission").textContent = "₹" + totalComm;
-  }
-
-  /************ TABLE RENDER ************/
-  function renderTable() {
-    const tbody = document.getElementById("customerTableBody");
-    tbody.innerHTML = "";
-    const list = Object.values(nodes);
-    list.sort((a,b)=>a.name.localeCompare(b.name));
-
-    document.getElementById("totalCustomersBadge").textContent =
-      list.length + " Customers";
-
-    list.forEach((node, idx) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${idx+1}</td>
-        <td>${node.name}</td>
-        <td>${node.members}</td>
-        <td>${node.pairs}</td>
-        <td>₹${node.commission}</td>
-        <td>
-          <button class="btn btn-secondary btn-sm" onclick="viewTreeFrom('${node.id}')">Tree</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${node.id}')">Del</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  /************ TREE VIEW ************/
-  function viewTreeFrom(id) {
-    currentTreeRootId = id;
-    renderTree();
-  }
-
-  function showFullRootTree() {
-    currentTreeRootId = rootId;
-    renderTree();
-  }
-
-  function renderTree() {
-    const area = document.getElementById("treeViewArea");
-    const info = document.getElementById("treeRootInfo");
-
-    if (!rootId || !Object.keys(nodes).length) {
-      info.textContent = "Tree खाली है। पहले कोई customer जोड़ें।";
-      area.textContent = "";
-      return;
-    }
-    const startId = currentTreeRootId || rootId;
-    const startNode = nodes[startId];
-    if (!startNode) {
-      info.textContent = "Tree root नहीं मिला।";
-      area.textContent = "";
-      return;
-    }
-
-    info.innerHTML = `अभी tree <b>${startNode.name}</b> से शुरू हो रहा है 
-      (Members: ${startNode.members}, Pairs: ${startNode.pairs}, Commission: ₹${startNode.commission})`;
-
-    let html = "";
-    function buildLevel(ids) {
-      if (!ids.length) return;
-      html += `<div class="tree-level">`;
-      ids.forEach(id => {
-        const n = nodes[id];
-        if (!n) return;
-        const isRoot = (id === rootId);
-        html += `
-          <div class="tree-node-wrap">
-            <div class="tree-node ${isRoot ? "tree-node-main":""}">
-              <div class="tree-node-name">${n.name}</div>
-              <div class="tree-node-meta">
-                M:${n.members} · P:${n.pairs} · ₹${n.commission}
-              </div>
-              <div class="tree-node-actions">
-                <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
-                <button class="btn btn-secondary btn-sm" onclick="editCustomer('${n.id}')">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button>
-              </div>
-            </div>
-          </div>
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${count}</td>
+          <td>${data.name || ""}</td>
+          <td>${members}</td>
+          <td>${pairs}</td>
+          <td>₹${comm}</td>
+          <td>₹${bonus}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" data-action="add" data-id="${doc.id}" ${isBlocked ? "disabled" : ""}>+ Member</button>
+            <button class="btn btn-sm btn-secondary" data-action="toggleBlock" data-id="${doc.id}">
+              ${isBlocked ? "Unblock" : "Block"}
+            </button>
+            <button class="btn btn-sm btn-danger" data-action="delete" data-id="${doc.id}">Del</button>
+          </td>
         `;
+        usersTableBody.appendChild(tr);
       });
-      html += `</div>`;
 
-      const next = [];
-      ids.forEach(id=>{
-        const n = nodes[id];
-        if (!n) return;
-        if (n.left)  next.push(n.left);
-        if (n.right) next.push(n.right);
-      });
-      if (next.length) buildLevel(next);
-    }
-
-    buildLevel([startId]);
-    area.innerHTML = html;
+      adminTotalUsers.textContent = count + " customers";
+      totalPairsEl.textContent = sumPairs;
+      totalBonusEl.textContent = "₹" + sumBonus;
+    });
   }
 
-  /************ RENDER ALL ************/
-  function renderAll() {
-    recalcAll();
-    renderTable();
-    renderTree();
+  usersTableBody.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const id = btn.getAttribute("data-id");
+    const action = btn.getAttribute("data-action");
+    if (!id || !action) return;
+
+    if (action === "add") {
+      await addMemberToUser(id);
+    } else if (action === "toggleBlock") {
+      await toggleBlockUser(id);
+    } else if (action === "delete") {
+      await deleteUser(id);
+    }
+  });
+
+  async function addMemberToUser(userId) {
+    try {
+      const ref = usersCol.doc(userId);
+      const snap = await ref.get();
+      if (!snap.exists) return;
+      const data = snap.data();
+      if (data.isBlocked) {
+        alert("ये customer blocked है।");
+        return;
+      }
+
+      let members = (data.totalMembers || 0) + 1;
+      let oldPairs = data.totalPairs || 0;
+      let newPairs = Math.floor(members / 2) - oldPairs;
+      let totalPairs = oldPairs + (newPairs > 0 ? newPairs : 0);
+
+      let comm = data.commissionWallet || 0;
+      let bonus = data.bonusWallet || 0;
+
+      if (newPairs > 0) {
+        const earningPerPair = 3; // ₹3 per pair
+        const gross = newPairs * earningPerPair;
+        const serviceCharge = Math.round(gross * 0.15); // 15% hidden service charge
+        const net = gross - serviceCharge;
+        // Binary earning Bonus Wallet में जाएगी
+        bonus += net;
+      }
+
+      await ref.update({
+        totalMembers: members,
+        totalPairs: totalPairs,
+        commissionWallet: comm,
+        bonusWallet: bonus
+      });
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+
+  async function toggleBlockUser(userId) {
+    try {
+      const ref = usersCol.doc(userId);
+      const snap = await ref.get();
+      if (!snap.exists) return;
+      const isBlocked = !!snap.data().isBlocked;
+      await ref.update({ isBlocked: !isBlocked });
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+
+  async function deleteUser(userId) {
+    if (!confirm("क्या आप इस customer को delete करना चाहते हैं?")) return;
+    try {
+      await usersCol.doc(userId).delete();
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+
+  // ============================
+  //  WITHDRAWAL REQUESTS
+  // ============================
+  const withdrawTableBody = document.getElementById("withdrawTableBody");
+  const totalWithdrawBadge = document.getElementById("totalWithdrawBadge");
+
+  function subscribeWithdrawals() {
+    if (adminWithdrawUnsub) adminWithdrawUnsub();
+    adminWithdrawUnsub = withdrawalsCol
+      .orderBy("createdAt", "desc")
+      .onSnapshot((snap) => {
+        withdrawTableBody.innerHTML = "";
+        let count = 0;
+        snap.forEach((doc) => {
+          count++;
+          const w = doc.data();
+          const status = w.status || "Pending";
+          let pillClass = "pill-pending";
+          if (status === "Paid") pillClass = "pill-paid";
+          else if (status === "Rejected") pillClass = "pill-rejected";
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${w.customerName || ""}</td>
+            <td>₹${w.amount || 0}</td>
+            <td>${w.walletType || ""}</td>
+            <td>${w.bankName || ""}</td>
+            <td>${w.bankAccount || ""}</td>
+            <td>${w.bankIfsc || ""}</td>
+            <td><span class="pill ${pillClass}">${status}</span></td>
+            <td>
+              <button class="btn btn-sm btn-primary" data-wid="${doc.id}" data-waction="paid" ${status !== "Pending" ? "disabled" : ""}>Paid</button>
+              <button class="btn btn-sm btn-danger" data-wid="${doc.id}" data-waction="reject" ${status !== "Pending" ? "disabled" : ""}>Reject</button>
+            </td>
+          `;
+          withdrawTableBody.appendChild(tr);
+        });
+        totalWithdrawBadge.textContent = count + " requests";
+      });
+  }
+
+  withdrawTableBody.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const wid = btn.getAttribute("data-wid");
+    const action = btn.getAttribute("data-waction");
+    if (!wid || !action) return;
+
+    if (action === "paid") {
+      await markWithdrawalStatus(wid, "Paid");
+    } else if (action === "reject") {
+      // reject पर हम bonus वापस दे सकते हैं (optional)
+      if (confirm("Reject करने पर amount वापस Bonus Wallet में जोड़ना है?")) {
+        await rejectAndRefund(wid);
+      } else {
+        await markWithdrawalStatus(wid, "Rejected");
+      }
+    }
+  });
+
+  async function markWithdrawalStatus(wid, status) {
+    try {
+      await withdrawalsCol.doc(wid).update({ status: status });
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+
+  async function rejectAndRefund(wid) {
+    try {
+      const ref = withdrawalsCol.doc(wid);
+      const snap = await ref.get();
+      if (!snap.exists) return;
+      const w = snap.data();
+      if (w.status !== "Pending") {
+        alert("यह request Pending नहीं है।");
+        return;
+      }
+
+      const userId = w.userId;
+      const amount = w.amount || 0;
+      const walletType = w.walletType || "bonus";
+
+      if (!userId || amount <= 0) {
+        await ref.update({ status: "Rejected" });
+        return;
+      }
+
+      const userRef = usersCol.doc(userId);
+      const userSnap = await userRef.get();
+      if (!userSnap.exists) {
+        await ref.update({ status: "Rejected" });
+        return;
+      }
+      const data = userSnap.data();
+
+      if (walletType === "bonus") {
+        const bonus = (data.bonusWallet || 0) + amount;
+        await userRef.update({ bonusWallet: bonus });
+      } else if (walletType === "commission") {
+        const comm = (data.commissionWallet || 0) + amount;
+        await userRef.update({ commissionWallet: comm });
+      }
+
+      await ref.update({ status: "Rejected" });
+
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
   }
 </script>
-
 </body>
 </html>
