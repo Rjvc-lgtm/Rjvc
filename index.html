@@ -671,6 +671,28 @@
     }
   });
 </script>
+<!-- Firebase CDN Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
+<script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+    authDomain: "rjvc-plan.firebaseapp.com",
+    projectId: "rjvc-plan",
+    storageBucket: "rjvc-plan.firebasestorage.app",
+    messagingSenderId: "265431528728",
+    appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d",
+    measurementId: "G-1Y7PN96H93"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+
+  // Firestore Database
+  const db = firebase.firestore();
+</script>
 </body>
 </html>
