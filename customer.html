@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <title>RJVC PLAN - Customer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+    body{margin:0;background:#eef3ff}
+    .page{max-width:900px;margin:0 auto;padding:16px}
+    h1{margin:16px 0;text-align:center}
+    .card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.1);margin-bottom:16px}
+    label{display:block;margin-top:8px;font-size:14px}
+    input{width:100%;padding:10px;border-radius:10px;border:1px solid #cbd5e1}
+    input:focus{outline:none;border-color:#2563eb}
+    .btn{border:none;border-radius:20px;padding:10px 16px;font-weight:600;cursor:pointer}
+    .btn-primary{background:#2563eb;color:#fff}
+    .btn-secondary{background:#e5edff;color:#1e40af}
+    .btn-sm{padding:6px 10px;font-size:12px}
+    .flex{display:flex;align-items:center;justify-content:space-between}
+    .wallet-box{border-radius:14px;padding:12px;margin-top:8px}
+    .wallet-comm{background:#0f172a;color:#e5e7eb}
+    .wallet-avail{background:#e0f2fe;color:#082f49}
+    .stat-box{background:#f9fafb;border-radius:12px;padding:10px;margin-top:6px;border:1px solid #e5e7eb}
+    .small{font-size:12px;color:#6b7280}
+    .error{color:#b91c1c;font-size:13px;margin-top:6px}
+    .success{color:#166534;font-size:13px;margin-top:6px}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+    th,td{padding:6px;border-bottom:1px solid #e5e7eb}
+    th{background:#f8fafc;text-align:left;font-size:11px}
+    .status-pending{background:#fef3c7;padding:2px 6px;border-radius:12px;font-size:11px}
+    .status-approved{background:#bbf7d0;padding:2px 6px;border-radius:12px;font-size:11px}
+    .status-rejected{background:#fecaca;padding:2px 6px;border-radius:12px;font-size:11px}
+  </style>
+</head>
+<body>
+<div class="page">
+  <h1>RJVC PLAN - Customer</h1>
+
+  <!-- LOGIN CARD -->
+  <div id="loginCard" class="card">
+    <h2>Customer Login</h2>
+    <label>Customer Name</label>
+    <input id="loginName" placeholder="जैसे: Rajesh" />
+
+    <label>Password</label>
+    <input id="loginPass" type="password" placeholder="जैसे: 1234" />
+
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="customerLogin()">
+      Login
+    </button>
+
+    <div id="loginMsg" class="error" style="display:none;"></div>
+  </div>
+
+  <!-- DASHBOARD CARD -->
+  <div id="dashCard" class="card" style="display:none;">
+    <div class="flex">
+      <div>
+        <h2 id="custTitle">Customer Dashboard</h2>
+        <div class="small" id="custWelcome"></div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Wallets -->
+    <div class="wallet-box wallet-comm">
+      <div class="small">कुल Binary Commission (Tree से)</div>
+      <div style="font-size:24px;font-weight:700" id="totalCommission">₹0</div>
+      <div class="small">सिर्फ pairs के हिसाब से auto calculate किया गया amount।</div>
+    </div>
+
+    <div class="wallet-box wallet-avail">
+      <div class="small">Available Balance (निकालने के लिए)</div>
+      <div style="font-size:24px;font-weight:700" id="availBalance">₹0</div>
+      <div class="small">= Total Commission − Already Withdrawn</div>
+      <div class="small">इतना ही amount आप withdraw कर सकते हैं।</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-box">
+      <div>आपके नीचे कुल Members: <b><span id="statMembers">0</span></b></div>
+      <div>कुल Binary Pairs: <b><span id="statPairs">0</span></b></div>
+    </div>
+
+    <!-- Withdrawal Form -->
+    <div class="stat-box" style="margin-top:10px;">
+      <h3 style="margin:0 0 6px;">Withdrawal Request भेजें</h3>
+      <label>Amount (₹)</label>
+      <input id="wdAmount" type="number" min="1" />
+
+      <label>Remark / UPI / Bank Detail (short)</label>
+      <input id="wdNote" placeholder="जैसे: UPI xxxx@upi" />
+
+      <button class="btn btn-primary" style="margin-top:10px;" onclick="createWithdrawal()">
+        Withdrawal Request भेजें
+      </button>
+
+      <div id="wdMsg" class="error" style="display:none;"></div>
+    </div>
+
+    <!-- Withdrawal History -->
+    <div class="stat-box" style="margin-top:10px;">
+      <h3 style="margin:0 0 6px;">आपकी Withdrawal History</h3>
+      <div class="small">सबसे ऊपर latest request दिखेगी।</div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="wdTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase JS SDK v8 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+  // ---------- Firebase Init ----------
+  firebase.initializeApp({
+    apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+    authDomain: "rjvc-plan.firebaseapp.com",
+    projectId: "rjvc-plan"
+  });
+  const db = firebase.firestore();
+  const treeCol = db.collection("TreeNodes");
+  const wdCol   = db.collection("Withdrawals");
+
+  // ---------- UI refs ----------
+  const loginCard   = document.getElementById("loginCard");
+  const dashCard    = document.getElementById("dashCard");
+  const loginName   = document.getElementById("loginName");
+  const loginPass   = document.getElementById("loginPass");
+  const loginMsg    = document.getElementById("loginMsg");
+
+  const custWelcome      = document.getElementById("custWelcome");
+  const totalCommission  = document.getElementById("totalCommission");
+  const availBalance     = document.getElementById("availBalance");
+  const statMembers      = document.getElementById("statMembers");
+  const statPairs        = document.getElementById("statPairs");
+
+  const wdAmount   = document.getElementById("wdAmount");
+  const wdNote     = document.getElementById("wdNote");
+  const wdMsg      = document.getElementById("wdMsg");
+  const wdTableBody= document.getElementById("wdTableBody");
+
+  let currentCustId   = null;
+  let currentCustName = null;
+  let custUnsubDoc    = null;
+  let wdUnsubList     = null;
+
+  // ---------- Helper ----------
+  function formatRupee(x){ return "₹" + (x||0); }
+
+  // ---------- Login ----------
+  async function customerLogin(){
+    const name = loginName.value.trim();
+    const pass = loginPass.value.trim();
+    loginMsg.style.display="none";
+
+    if(!name || !pass){
+      loginMsg.textContent = "Name और Password दोनों भरें।";
+      loginMsg.style.display="block";
+      return;
+    }
+
+    try{
+      const snap = await treeCol
+        .where("name","==",name)
+        .where("password","==",pass)
+        .limit(1)
+        .get();
+      if(snap.empty){
+        loginMsg.textContent = "गलत Name या Password!";
+        loginMsg.style.display="block";
+        return;
+      }
+
+      const doc = snap.docs[0];
+      currentCustId = doc.id;
+      currentCustName = doc.data().name || name;
+
+      subscribeCustomer();
+      subscribeWithdrawals();
+
+      loginCard.style.display="none";
+      dashCard.style.display="block";
+    }catch(err){
+      loginMsg.textContent = "Login error: " + err.message;
+      loginMsg.style.display="block";
+    }
+  }
+
+  function logout(){
+    if(custUnsubDoc) custUnsubDoc();
+    if(wdUnsubList)  wdUnsubList();
+    currentCustId = null;
+    currentCustName = null;
+
+    loginName.value="";
+    loginPass.value="";
+    dashCard.style.display="none";
+    loginCard.style.display="block";
+  }
+
+  // ---------- Subscribe Customer Doc ----------
+  function subscribeCustomer(){
+    if(custUnsubDoc) custUnsubDoc();
+
+    custUnsubDoc = treeCol.doc(currentCustId).onSnapshot(doc=>{
+      if(!doc.exists) return;
+      const d = doc.data();
+
+      const comm = d.commission || 0;
+      const withdrawn = d.withdrawn || 0;
+      const avail = Math.max(comm - withdrawn,0);
+
+      custWelcome.textContent = "स्वागत है, " + (d.name || "") + " जी";
+      totalCommission.textContent = formatRupee(comm);
+      availBalance.textContent = formatRupee(avail);
+      statMembers.textContent = d.members || 0;
+      statPairs.textContent   = d.pairs || 0;
+    });
+  }
+
+  // ---------- Withdrawal History ----------
+  function subscribeWithdrawals(){
+    if(wdUnsubList) wdUnsubList();
+
+    wdUnsubList = wdCol
+      .where("customerId","==",currentCustId)
+      .orderBy("createdAt","desc")
+      .onSnapshot(snap=>{
+        wdTableBody.innerHTML="";
+        snap.forEach(doc=>{
+          const d = doc.data();
+          const tr = document.createElement("tr");
+
+          let statusClass="status-pending";
+          if(d.status==="approved") statusClass="status-approved";
+          if(d.status==="rejected") statusClass="status-rejected";
+
+          const dt = d.createdAt && d.createdAt.toDate
+            ? d.createdAt.toDate().toLocaleString()
+            : "";
+
+          tr.innerHTML = `
+            <td>${dt}</td>
+            <td>${formatRupee(d.amount)}</td>
+            <td><span class="${statusClass}">${d.status}</span></td>
+          `;
+          wdTableBody.appendChild(tr);
+        });
+      });
+  }
+
+  // ---------- Create Withdrawal ----------
+  async function createWithdrawal(){
+    wdMsg.style.display="none";
+    const amt = Number(wdAmount.value || 0);
+    const note= wdNote.value.trim();
+
+    if(!currentCustId){
+      wdMsg.textContent="पहले login करें।";
+      wdMsg.style.display="block";
+      return;
+    }
+    if(amt<=0){
+      wdMsg.textContent="Amount सही भरें।";
+      wdMsg.style.display="block";
+      return;
+    }
+
+    // अभी available balance client से नहीं निकाल रहे, सिर्फ basic check.
+    // असली limit admin approve करते समय भी check कर सकता है।
+    try{
+      await wdCol.add({
+        customerId: currentCustId,
+        customerName: currentCustName,
+        amount: amt,
+        walletType: "commission",
+        note: note,
+        status: "pending",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      wdAmount.value="";
+      wdNote.value="";
+      wdMsg.textContent="Request भेज दी गयी। Status pending है।";
+      wdMsg.className="success";
+      wdMsg.style.display="block";
+    }catch(err){
+      wdMsg.textContent="Error: "+err.message;
+      wdMsg.className="error";
+      wdMsg.style.display="block";
+    }
+  }
+</script>
+</body>
+</html>
