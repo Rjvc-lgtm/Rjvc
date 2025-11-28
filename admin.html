@@ -1,523 +1,410 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8" />
-  <title>Binary Tree Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto;}
-    body{margin:0;background:#f2f5ff;}
-    h1,h2,h3{margin:0 0 8px;}
-    .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-    .card{background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:24px;max-width:480px;width:100%;}
-    label{display:block;font-size:14px;margin-bottom:4px;}
-    input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #c5cbe3;font-size:15px;}
-    input:focus{outline:none;border-color:#2952ff;box-shadow:0 0 0 2px rgba(41,82,255,.18);}
-    .btn{border:none;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer;}
-    .btn-primary{background:#2952ff;color:#fff;}
-    .btn-secondary{background:#e2e7ff;color:#172554;}
-    .btn-danger{background:#fee2e2;color:#991b1b;}
-    .btn-sm{padding:6px 10px;font-size:12px;}
-    .btn:disabled{opacity:.5;cursor:not-allowed;}
-    .mt-2{margin-top:8px;}
-    .mt-3{margin-top:12px;}
-    .mt-4{margin-top:16px;}
-    .flex{display:flex;}
-    .between{justify-content:space-between;align-items:center;}
-    .center{text-align:center;}
-    table{width:100%;border-collapse:collapse;font-size:13px;}
-    th,td{padding:6px 4px;border-bottom:1px solid #e5e7eb;text-align:left;}
-    th{font-size:12px;text-transform:uppercase;color:#6b7280;}
-    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#e5f3ff;color:#1d4ed8;}
-    .wrap{max-width:1100px;width:100%;margin:24px auto;}
-    .panel{background:#fff;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:18px;margin-bottom:18px;}
-    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:12px;}
-    .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:6px;}
-    .tree-level{text-align:center;margin-top:12px;}
-    .tree-node-wrap{display:inline-block;margin:8px;}
-    .tree-node{
-      padding:8px 12px;
-      border-radius:12px;
-      background:#111827;
-      border:1px solid #4b5563;
-      font-size:12px;
-      min-width:120px;
-    }
-    .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
-    .tree-node-actions{margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;justify-content:center;}
-    .status-pill{padding:2px 8px;border-radius:999px;font-size:11px;}
-    .status-pending{background:#fef9c3;color:#854d0e;}
-    .status-approved{background:#dcfce7;color:#166534;}
-    .status-rejected{background:#fee2e2;color:#b91c1c;}
-  </style>
+<meta charset="UTF-8" />
+<title>RJVC ADMIN PANEL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+body{margin:0;background:#eef3ff}
+.page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.15);max-width:480px;width:100%}
+h1,h2,h3{margin:0 0 10px}
+label{display:block;margin-top:10px;font-size:14px}
+input{width:100%;padding:10px;border-radius:10px;border:1px solid #cbd5e1}
+input:focus{border-color:#2563eb;outline:none}
+.btn{padding:10px 16px;border:none;border-radius:20px;font-weight:600;cursor:pointer}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-secondary{background:#dde7ff;color:#1e3a8a}
+.btn-danger{background:#fecaca;color:#991b1b}
+.btn-sm{padding:6px 10px;font-size:12px}
+.wrap{max-width:1100px;width:100%;margin:20px auto}
+.panel{background:#fff;padding:16px;border-radius:16px;margin-bottom:16px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px;border-bottom:1px solid #e2e8f0}
+th{text-align:left;background:#f8fafc;font-size:11px}
+.badge{background:#e5edff;color:#1e40af;padding:4px 10px;border-radius:20px;font-size:11px}
+.status-pending{background:#fef08a}
+.status-approved{background:#bbf7d0}
+.status-rejected{background:#fecaca}
+.tree-panel{background:#0f172a;color:#e2e8f0;padding:16px;border-radius:16px}
+.tree-node{background:#1e293b;border:1px solid #475569;border-radius:12px;padding:8px;margin:8px;display:inline-block;text-align:center;min-width:120px}
+.tree-node-main{background:#2563eb;border-color:#93c5fd}
+.tree-actions button{margin:2px}
+</style>
 </head>
 <body>
 
-<!-- LOGIN PAGE -->
+<!-- LOGIN -->
 <div id="loginPage" class="page">
-  <div class="card">
-    <h1 class="center">Admin Login</h1>
+<div class="card">
+<h1>Admin Login</h1>
 
-    <label>Admin ID</label>
-    <input id="adminId" placeholder="admin" />
+<label>Admin ID</label>
+<input id="adminId" placeholder="admin">
 
-    <label class="mt-2">Password</label>
-    <input id="adminPass" type="password" placeholder="1234" />
+<label>Admin Password</label>
+<input id="adminPass" type="password" placeholder="1234">
 
-    <button class="btn btn-primary mt-3" style="width:100%;" onclick="handleAdminLogin()">
-      Login
-    </button>
+<button class="btn btn-primary" style="width:100%;margin-top:15px" onclick="adminLogin()">Login</button>
 
-    <div id="loginError" style="display:none;color:red;margin-top:6px;">
-      गलत ID या Password
-    </div>
-  </div>
+<div id="loginError" style="color:red;display:none;margin-top:10px">
+गलत ID या Password
+</div>
+</div>
 </div>
 
+
 <!-- ADMIN PAGE -->
-<div id="adminPage" style="display:none;">
-  <div class="wrap">
+<div id="adminPage" style="display:none">
+<div class="wrap">
 
-    <div class="panel flex between">
-      <h2>Binary Tree Admin</h2>
-      <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
-    </div>
+<div class="panel" style="display:flex;justify-content:space-between;align-items:center">
+<h2>RJVC Binary Tree - Admin</h2>
+<button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+</div>
 
-    <!-- CREATE ROOT -->
-    <div class="panel">
-      <h3>नया Root Customer जोड़ें</h3>
-      <label>Name</label>
-      <input id="newName" placeholder="जैसे: Rajesh" />
-      <label class="mt-2">Password</label>
-      <input id="newPass" placeholder="1234" />
-      <button class="btn btn-primary mt-3" onclick="createRootCustomer()">
-        Add Root
-      </button>
-    </div>
+<!-- Create Root -->
+<div class="panel">
+<h3>नया Root Customer जोड़ें</h3>
+<label>Name</label>
+<input id="newName">
+<label>Password</label>
+<input id="newPass">
+<button class="btn btn-primary" style="margin-top:10px" onclick="addRoot()">Add Root</button>
+</div>
 
-    <!-- CUSTOMER LIST -->
-    <div class="panel">
-      <div class="flex between">
-        <h3>Customer List</h3>
-        <span id="totalCustomers" class="badge">0</span>
-      </div>
+<!-- Customer List -->
+<div class="panel">
+<h3>Customer List</h3>
+<span class="badge" id="custCount">0 Customers</span>
 
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Members</th>
-            <th>Pairs</th>
-            <th>Commission</th>
-            <th>Tree</th>
-            <th>Delete</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Name</th>
+<th>Members</th>
+<th>Pairs</th>
+<th>Commission</th>
+<th>Tree</th>
+<th>Delete</th>
+</tr>
+</thead>
+<tbody id="listBody"></tbody>
+</table>
+</div>
+</div>
 
-    <!-- WITHDRAWALS LIST -->
-    <div class="panel">
-      <div class="flex between">
-        <h3>Withdrawal Requests</h3>
-        <span id="wdCount" class="badge">0</span>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Customer</th>
-            <th>Amount</th>
-            <th>Wallet</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="wdBody"></tbody>
-      </table>
-      <p style="font-size:11px;color:#6b7280;margin-top:6px;">
-        ⚠ ध्यान: यहाँ Approve करने पर हम सिर्फ Firestore में <b>status</b> बदल रहे हैं।  
-        अगर आप wallet balance घटाना चाहते हो तो वो logic customer वाले page या Cloud Function में लगाना पड़ेगा।
-      </p>
-    </div>
+<!-- Withdrawal List -->
+<div class="panel">
+<h3>Withdrawal Requests</h3>
+<span class="badge" id="wdCount">0</span>
 
-    <!-- TREE PANEL -->
-    <div class="tree-panel">
-      <div class="tree-root-label">Binary Tree</div>
-      <div id="treeInfo"></div>
-      <div id="treeArea" style="margin-top:12px;"></div>
-    </div>
-  </div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Customer</th>
+<th>Amount</th>
+<th>Wallet</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="wdBody"></tbody>
+</table>
+</div>
+</div>
+
+<!-- Tree Panel -->
+<div class="tree-panel">
+<div id="treeInfo"></div>
+<div id="treeArea" style="margin-top:20px"></div>
+</div>
+
+</div>
 </div>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-// ======================
-// Firebase Config
-// ======================
-const firebaseConfig = {
-  apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
-  authDomain: "rjvc-plan.firebaseapp.com",
-  projectId: "rjvc-plan",
-  storageBucket: "rjvc-plan.firebasestorage.app",
-  messagingSenderId: "265431528728",
-  appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d"
-};
-firebase.initializeApp(firebaseConfig);
+// FIREBASE INIT
+firebase.initializeApp({
+apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+authDomain: "rjvc-plan.firebaseapp.com",
+projectId: "rjvc-plan"
+});
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
-const withdrawCol = db.collection("Withdrawals");  // <-- Withdrawal collection
+const wdCol = db.collection("Withdrawals");
+  // ---------------- ADMIN LOGIN ----------------
+const ADMIN_ID="admin";
+const ADMIN_PASS="1234";
 
-// Admin login
-const ADMIN_ID = "admin";
-const ADMIN_PASS = "1234";
+function adminLogin(){
+let id=document.getElementById("adminId").value.trim();
+let pw=document.getElementById("adminPass").value.trim();
 
-// Tree data
-let nodes = {};
-let rootId = null;
-let currentTreeRootId = null;
-
-// Withdraw listener
-let wdUnsub = null;
-
-// DOM short-hands
-const loginPage = document.getElementById("loginPage");
-const adminPage = document.getElementById("adminPage");
-const loginError = document.getElementById("loginError");
-const adminIdInput = document.getElementById("adminId");
-const adminPassInput = document.getElementById("adminPass");
-const tableBody = document.getElementById("tableBody");
-const totalCustomersEl = document.getElementById("totalCustomers");
-const treeInfo = document.getElementById("treeInfo");
-const treeArea = document.getElementById("treeArea");
-const wdBody = document.getElementById("wdBody");
-const wdCount = document.getElementById("wdCount");
-
-// Node factory
-function makeNode(id, name, pass){
-  return {
-    id,
-    name,
-    password: pass,
-    parent: null,
-    left: null,
-    right: null,
-    members: 0,
-    pairs: 0,
-    commission: 0
-  };
+if(id===ADMIN_ID && pw===ADMIN_PASS){
+document.getElementById("loginPage").style.display="none";
+document.getElementById("adminPage").style.display="block";
+loadTree();
+loadWithdrawals();
+}else{
+document.getElementById("loginError").style.display="block";
 }
-
-// ======================
-// Login / Logout
-// ======================
-async function handleAdminLogin(){
-  const id = adminIdInput.value.trim();
-  const pass = adminPassInput.value.trim();
-
-  if(id === ADMIN_ID && pass === ADMIN_PASS){
-    loginError.style.display = "none";
-    loginPage.style.display = "none";
-    adminPage.style.display = "block";
-
-    await loadTreeData();
-    setupWithdrawListener();
-    renderAll();
-  }else{
-    loginError.style.display = "block";
-  }
 }
 
 function logout(){
-  adminPage.style.display = "none";
-  loginPage.style.display = "flex";
-  adminPassInput.value = "";
-  if(wdUnsub) wdUnsub();
+document.getElementById("adminPage").style.display="none";
+document.getElementById("loginPage").style.display="flex";
 }
 
-// ======================
-// Tree: Load / Save
-// ======================
+// ---------------- TREE DATA ----------------
+let nodes={};
+let rootId=null;
+let currentRoot=null;
+
+// Load Tree from Firebase
+async function loadTree(){
+let snap=await treeCol.get();
+nodes={};
+rootId=null;
+
+snap.forEach(doc=>{
+if(doc.id==="_meta"){
+rootId=doc.data().rootId;
+} else {
+nodes[doc.id]=doc.data();
+}
+});
+
+currentRoot=rootId;
+recalc();
+renderList();
+renderTree();
+}
+
+// Save Tree
 async function saveTree(){
-  const payload = { nodes, rootId };
+let old=await treeCol.get();
+let batch=db.batch();
+old.forEach(d=>batch.delete(d.ref));
+await batch.commit();
 
-  // delete old docs
-  const old = await treeCol.get();
-  const batchDel = db.batch();
-  old.forEach(d => batchDel.delete(d.ref));
-  await batchDel.commit();
-
-  // create new docs
-  const batchPut = db.batch();
-  batchPut.set(treeCol.doc("_meta"), { rootId });
-  Object.values(nodes).forEach(n => {
-    batchPut.set(treeCol.doc(n.id), n);
-  });
-  await batchPut.commit();
+let batch2=db.batch();
+batch2.set(treeCol.doc("_meta"),{rootId});
+Object.values(nodes).forEach(n=>{
+batch2.set(treeCol.doc(n.id),n);
+});
+await batch2.commit();
 }
 
-async function loadTreeData(){
-  const snap = await treeCol.get();
-  if(snap.empty) return;
+// ---------------- ADD ROOT ----------------
+async function addRoot(){
+let name=document.getElementById("newName").value.trim();
+let pass=document.getElementById("newPass").value.trim();
 
-  let tmpNodes = {};
-  let tmpRoot = null;
+if(!name||!pass){alert("Fill Fields");return;}
 
-  snap.forEach(doc => {
-    if(doc.id === "_meta"){
-      tmpRoot = doc.data().rootId || null;
-    }else{
-      tmpNodes[doc.id] = doc.data();
-    }
-  });
+let id="C"+Date.now();
+nodes[id]={id,name,password:pass,left:null,right:null,parent:null};
 
-  nodes = tmpNodes;
-  rootId = tmpRoot;
-  currentTreeRootId = rootId;
-  recalcAll();
+if(!rootId) rootId=id;
+
+await saveTree();
+await loadTree();
+
+document.getElementById("newName").value="";
+document.getElementById("newPass").value="";
 }
 
-// ======================
-// Withdrawals listener
-// ======================
-function setupWithdrawListener(){
-  if(wdUnsub) wdUnsub();
+// ---------------- ADD CHILD ----------------
+async function addChild(parentId,side){
+let name=prompt("Name?");
+if(!name) return;
+let pass=prompt("Password?");
+if(!pass) return;
 
-  // मान लिया: Withdrawals collection में createdAt field है
-  wdUnsub = withdrawCol.orderBy("createdAt","desc").onSnapshot(snap=>{
-    wdBody.innerHTML = "";
-    let i = 0;
-    snap.forEach(doc=>{
-      const wd = doc.data();
-      i++;
-      const tr = document.createElement("tr");
+let newId="C"+Date.now();
+let newNode={id:newId,name,password:pass,left:null,right:null,parent:parentId};
 
-      const status = wd.status || "pending";
-      let pillClass = "status-pending";
-      if(status === "approved") pillClass = "status-approved";
-      else if(status === "rejected") pillClass = "status-rejected";
+let old=nodes[parentId][side];
+nodes[newId]=newNode;
+nodes[parentId][side]=newId;
 
-      tr.innerHTML = `
-        <td>${i}</td>
-        <td>${wd.customerName || "-"}</td>
-        <td>₹${wd.amount || 0}</td>
-        <td>${wd.walletType || "-"}</td>
-        <td>
-          <span class="status-pill ${pillClass}">${status}</span>
-        </td>
-        <td>
-          <button class="btn btn-sm btn-secondary" onclick="updateWithdrawStatus('${doc.id}','approved')" ${status!=='pending'?'disabled':''}>Approve</button>
-          <button class="btn btn-sm btn-danger" onclick="updateWithdrawStatus('${doc.id}','rejected')" ${status!=='pending'?'disabled':''}>Reject</button>
-        </td>
-      `;
-      wdBody.appendChild(tr);
-    });
-    wdCount.textContent = i + " Requests";
-  });
+if(old){
+nodes[old].parent=newId;
+newNode.left=old;
 }
 
-async function updateWithdrawStatus(id,newStatus){
-  if(!id) return;
-  await withdrawCol.doc(id).update({ status:newStatus });
+await saveTree();
+await loadTree();
+currentRoot=parentId;
+renderTree();
 }
 
-// ======================
-// Tree operations
-// ======================
-async function createRootCustomer(){
-  const name = document.getElementById("newName").value.trim();
-  const pass = document.getElementById("newPass").value.trim();
-  if(!name || !pass){ alert("Name और Password भरें"); return; }
-
-  const id = "C"+Date.now();
-  nodes[id] = makeNode(id,name,pass);
-  if(!rootId) rootId = id;
-
-  await saveTree();
-  recalcAll();
-  renderAll();
-
-  document.getElementById("newName").value="";
-  document.getElementById("newPass").value="";
-}
-
-async function addMember(parentId, side){
-  const parent = nodes[parentId];
-  if(!parent){ alert("Parent नहीं मिला"); return; }
-
-  const name = prompt("नया member का नाम?");
-  if(!name) return;
-  const pass = prompt("उसका login password?");
-  if(!pass) return;
-
-  const newId = "C"+Date.now();
-  const newNode = makeNode(newId,name,pass);
-  nodes[newId] = newNode;
-
-  const oldChild = parent[side];
-
-  newNode.parent = parentId;
-  parent[side] = newId;
-
-  if(oldChild){
-    const oc = nodes[oldChild];
-    oc.parent = newId;
-    if(!newNode.left) newNode.left = oldChild;
-    else newNode.right = oldChild;
-  }
-
-  await saveTree();
-  recalcAll();
-  renderAll();
-  currentTreeRootId = parentId;
-  renderTree();
-}
-
+// ---------------- DELETE NODE ----------------
 async function deleteNode(id){
-  const n = nodes[id];
-  if(!n) return;
-  if(!confirm(`"${n.name}" और उसके नीचे पूरा subtree delete होगा, जारी रखें?`)) return;
+if(!confirm("Delete This Customer with tree?")) return;
 
-  function removeSubtree(nodeId){
-    const node = nodes[nodeId];
-    if(!node) return;
-    if(node.left) removeSubtree(node.left);
-    if(node.right) removeSubtree(node.right);
-    delete nodes[nodeId];
-  }
-
-  if(rootId === id){
-    nodes = {};
-    rootId = null;
-  }else{
-    const p = nodes[n.parent];
-    if(p){
-      if(p.left === id) p.left = null;
-      if(p.right === id) p.right = null;
-    }
-    removeSubtree(id);
-  }
-
-  await saveTree();
-  recalcAll();
-  renderAll();
+function del(id){
+let n=nodes[id];
+if(!n) return;
+if(n.left) del(n.left);
+if(n.right) del(n.right);
+delete nodes[id];
 }
 
-// ======================
-// Calculations
-// ======================
-function countDesc(id){
-  if(!id) return 0;
-  const n = nodes[id];
-  let c = 0;
-  if(n.left) c += 1 + countDesc(n.left);
-  if(n.right) c += 1 + countDesc(n.right);
-  return c;
+if(id===rootId){
+nodes={};
+rootId=null;
+} else {
+let p=nodes[nodes[id].parent];
+if(p.left===id) p.left=null;
+if(p.right===id) p.right=null;
+del(id);
 }
 
-function recalcAll(){
-  Object.values(nodes).forEach(n=>{
-    const m = countDesc(n.id);
-    n.members = m;
-    n.pairs = Math.floor(m/2);
-    n.commission = n.pairs * 3;  // प्रति pair 3₹
-  });
+await saveTree();
+await loadTree();
 }
 
-// ======================
-// Render List
-// ======================
-function renderTable(){
-  tableBody.innerHTML = "";
-  const list = Object.values(nodes).sort((a,b)=>a.name.localeCompare(b.name));
-  totalCustomersEl.textContent = list.length;
-
-  list.forEach((n,i)=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td>${n.name}</td>
-      <td>${n.members}</td>
-      <td>${n.pairs}</td>
-      <td>₹${n.commission}</td>
-      <td><button class="btn btn-secondary btn-sm" onclick="showTree('${n.id}')">Tree</button></td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteNode('${n.id}')">Del</button></td>
-    `;
-    tableBody.appendChild(tr);
-  });
+// ---------------- RECALC ----------------
+function count(id){
+if(!id) return 0;
+let n=nodes[id];
+let c=0;
+if(n.left) c+=1+count(n.left);
+if(n.right) c+=1+count(n.right);
+return c;
 }
 
-// ======================
-// Render Tree
-// ======================
-function showTree(id){
-  currentTreeRootId = id;
-  renderTree();
+function recalc(){
+Object.values(nodes).forEach(n=>{
+let m=count(n.id);
+n.members=m;
+n.pairs=Math.floor(m/2);
+n.commission=n.pairs*3;
+});
+}
+
+// ---------------- RENDER LIST ----------------
+function renderList(){
+let tb=document.getElementById("listBody");
+tb.innerHTML="";
+
+let arr=Object.values(nodes).sort((a,b)=>a.name.localeCompare(b.name));
+document.getElementById("custCount").innerText=arr.length+" Customers";
+
+arr.forEach((n,i)=>{
+let tr=document.createElement("tr");
+tr.innerHTML=`
+<td>${i+1}</td>
+<td>${n.name}</td>
+<td>${n.members}</td>
+<td>${n.pairs}</td>
+<td>₹${n.commission}</td>
+<td><button class='btn btn-secondary btn-sm' onclick="openTree('${n.id}')">Tree</button></td>
+<td><button class='btn btn-danger btn-sm' onclick="deleteNode('${n.id}')">Del</button></td>
+`;
+tb.appendChild(tr);
+});
+}
+
+// ---------------- RENDER TREE ----------------
+function openTree(id){
+currentRoot=id;
+renderTree();
 }
 
 function renderTree(){
-  const startId = currentTreeRootId || rootId;
-  const root = nodes[startId];
-  if(!root){
-    treeInfo.textContent = "Tree खाली है।";
-    treeArea.innerHTML = "";
-    return;
-  }
-
-  treeInfo.innerHTML = `अभी tree <b>${root.name}</b> से शुरू हो रहा है (M:${root.members}, P:${root.pairs}, ₹${root.commission})`;
-
-  let html="";
-  function buildLevel(ids){
-    if(!ids.length) return;
-    html += `<div class="tree-level">`;
-    const next = [];
-
-    ids.forEach(id=>{
-      const n = nodes[id];
-      if(!n) return;
-      const isMainRoot = (id === rootId);
-      html += `
-        <div class="tree-node-wrap">
-          <div class="tree-node ${isMainRoot?'tree-node-main':''}">
-            <div>${n.name}</div>
-            <div style="font-size:10px;margin-top:2px;">M:${n.members} · P:${n.pairs} · ₹${n.commission}</div>
-            <div class="tree-node-actions">
-              <button class="btn btn-sm btn-secondary" onclick="askSideAndAdd('${n.id}')">+Member</button>
-            </div>
-          </div>
-        </div>
-      `;
-      if(n.left) next.push(n.left);
-      if(n.right) next.push(n.right);
-    });
-
-    html += `</div>`;
-    if(next.length) buildLevel(next);
-  }
-
-  buildLevel([startId]);
-  treeArea.innerHTML = html;
+let n=nodes[currentRoot];
+if(!n){
+document.getElementById("treeArea").innerHTML="No Tree Found";
+return;
 }
 
-function askSideAndAdd(id){
-  const c = prompt("किस side जोड़ना है? L / R");
-  if(!c) return;
-  const side = (c.trim().toLowerCase()==="l") ? "left" : "right";
-  addMember(id, side);
+document.getElementById("treeInfo").innerHTML=
+`<b>${n.name}</b> (M:${n.members} P:${n.pairs} ₹${n.commission})`;
+
+let html="";
+function build(ids){
+if(!ids.length) return;
+html+=`<div style='text-align:center'>`;
+let next=[];
+
+ids.forEach(id=>{
+let n=nodes[id];
+html+=`
+<div class="tree-node ${id===rootId?'tree-node-main':''}">
+<b>${n.name}</b><br>
+<small>M:${n.members} P:${n.pairs} ₹${n.commission}</small>
+<div class="tree-actions">
+<button class='btn btn-secondary btn-sm' onclick="askSide('${n.id}')">+Member</button>
+</div>
+</div>
+`;
+if(n.left) next.push(n.left);
+if(n.right) next.push(n.right);
+});
+html+=`</div>`;
+
+if(next.length) build(next);
 }
 
-// ======================
-// Render All
-// ======================
-function renderAll(){
-  recalcAll();
-  renderTable();
-  renderTree();
+build([currentRoot]);
+document.getElementById("treeArea").innerHTML=html;
+}
+
+function askSide(id){
+let side=prompt("Left=L , Right=R").toLowerCase();
+if(side==="l") addChild(id,"left");
+else addChild(id,"right");
+}
+
+// ---------------- WITHDRAWALS ----------------
+function loadWithdrawals(){
+wdCol.orderBy("createdAt","desc").onSnapshot(snap=>{
+let body=document.getElementById("wdBody");
+body.innerHTML="";
+let i=0;
+
+snap.forEach(doc=>{
+let d=doc.data();
+i++;
+
+let statusClass="status-pending";
+if(d.status==="approved") statusClass="status-approved";
+if(d.status==="rejected") statusClass="status-rejected";
+
+body.innerHTML+=`
+<tr>
+<td>${i}</td>
+<td>${d.customerName}</td>
+<td>₹${d.amount}</td>
+<td>${d.walletType}</td>
+<td><span class='${statusClass}'>${d.status}</span></td>
+<td>
+<button class='btn btn-secondary btn-sm' onclick="updateWD('${doc.id}','approved')" ${d.status!=='pending'?'disabled':''}>Approve</button>
+<button class='btn btn-danger btn-sm' onclick="updateWD('${doc.id}','rejected')" ${d.status!=='pending'?'disabled':''}>Reject</button>
+</td>
+</tr>`;
+});
+
+document.getElementById("wdCount").innerText=i;
+});
+}
+
+async function updateWD(id,status){
+await wdCol.doc(id).update({status});
 }
 </script>
 </body>
