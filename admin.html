@@ -45,6 +45,10 @@
     }
     .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
     .tree-node-actions{margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;justify-content:center;}
+    .status-pill{padding:2px 8px;border-radius:999px;font-size:11px;}
+    .status-pending{background:#fef9c3;color:#854d0e;}
+    .status-approved{background:#dcfce7;color:#166534;}
+    .status-rejected{background:#fee2e2;color:#b91c1c;}
   </style>
 </head>
 <body>
@@ -64,7 +68,7 @@
       Login
     </button>
 
-    <div id="loginError" class="error" style="display:none;color:red;margin-top:6px;">
+    <div id="loginError" style="display:none;color:red;margin-top:6px;">
       गलत ID या Password
     </div>
   </div>
@@ -86,13 +90,12 @@
       <input id="newName" placeholder="जैसे: Rajesh" />
       <label class="mt-2">Password</label>
       <input id="newPass" placeholder="1234" />
-
       <button class="btn btn-primary mt-3" onclick="createRootCustomer()">
         Add Root
       </button>
     </div>
 
-    <!-- LIST -->
+    <!-- CUSTOMER LIST -->
     <div class="panel">
       <div class="flex between">
         <h3>Customer List</h3>
@@ -115,6 +118,31 @@
       </table>
     </div>
 
+    <!-- WITHDRAWALS LIST -->
+    <div class="panel">
+      <div class="flex between">
+        <h3>Withdrawal Requests</h3>
+        <span id="wdCount" class="badge">0</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Wallet</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="wdBody"></tbody>
+      </table>
+      <p style="font-size:11px;color:#6b7280;margin-top:6px;">
+        ⚠ ध्यान: यहाँ Approve करने पर हम सिर्फ Firestore में <b>status</b> बदल रहे हैं।  
+        अगर आप wallet balance घटाना चाहते हो तो वो logic customer वाले page या Cloud Function में लगाना पड़ेगा।
+      </p>
+    </div>
+
     <!-- TREE PANEL -->
     <div class="tree-panel">
       <div class="tree-root-label">Binary Tree</div>
@@ -129,7 +157,9 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
+// ======================
 // Firebase Config
+// ======================
 const firebaseConfig = {
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -141,18 +171,35 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
+const withdrawCol = db.collection("Withdrawals");  // <-- Withdrawal collection
 
-// ADMIN LOGIN
+// Admin login
 const ADMIN_ID = "admin";
 const ADMIN_PASS = "1234";
 
-// Tree Data
+// Tree data
 let nodes = {};
 let rootId = null;
 let currentTreeRootId = null;
 
-// Create Node
-function makeNode(id, name, pass) {
+// Withdraw listener
+let wdUnsub = null;
+
+// DOM short-hands
+const loginPage = document.getElementById("loginPage");
+const adminPage = document.getElementById("adminPage");
+const loginError = document.getElementById("loginError");
+const adminIdInput = document.getElementById("adminId");
+const adminPassInput = document.getElementById("adminPass");
+const tableBody = document.getElementById("tableBody");
+const totalCustomersEl = document.getElementById("totalCustomers");
+const treeInfo = document.getElementById("treeInfo");
+const treeArea = document.getElementById("treeArea");
+const wdBody = document.getElementById("wdBody");
+const wdCount = document.getElementById("wdCount");
+
+// Node factory
+function makeNode(id, name, pass){
   return {
     id,
     name,
@@ -166,91 +213,150 @@ function makeNode(id, name, pass) {
   };
 }
 
-// Login
-async function handleAdminLogin() {
-  const id = adminId.value.trim();
-  const pass = adminPass.value.trim();
+// ======================
+// Login / Logout
+// ======================
+async function handleAdminLogin(){
+  const id = adminIdInput.value.trim();
+  const pass = adminPassInput.value.trim();
 
-  if (id === ADMIN_ID && pass === ADMIN_PASS) {
+  if(id === ADMIN_ID && pass === ADMIN_PASS){
     loginError.style.display = "none";
     loginPage.style.display = "none";
     adminPage.style.display = "block";
 
-    await loadData();
+    await loadTreeData();
+    setupWithdrawListener();
     renderAll();
-  } else {
+  }else{
     loginError.style.display = "block";
   }
 }
 
-function logout() {
+function logout(){
   adminPage.style.display = "none";
   loginPage.style.display = "flex";
+  adminPassInput.value = "";
+  if(wdUnsub) wdUnsub();
 }
 
-// Save to Firebase
-async function saveData() {
+// ======================
+// Tree: Load / Save
+// ======================
+async function saveTree(){
   const payload = { nodes, rootId };
 
-  // delete old
+  // delete old docs
   const old = await treeCol.get();
-  const batch1 = db.batch();
-  old.forEach(d => batch1.delete(d.ref));
-  await batch1.commit();
+  const batchDel = db.batch();
+  old.forEach(d => batchDel.delete(d.ref));
+  await batchDel.commit();
 
-  // save new
-  const batch2 = db.batch();
-  batch2.set(treeCol.doc("_meta"), { rootId });
+  // create new docs
+  const batchPut = db.batch();
+  batchPut.set(treeCol.doc("_meta"), { rootId });
   Object.values(nodes).forEach(n => {
-    batch2.set(treeCol.doc(n.id), n);
+    batchPut.set(treeCol.doc(n.id), n);
   });
-  await batch2.commit();
+  await batchPut.commit();
 }
 
-// Load from Firebase
-async function loadData() {
+async function loadTreeData(){
   const snap = await treeCol.get();
-  if (snap.empty) return;
+  if(snap.empty) return;
 
-  let tempNodes = {};
-  let tempRoot = null;
+  let tmpNodes = {};
+  let tmpRoot = null;
 
   snap.forEach(doc => {
-    if (doc.id === "_meta") tempRoot = doc.data().rootId;
-    else tempNodes[doc.id] = doc.data();
+    if(doc.id === "_meta"){
+      tmpRoot = doc.data().rootId || null;
+    }else{
+      tmpNodes[doc.id] = doc.data();
+    }
   });
 
-  nodes = tempNodes;
-  rootId = tempRoot;
+  nodes = tmpNodes;
+  rootId = tmpRoot;
   currentTreeRootId = rootId;
   recalcAll();
 }
 
-// Create root
-async function createRootCustomer() {
-  const name = newName.value.trim();
-  const pass = newPass.value.trim();
-  if (!name || !pass) return alert("भरें");
+// ======================
+// Withdrawals listener
+// ======================
+function setupWithdrawListener(){
+  if(wdUnsub) wdUnsub();
 
-  const id = "C" + Date.now();
-  nodes[id] = makeNode(id, name, pass);
+  // मान लिया: Withdrawals collection में createdAt field है
+  wdUnsub = withdrawCol.orderBy("createdAt","desc").onSnapshot(snap=>{
+    wdBody.innerHTML = "";
+    let i = 0;
+    snap.forEach(doc=>{
+      const wd = doc.data();
+      i++;
+      const tr = document.createElement("tr");
 
-  if (!rootId) rootId = id;
-  await saveData();
-  renderAll();
-  newName.value = "";
-  newPass.value = "";
+      const status = wd.status || "pending";
+      let pillClass = "status-pending";
+      if(status === "approved") pillClass = "status-approved";
+      else if(status === "rejected") pillClass = "status-rejected";
+
+      tr.innerHTML = `
+        <td>${i}</td>
+        <td>${wd.customerName || "-"}</td>
+        <td>₹${wd.amount || 0}</td>
+        <td>${wd.walletType || "-"}</td>
+        <td>
+          <span class="status-pill ${pillClass}">${status}</span>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-secondary" onclick="updateWithdrawStatus('${doc.id}','approved')" ${status!=='pending'?'disabled':''}>Approve</button>
+          <button class="btn btn-sm btn-danger" onclick="updateWithdrawStatus('${doc.id}','rejected')" ${status!=='pending'?'disabled':''}>Reject</button>
+        </td>
+      `;
+      wdBody.appendChild(tr);
+    });
+    wdCount.textContent = i + " Requests";
+  });
 }
 
-// Add member
-async function addMember(parentId, side) {
-  const parent = nodes[parentId];
-  const name = prompt("Name?");
-  const pass = prompt("Password?");
-  if (!name || !pass) return;
+async function updateWithdrawStatus(id,newStatus){
+  if(!id) return;
+  await withdrawCol.doc(id).update({ status:newStatus });
+}
 
-  const newId = "C" + Date.now();
-  const newNode = makeNode(newId, name, pass);
+// ======================
+// Tree operations
+// ======================
+async function createRootCustomer(){
+  const name = document.getElementById("newName").value.trim();
+  const pass = document.getElementById("newPass").value.trim();
+  if(!name || !pass){ alert("Name और Password भरें"); return; }
+
+  const id = "C"+Date.now();
+  nodes[id] = makeNode(id,name,pass);
+  if(!rootId) rootId = id;
+
+  await saveTree();
+  recalcAll();
+  renderAll();
+
+  document.getElementById("newName").value="";
+  document.getElementById("newPass").value="";
+}
+
+async function addMember(parentId, side){
+  const parent = nodes[parentId];
+  if(!parent){ alert("Parent नहीं मिला"); return; }
+
+  const name = prompt("नया member का नाम?");
+  if(!name) return;
+  const pass = prompt("उसका login password?");
+  if(!pass) return;
+
+  const newId = "C"+Date.now();
+  const newNode = makeNode(newId,name,pass);
   nodes[newId] = newNode;
 
   const oldChild = parent[side];
@@ -258,73 +364,80 @@ async function addMember(parentId, side) {
   newNode.parent = parentId;
   parent[side] = newId;
 
-  if (oldChild) {
+  if(oldChild){
     const oc = nodes[oldChild];
     oc.parent = newId;
-
-    if (!newNode.left) newNode.left = oldChild;
+    if(!newNode.left) newNode.left = oldChild;
     else newNode.right = oldChild;
   }
 
-  await saveData();
+  await saveTree();
   recalcAll();
   renderAll();
   currentTreeRootId = parentId;
   renderTree();
 }
 
-// Delete
-async function deleteNode(id) {
-  if (!confirm("Delete?")) return;
+async function deleteNode(id){
+  const n = nodes[id];
+  if(!n) return;
+  if(!confirm(`"${n.name}" और उसके नीचे पूरा subtree delete होगा, जारी रखें?`)) return;
 
-  function remove(id) {
-    const n = nodes[id];
-    if (!n) return;
-    if (n.left) remove(n.left);
-    if (n.right) remove(n.right);
-    delete nodes[id];
+  function removeSubtree(nodeId){
+    const node = nodes[nodeId];
+    if(!node) return;
+    if(node.left) removeSubtree(node.left);
+    if(node.right) removeSubtree(node.right);
+    delete nodes[nodeId];
   }
 
-  if (rootId === id) {
+  if(rootId === id){
     nodes = {};
     rootId = null;
-  } else {
-    const p = nodes[nodes[id].parent];
-    if (p.left === id) p.left = null;
-    if (p.right === id) p.right = null;
-    remove(id);
+  }else{
+    const p = nodes[n.parent];
+    if(p){
+      if(p.left === id) p.left = null;
+      if(p.right === id) p.right = null;
+    }
+    removeSubtree(id);
   }
-  await saveData();
+
+  await saveTree();
+  recalcAll();
   renderAll();
 }
 
-// Recalc
-function count(id) {
-  if (!id) return 0;
-  let c = 0;
+// ======================
+// Calculations
+// ======================
+function countDesc(id){
+  if(!id) return 0;
   const n = nodes[id];
-  if (n.left) c += 1 + count(n.left);
-  if (n.right) c += 1 + count(n.right);
+  let c = 0;
+  if(n.left) c += 1 + countDesc(n.left);
+  if(n.right) c += 1 + countDesc(n.right);
   return c;
 }
 
-function recalcAll() {
-  Object.values(nodes).forEach(n => {
-    const m = count(n.id);
+function recalcAll(){
+  Object.values(nodes).forEach(n=>{
+    const m = countDesc(n.id);
     n.members = m;
-    n.pairs = Math.floor(m / 2);
-    n.commission = n.pairs * 3;
+    n.pairs = Math.floor(m/2);
+    n.commission = n.pairs * 3;  // प्रति pair 3₹
   });
 }
 
-// Render table
-function renderTable() {
+// ======================
+// Render List
+// ======================
+function renderTable(){
   tableBody.innerHTML = "";
-  const list = Object.values(nodes);
+  const list = Object.values(nodes).sort((a,b)=>a.name.localeCompare(b.name));
+  totalCustomersEl.textContent = list.length;
 
-  totalCustomers.textContent = list.length;
-
-  list.forEach((n, i) => {
+  list.forEach((n,i)=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${i+1}</td>
@@ -339,64 +452,73 @@ function renderTable() {
   });
 }
 
-// Tree UI
-function showTree(id) {
+// ======================
+// Render Tree
+// ======================
+function showTree(id){
   currentTreeRootId = id;
   renderTree();
 }
 
-function renderTree() {
-  const root = nodes[currentTreeRootId];
-  if (!root) return;
-  treeInfo.innerHTML = `<b>${root.name}</b> Tree`;
+function renderTree(){
+  const startId = currentTreeRootId || rootId;
+  const root = nodes[startId];
+  if(!root){
+    treeInfo.textContent = "Tree खाली है।";
+    treeArea.innerHTML = "";
+    return;
+  }
 
-  let html = "";
+  treeInfo.innerHTML = `अभी tree <b>${root.name}</b> से शुरू हो रहा है (M:${root.members}, P:${root.pairs}, ₹${root.commission})`;
 
-  function lvl(ids) {
-    if (!ids.length) return;
+  let html="";
+  function buildLevel(ids){
+    if(!ids.length) return;
     html += `<div class="tree-level">`;
+    const next = [];
 
-    let next = [];
-    ids.forEach(id => {
+    ids.forEach(id=>{
       const n = nodes[id];
-      const isMain = (id === rootId);
+      if(!n) return;
+      const isMainRoot = (id === rootId);
       html += `
         <div class="tree-node-wrap">
-          <div class="tree-node ${isMain?"tree-node-main":""}">
-            ${n.name}<br>
-            <small>M:${n.members} P:${n.pairs} ₹${n.commission}</small>
+          <div class="tree-node ${isMainRoot?'tree-node-main':''}">
+            <div>${n.name}</div>
+            <div style="font-size:10px;margin-top:2px;">M:${n.members} · P:${n.pairs} · ₹${n.commission}</div>
             <div class="tree-node-actions">
-              <button class="btn btn-sm btn-secondary" onclick="addChoice('${n.id}')">+Member</button>
+              <button class="btn btn-sm btn-secondary" onclick="askSideAndAdd('${n.id}')">+Member</button>
             </div>
           </div>
         </div>
       `;
-      if (n.left) next.push(n.left);
-      if (n.right) next.push(n.right);
+      if(n.left) next.push(n.left);
+      if(n.right) next.push(n.right);
     });
 
     html += `</div>`;
-    if (next.length) lvl(next);
+    if(next.length) buildLevel(next);
   }
 
-  lvl([currentTreeRootId]);
+  buildLevel([startId]);
   treeArea.innerHTML = html;
 }
 
-function addChoice(id) {
-  const x = prompt("Left or Right? L/R");
-  if (!x) return;
-  let side = x.toLowerCase()==="l"?"left":"right";
+function askSideAndAdd(id){
+  const c = prompt("किस side जोड़ना है? L / R");
+  if(!c) return;
+  const side = (c.trim().toLowerCase()==="l") ? "left" : "right";
   addMember(id, side);
 }
 
+// ======================
 // Render All
-function renderAll() {
+// ======================
+function renderAll(){
   recalcAll();
   renderTable();
   renderTree();
 }
-
 </script>
 </body>
 </html>
