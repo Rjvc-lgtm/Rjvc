@@ -2,21 +2,22 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>Binary Tree Admin Panel (RJVC Firebase)</title>
+  <title>Binary Tree Admin (Firebase)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto;}
-    body{margin:0;background:#f2f5ff;}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+    body{margin:0;background:#f3f4f6;color:#111827;}
     h1,h2,h3{margin:0 0 8px;}
+
     .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-    .card{background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:24px;max-width:480px;width:100%;}
+    .card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.15);padding:22px;max-width:480px;width:100%;}
     label{display:block;font-size:14px;margin-bottom:4px;}
-    input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #c5cbe3;font-size:15px;}
-    input:focus{outline:none;border-color:#2952ff;box-shadow:0 0 0 2px rgba(41,82,255,.18);}
+    input{width:100%;padding:10px 12px;border-radius:999px;border:1px solid #d1d5db;font-size:15px;outline:none;}
+    input:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.25);}
     .btn{border:none;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer;}
-    .btn-primary{background:#2952ff;color:#fff;}
-    .btn-secondary{background:#e2e7ff;color:#172554;}
-    .btn-danger{background:#fee2e2;color:#991b1b;}
+    .btn-primary{background:#2563eb;color:#fff;}
+    .btn-secondary{background:#e5e7eb;color:#111827;}
+    .btn-danger{background:#dc2626;color:#fff;}
     .btn-sm{padding:6px 10px;font-size:12px;}
     .btn:disabled{opacity:.5;cursor:not-allowed;}
     .mt-2{margin-top:8px;}
@@ -28,62 +29,40 @@
     table{width:100%;border-collapse:collapse;font-size:13px;}
     th,td{padding:6px 4px;border-bottom:1px solid #e5e7eb;text-align:left;}
     th{font-size:12px;text-transform:uppercase;color:#6b7280;}
-    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#e5f3ff;color:#1d4ed8;}
-    .wrap{max-width:1100px;width:100%;margin:24px auto;}
-    .panel{background:#fff;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:18px;margin-bottom:18px;}
-    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:12px;}
-    .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:6px;}
-    .wallets{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
-    .wallet-box{flex:1 1 140px;background:#eff6ff;border-radius:14px;padding:10px 12px;}
+    .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;background:#dbeafe;color:#1d4ed8;}
+    .wrap{max-width:1100px;width:100%;margin:24px auto;padding:0 8px;}
+    .panel{background:#fff;border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.1);padding:18px;margin-bottom:18px;}
+    .wallets{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;}
+    .wallet-box{flex:1 1 180px;background:#eff6ff;border-radius:14px;padding:10px 12px;}
     .wallet-title{font-size:12px;color:#4b5563;}
     .wallet-value{font-size:18px;font-weight:700;color:#1d4ed8;}
+    .small{font-size:12px;color:#6b7280;}
     .error{color:#dc2626;font-size:13px;margin-top:6px;}
+    .ok{color:#166534;font-size:13px;margin-top:6px;}
 
-    .tree-level{margin:8px 0;text-align:center;}
-    .tree-node-wrap{display:inline-block;margin:6px;text-align:center;}
-    .tree-node{
-      padding:6px 10px;
-      border-radius:12px;
-      background:#111827;
-      border:1px solid #4b5563;
-      font-size:12px;
-      min-width:120px;
-    }
+    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;}
+    .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
+    .tree-level{text-align:center;margin:8px 0;}
+    .tree-node-wrap{display:inline-block;margin:6px;}
+    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:12px;min-width:120px;}
     .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
     .tree-node-name{font-weight:600;}
     .tree-node-meta{font-size:10px;color:#9ca3af;margin-top:2px;}
     .tree-node-actions{margin-top:6px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
-    .tree-node-actions .btn-sm{padding:4px 6px;font-size:10px;}
+    .tree-node-actions .btn-sm{padding:3px 6px;font-size:10px;}
+
+    .profit-panel{background:#0f172a;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:10px;}
+    .profit-boxes{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+    .profit-box{flex:1 1 160px;background:#020617;border-radius:14px;padding:10px 12px;border:1px solid #1e293b;}
+    .profit-label{font-size:12px;color:#9ca3af;}
+    .profit-value{font-size:18px;font-weight:700;}
+
+    canvas{max-width:100%;}
 
     @media(max-width:720px){
-      .wrap{padding:0 6px;}
-      .panel{padding:12px;}
+      .panel{padding:14px;}
       table{font-size:12px;}
     }
-
-    /* Weekly report */
-    .grid2{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:12px;
-    }
-    .metric-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-      gap:12px;
-    }
-    .metric-box{
-      border-radius:16px;
-      color:#fff;
-      padding:14px 16px;
-    }
-    .metric-title{font-size:13px;opacity:.95;margin-bottom:6px;}
-    .metric-value{font-size:22px;font-weight:700;}
-    .bg-blue{background:linear-gradient(135deg,#06b6d4,#0ea5e9);}
-    .bg-orange{background:linear-gradient(135deg,#fb923c,#f97316);}
-    .bg-green{background:linear-gradient(135deg,#22c55e,#16a34a);}
-    .small{font-size:12px;color:#6b7280;margin-top:4px;}
-    canvas{max-width:100%;}
   </style>
 </head>
 <body>
@@ -105,44 +84,45 @@
     </button>
     <div id="loginError" class="error" style="display:none;">गलत ID या Password</div>
     <p style="margin-top:12px;font-size:12px;color:#6b7280;">
-      अभी के लिए default login: <b>ID: admin</b>, <b>Password: 1234</b><br/>
-      (कोड में ऊपर बदल सकते हैं)
+      अभी के लिए default: <b>ID: admin</b>, <b>Password: 1234</b> (आप चाहो तो code में बदल सकते हैं)
     </p>
   </div>
 </div>
 
-<!-- ADMIN PAGE -->
+<!-- ADMIN MAIN PAGE -->
 <div id="adminPage" style="display:none;">
   <div class="wrap">
+    <!-- HEADER -->
     <div class="panel flex between">
       <div>
         <h2>Binary Tree Admin (Firebase)</h2>
-        <div style="font-size:13px;color:#4b5563;">
-          हर customer 20₹ देता है, 2 members (1 pair) पर <b>3₹</b> binary earning auto calculate होगी।
+        <div class="small">
+          हर customer 20₹ देता है, 2 members (1 pair) पर <b>3₹</b> binary earning मानी गई है।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
     </div>
 
-    <!-- CREATE CUSTOMER ROOT -->
+    <!-- CREATE ROOT CUSTOMER -->
     <div class="panel">
       <h3>नया Customer बनाएं (Root level)</h3>
       <div class="flex" style="gap:10px;flex-wrap:wrap;margin-top:8px;">
         <div style="flex:1 1 200px;">
           <label>Customer Name</label>
-          <input id="newName" placeholder="जैसे: Rajesh" />
+          <input id="rootName" placeholder="जैसे: Rajesh" />
         </div>
         <div style="flex:1 1 200px;">
           <label>Customer Password (Login के लिए)</label>
-          <input id="newPass" placeholder="जैसे: 1234" />
+          <input id="rootPass" placeholder="जैसे: 1234" />
         </div>
       </div>
       <button class="btn btn-primary mt-3" onclick="createRootCustomer()">
         Root में नया Customer जोड़ें
       </button>
-      <p style="font-size:12px;color:#6b7280;margin-top:6px;">
-        Root में नया customer add होगा। बाद में Tree view में किसी भी node पर 
-        <b>+Member / Edit / Delete</b> से पूरा binary tree manage कर सकते हैं।
+      <div id="rootMsg" class="ok" style="display:none;"></div>
+      <p class="small" style="margin-top:6px;">
+        Root में नया customer add होगा। बाद में Tree view में किसी भी node पर
+        <b>+Member / Edit / Delete</b> से पूरा binary tree manage कर सकते हैं (बीच में भी जोड़ सकते हैं)।
       </p>
     </div>
 
@@ -158,7 +138,7 @@
           <div id="totalPairs" class="wallet-value">0</div>
         </div>
         <div class="wallet-box">
-          <div class="wallet-title">कुल Commission (₹)</div>
+          <div class="wallet-title">कुल Binary Pairs Income (Members को) ₹</div>
           <div id="totalCommission" class="wallet-value">₹0</div>
         </div>
       </div>
@@ -170,15 +150,20 @@
               <th>Name</th>
               <th>Members<br/>(नीचे)</th>
               <th>Pairs</th>
-              <th>Commission<br/>(₹)</th>
-              <th>Actions</th>
+              <th>Binary Income<br/>(₹)</th>
+              <th>Tree</th>
+              <th>Del</th>
             </tr>
           </thead>
           <tbody id="customerTableBody">
-            <!-- JS से rows -->
+            <!-- rows -->
           </tbody>
         </table>
       </div>
+      <p class="small" style="margin-top:6px;">
+        Logic: हर 2 member = 1 pair. 1 pair की binary earning = 3₹ (20₹ का 15%)।
+        यह earning members को जाती है। Company profit नीचे वाले section में दिखेगा।
+      </p>
     </div>
 
     <!-- TREE VIEW -->
@@ -186,7 +171,7 @@
       <div class="flex between">
         <div>
           <div class="tree-root-label">Binary Tree View</div>
-          <div id="treeRootInfo" style="font-size:13px;margin-bottom:4px;">
+          <div id="treeRootInfo" style="font-size:13px;">
             अभी कोई root select नहीं है।
           </div>
         </div>
@@ -199,74 +184,71 @@
       </div>
     </div>
 
-    <!-- WEEKLY BUSINESS REPORT (SUNDAY + WEDNESDAY) -->
+    <!-- WEEKLY COMPANY PROFIT + CHART -->
     <div class="panel">
-      <h3>Weekly Binary Business Report</h3>
-      <div class="grid2">
-        <div>
-          <h4>Sunday (रविवार)</h4>
-          <label>Income from Package Sale (₹)</label>
-          <input id="sunIncome" type="number" placeholder="जैसे: 3000" />
-          <label style="margin-top:8px;">Total Binary Pairs Income (Members को दिया) (₹)</label>
-          <input id="sunMemberIncome" type="number" placeholder="जैसे: 1200" />
+      <h3>Weekly Company Profit (Firebase)</h3>
+      <p class="small">
+        यहाँ आप हर हफ्ते की <b>Sunday</b> और <b>Wednesday</b> की package sale income डाल सकते हैं।
+        सिस्टम अपने-आप Tree से total binary payout निकाल कर Company profit दिखाएगा।
+      </p>
+
+      <div class="flex" style="gap:10px;flex-wrap:wrap;margin-top:8px;">
+        <div style="flex:1 1 160px;">
+          <label>Sunday Package Income (₹)</label>
+          <input id="sunIncome" type="number" min="0" value="0" />
         </div>
-        <div>
-          <h4>Wednesday (बुधवार)</h4>
-          <label>Income from Package Sale (₹)</label>
-          <input id="wedIncome" type="number" placeholder="जैसे: 2100" />
-          <label style="margin-top:8px;">Total Binary Pairs Income (Members को दिया) (₹)</label>
-          <input id="wedMemberIncome" type="number" placeholder="जैसे: 1107" />
+        <div style="flex:1 1 160px;">
+          <label>Wednesday Package Income (₹)</label>
+          <input id="wedIncome" type="number" min="0" value="0" />
         </div>
       </div>
-      <button class="btn btn-primary mt-3" onclick="calculateWeekly()">
+
+      <button class="btn btn-primary mt-3" onclick="calculateAndSaveWeekly()">
         Calculate Weekly Report (Firebase Save)
       </button>
-      <div class="small">
-        हर दिन Company Profit = Income − Members को दी गई binary income.  
-        Weekly Profit = Sunday Profit + Wednesday Profit.
-      </div>
-    </div>
+      <div id="weeklyMsg" class="ok" style="display:none;"></div>
 
-    <!-- WEEKLY OUTPUT + CHART -->
-    <div class="panel">
-      <h3>Weekly Result & Business Chart</h3>
-      <div class="metric-grid">
-        <div class="metric-box bg-blue">
-          <div class="metric-title">Sunday Profit (Company)</div>
-          <div class="metric-value" id="sunProfit">₹0</div>
+      <div class="profit-panel mt-3">
+        <div class="flex between">
+          <div>
+            <div class="small">Weekly Binary Business Report</div>
+            <div style="font-size:14px;">Current Week Summary</div>
+          </div>
+          <div class="small" id="weeklyUpdated">Last update: --</div>
         </div>
-        <div class="metric-box bg-blue">
-          <div class="metric-title">Wednesday Profit (Company)</div>
-          <div class="metric-value" id="wedProfit">₹0</div>
+
+        <div class="profit-boxes">
+          <div class="profit-box">
+            <div class="profit-label">Total Package Income (Sunday + Wednesday)</div>
+            <div class="profit-value" id="totalIncome">₹0</div>
+          </div>
+          <div class="profit-box">
+            <div class="profit-label">Total Binary Pairs Income (Members को) ₹</div>
+            <div class="profit-value" id="weeklyBinary">₹0</div>
+          </div>
+          <div class="profit-box">
+            <div class="profit-label">Company Profit (₹)</div>
+            <div class="profit-value" id="companyProfit">₹0</div>
+          </div>
         </div>
-        <div class="metric-box bg-blue">
-          <div class="metric-title">Total Weekly Income (Sun+Wed)</div>
-          <div class="metric-value" id="weekIncome">₹0</div>
+
+        <div class="mt-3">
+          <div class="small">Business Chart (Weekly)</div>
+          <canvas id="weeklyChart" width="400" height="220"></canvas>
         </div>
-        <div class="metric-box bg-orange">
-          <div class="metric-title">Total Binary Pairs Income (Members को दिया)</div>
-          <div class="metric-value" id="weekMembersIncome">₹0</div>
-        </div>
-        <div class="metric-box bg-green">
-          <div class="metric-title">Total Weekly Company Profit</div>
-          <div class="metric-value" id="weekProfit">₹0</div>
-        </div>
-      </div>
-      <div style="margin-top:16px;">
-        <canvas id="weeklyChart" height="220"></canvas>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- Firebase + Chart.js -->
+<!-- FIREBASE CDN -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
 
 <script>
-  /************ Firebase Config (RJVC PLAN) ************/
+  /************ Firebase config – RJVC PLAN ************/
   const firebaseConfig = {
     apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
     authDomain: "rjvc-plan.firebaseapp.com",
@@ -276,531 +258,445 @@
     appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d",
     measurementId: "G-1Y7PN96H93"
   };
+
   firebase.initializeApp(firebaseConfig);
+  try { firebase.analytics(); } catch(e) {}
+
   const db = firebase.firestore();
   const treeCol   = db.collection("TreeNodes");
-  const weeklyCol = db.collection("WeeklyReports");
+  const weeklyDoc = db.collection("WeeklyReport").doc("current");
 
-  /************ ADMIN LOGIN CONFIG ************/
+  /************ Simple Admin Login ************/
   const ADMIN_ID = "admin";
   const ADMIN_PASSWORD = "1234";
 
-  /************ DATA STRUCTURE (memory में) ************/
-  let nodes = {};      // id -> node
-  let rootId = null;   // parentId == null
-  let currentTreeRootId = null;
-
-  function createNodeObj(id, data){
-    return {
-      id,
-      name: data.name || "",
-      password: data.password || "",
-      left: data.leftChildId || null,
-      right: data.rightChildId || null,
-      parent: data.parentId || null,
-      members: data.members || 0,
-      pairs: data.pairs || 0,
-      commission: data.commission || 0
-    };
-  }
-
-  /************ LOGIN ************/
-  async function handleAdminLogin() {
-    const id = document.getElementById("adminId").value.trim();
+  function handleAdminLogin(){
+    const id   = document.getElementById("adminId").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
-    const err = document.getElementById("loginError");
+    const err  = document.getElementById("loginError");
 
-    if (id === ADMIN_ID && pass === ADMIN_PASSWORD) {
+    if(id === ADMIN_ID && pass === ADMIN_PASSWORD){
       err.style.display = "none";
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("adminPage").style.display = "block";
-      await loadDataFromFirebase();
-      await loadWeeklyFromFirebase();
-    } else {
+      startSubscriptions();
+    }else{
       err.style.display = "block";
     }
   }
 
-  function logout() {
+  function logout(){
     document.getElementById("adminPage").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
     document.getElementById("adminPass").value = "";
   }
 
-  /************ LOAD TREE FROM FIREBASE ************/
-  async function loadDataFromFirebase(){
-    nodes = {};
-    rootId = null;
-    try{
-      const snap = await treeCol.get();
+  /************ Tree data in memory ************/
+  let nodesById = {};    // id -> node data
+  let rootId    = null;  // top root
+  let currentTreeRootId = null;
+  let treeUnsub = null;
+  let weeklyUnsub = null;
+
+  function startSubscriptions(){
+    // live tree listener
+    if(treeUnsub) treeUnsub();
+    treeUnsub = treeCol.orderBy("createdAt","asc").onSnapshot(snap=>{
+      nodesById = {};
+      rootId = null;
       snap.forEach(doc=>{
-        const data = doc.data();
-        nodes[doc.id] = createNodeObj(doc.id, data);
+        const d = doc.data();
+        nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
-      // root = कोई भी node जिसका parentId null है
-      Object.values(nodes).forEach(n=>{
-        if(!n.parent && !rootId){ rootId = n.id; }
+
+      // root = जिसे parentId नहीं है
+      Object.values(nodesById).forEach(n=>{
+        if(!n.parentId) rootId = n.id;
       });
-      recalcAll();   // members, pairs, commission calculate + save
+
+      recalcAll();
       renderTable();
       renderTree();
-    }catch(err){
-      console.error("loadData error:", err);
-      alert("Tree load error: " + err.message);
-    }
+    });
+
+    // weekly report listener
+    if(weeklyUnsub) weeklyUnsub();
+    weeklyUnsub = weeklyDoc.onSnapshot(snap=>{
+      if(!snap.exists) return;
+      const d = snap.data();
+      document.getElementById("sunIncome").value = d.sundayIncome || 0;
+      document.getElementById("wedIncome").value = d.wednesdayIncome || 0;
+      document.getElementById("totalIncome").textContent  = "₹" + (d.totalIncome || 0);
+      document.getElementById("weeklyBinary").textContent = "₹" + (d.binaryPayout || 0);
+      document.getElementById("companyProfit").textContent= "₹" + (d.companyProfit || 0);
+      document.getElementById("weeklyUpdated").textContent= d.lastUpdated || "--";
+      drawWeeklyChart(d.totalIncome || 0, d.binaryPayout || 0, d.companyProfit || 0);
+    });
   }
 
-  /************ SAVE ONE NODE TO FIREBASE ************/
-  async function saveNodeToFirebase(nodeId){
-    const n = nodes[nodeId];
-    if(!n) return;
-    const payload = {
-      name: n.name,
-      password: n.password,
-      parentId: n.parent || null,
-      leftChildId: n.left || null,
-      rightChildId: n.right || null,
-      members: n.members || 0,
-      pairs: n.pairs || 0,
-      commission: n.commission || 0
-    };
-    await treeCol.doc(nodeId).set(payload, { merge:true });
-  }
+  /************ Create Root Customer ************/
+  async function createRootCustomer(){
+    const name = document.getElementById("rootName").value.trim();
+    const pass = document.getElementById("rootPass").value.trim();
+    const msg  = document.getElementById("rootMsg");
+    msg.style.display = "none";
 
-  /************ CREATE ROOT CUSTOMER ************/
-  async function createRootCustomer() {
-    const name = document.getElementById("newName").value.trim();
-    const pass = document.getElementById("newPass").value.trim();
-    if (!name || !pass) {
-      alert("Name और Password दोनों भरें");
+    if(!name || !pass){
+      msg.textContent = "Name और Password दोनों जरूरी हैं।";
+      msg.className = "error";
+      msg.style.display = "block";
       return;
     }
 
     try{
-      const docRef = await treeCol.add({
+      // सिर्फ एक root allow – अगर पहले से root है तो new node भी बन जाएगा लेकिन root वही रहेगा
+      await treeCol.add({
         name,
         password: pass,
         parentId: null,
-        leftChildId: null,
-        rightChildId: null,
-        members: 0,
-        pairs: 0,
-        commission: 0,
+        leftId: null,
+        rightId: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      document.getElementById("newName").value = "";
-      document.getElementById("newPass").value = "";
-      await loadDataFromFirebase();
+
+      document.getElementById("rootName").value = "";
+      document.getElementById("rootPass").value = "";
+
+      msg.textContent = "Customer root में सफलतापूर्वक जोड़ा गया।";
+      msg.className = "ok";
+      msg.style.display = "block";
     }catch(err){
-      alert("Error: " + err.message);
+      msg.textContent = "Error: " + err.message;
+      msg.className = "error";
+      msg.style.display = "block";
     }
   }
 
-  /************ ADD MEMBER ************/
-  async function addMember(parentId, side) {
-    const parent = nodes[parentId];
-    if (!parent) {
-      alert("Parent नहीं मिला");
-      return;
-    }
-
-    const name = prompt("नया member का नाम?");
-    if (!name) return;
-    const pass = prompt("उसका login password?");
-    if (!pass) return;
-
-    try{
-      // नया node Firestore में बनाओ
-      const newDocRef = await treeCol.add({
-        name,
-        password: pass,
-        parentId: parentId,
-        leftChildId: null,
-        rightChildId: null,
-        members: 0,
-        pairs: 0,
-        commission: 0,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      const newId = newDocRef.id;
-
-      // memory में node
-      nodes[newId] = createNodeObj(newId, {
-        name,
-        password: pass,
-        parentId: parentId
-      });
-
-      const existingChildId = parent[side];
-
-      // parent -> new child
-      parent[side] = newId;
-      nodes[parentId] = parent;
-      await saveNodeToFirebase(parentId);
-
-      if (existingChildId) {
-        // पुराना child अब new node का left बनाओ
-        const existingChild = nodes[existingChildId];
-        nodes[newId].left = existingChildId;
-        existingChild.parent = newId;
-        await saveNodeToFirebase(existingChildId);
-        await saveNodeToFirebase(newId);
-      }
-
-      await loadDataFromFirebase();
-      currentTreeRootId = parentId;
-      renderTree();
-    }catch(err){
-      alert("Error: " + err.message);
-    }
-  }
-
-  function treeAddMember(parentId) {
-    const choice = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
-    if (!choice) return;
-    const c = choice.trim().toLowerCase();
-    let side = null;
-    if (c === "l" || c === "1") side = "left";
-    else if (c === "r" || c === "2") side = "right";
-    else {
-      alert("गलत choice, L/1 या R/2 लिखें");
-      return;
-    }
-    addMember(parentId, side);
-  }
-
-  /************ EDIT / DELETE ************/
-  async function editCustomer(id) {
-    const n = nodes[id];
-    if (!n) return;
-    const newName = prompt("नया नाम?", n.name);
-    if (!newName) return;
-    n.name = newName;
-    nodes[id] = n;
-    await saveNodeToFirebase(id);
-    recalcAll();
-    renderTable();
-    renderTree();
-  }
-
-  async function deleteCustomer(id) {
-    const n = nodes[id];
-    if (!n) return;
-    if (!confirm(`क्या आप "${n.name}" को delete करना चाहते हैं? उसके नीचे का सारा subtree भी delete होगा।`)) {
-      return;
-    }
-
-    try{
-      // अगर root delete कर रहे हैं
-      if (rootId === id) {
-        // पूरा TreeNodes collection साफ़ करना dangerous है,
-        // इस code में सिर्फ उसी subtree को delete करेंगे:
-        await deleteSubTreeFirebase(id);
-        nodes = {};
-        rootId = null;
-        currentTreeRootId = null;
-        renderTable();
-        renderTree();
-        return;
-      }
-
-      // parent से link हटाओ
-      const pId = n.parent;
-      if (pId && nodes[pId]) {
-        const p = nodes[pId];
-        if (p.left === id) p.left = null;
-        if (p.right === id) p.right = null;
-        nodes[pId] = p;
-        await saveNodeToFirebase(pId);
-      }
-
-      await deleteSubTreeFirebase(id);
-      await loadDataFromFirebase();
-    }catch(err){
-      alert("Error: " + err.message);
-    }
-  }
-
-  async function deleteSubTreeFirebase(nodeId){
-    const node = nodes[nodeId];
-    if (!node) return;
-    if (node.left)  await deleteSubTreeFirebase(node.left);
-    if (node.right) await deleteSubTreeFirebase(node.right);
-    delete nodes[nodeId];
-    await treeCol.doc(nodeId).delete();
-  }
-
-  /************ CALCULATIONS ************/
-  function countDesc(nodeId) {
-    const node = nodes[nodeId];
-    if (!node) return 0;
+  /************ Utility – count descendants & commissions ************/
+  function countDescendants(nodeId){
+    const node = nodesById[nodeId];
+    if(!node) return 0;
     let c = 0;
-    if (node.left)  c += 1 + countDesc(node.left);
-    if (node.right) c += 1 + countDesc(node.right);
+    if(node.leftId)  c += 1 + countDescendants(node.leftId);
+    if(node.rightId) c += 1 + countDescendants(node.rightId);
     return c;
   }
 
-  async function recalcAll() {
-    let totalPairs = 0;
-    let totalComm = 0;
-    const updatePromises = [];
+  let globalTotalPairs = 0;
+  let globalTotalCommission = 0;
 
-    Object.values(nodes).forEach(node => {
-      const members = countDesc(node.id);
-      const pairs = Math.floor(members / 2);
-      const commission = pairs * 3;   // 3₹ per pair
+  function recalcAll(){
+    globalTotalPairs = 0;
+    globalTotalCommission = 0;
+    const list = Object.values(nodesById);
 
-      node.members = members;
-      node.pairs = pairs;
-      node.commission = commission;
+    list.forEach(n=>{
+      const members = countDescendants(n.id);
+      const pairs = Math.floor(members/2);
+      const commission = pairs * 3; // 3₹ per pair
 
-      nodes[node.id] = node;
+      n.members = members;
+      n.pairs = pairs;
+      n.commission = commission;
 
-      totalPairs += pairs;
-      totalComm += commission;
-
-      // Firestore में भी update
-      updatePromises.push(
-        treeCol.doc(node.id).set({
-          members,
-          pairs,
-          commission
-        }, { merge:true })
-      );
+      globalTotalPairs += pairs;
+      globalTotalCommission += commission;
     });
 
-    try{
-      if(updatePromises.length){
-        await Promise.all(updatePromises);
-      }
-    }catch(err){
-      console.warn("recalcAll update error:", err);
-    }
-
-    document.getElementById("totalPairs").textContent = totalPairs;
-    document.getElementById("totalCommission").textContent = "₹" + totalComm;
+    document.getElementById("totalPairs").textContent = globalTotalPairs;
+    document.getElementById("totalCommission").textContent = "₹" + globalTotalCommission;
   }
 
-  /************ TABLE RENDER ************/
-  function renderTable() {
+  /************ Table render ************/
+  function renderTable(){
     const tbody = document.getElementById("customerTableBody");
     tbody.innerHTML = "";
-    const list = Object.values(nodes);
+    const list = Object.values(nodesById);
     list.sort((a,b)=>a.name.localeCompare(b.name));
 
     document.getElementById("totalCustomersBadge").textContent =
       list.length + " Customers";
 
-    list.forEach((node, idx) => {
+    list.forEach((n,idx)=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${idx+1}</td>
-        <td>${node.name}</td>
-        <td>${node.members}</td>
-        <td>${node.pairs}</td>
-        <td>₹${node.commission}</td>
-        <td>
-          <button class="btn btn-secondary btn-sm" onclick="viewTreeFrom('${node.id}')">Tree</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${node.id}')">Del</button>
-        </td>
+        <td>${n.name}</td>
+        <td>${n.members || 0}</td>
+        <td>${n.pairs || 0}</td>
+        <td>₹${n.commission || 0}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="viewTreeFrom('${n.id}')">Tree</button></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button></td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  /************ TREE VIEW ************/
-  function viewTreeFrom(id) {
+  /************ Tree view ************/
+  function viewTreeFrom(id){
     currentTreeRootId = id;
     renderTree();
   }
 
-  function showFullRootTree() {
+  function showFullRootTree(){
     currentTreeRootId = rootId;
     renderTree();
   }
 
-  function renderTree() {
+  function renderTree(){
     const area = document.getElementById("treeViewArea");
     const info = document.getElementById("treeRootInfo");
 
-    if (!Object.keys(nodes).length) {
+    if(!Object.keys(nodesById).length){
       info.textContent = "Tree खाली है। पहले कोई customer जोड़ें।";
       area.textContent = "";
       return;
     }
+
     const startId = currentTreeRootId || rootId;
-    const startNode = nodes[startId];
-    if (!startNode) {
+    const startNode = nodesById[startId];
+    if(!startNode){
       info.textContent = "Tree root नहीं मिला।";
       area.textContent = "";
       return;
     }
 
-    info.innerHTML = `अभी tree <b>${startNode.name}</b> से शुरू हो रहा है 
-      (Members: ${startNode.members}, Pairs: ${startNode.pairs}, Commission: ₹${startNode.commission})`;
+    info.innerHTML = `अभी tree <b>${startNode.name}</b> से शुरू हो रहा है
+      (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Binary Income: ₹${startNode.commission||0})`;
 
     let html = "";
-    function buildLevel(ids) {
-      if (!ids.length) return;
+
+    function buildLevel(ids){
+      if(!ids.length) return;
       html += `<div class="tree-level">`;
-      ids.forEach(id => {
-        const n = nodes[id];
-        if (!n) return;
-        const isRoot = (!nodes[n.parent]); // सबसे ऊपर वाला
+      ids.forEach(id=>{
+        const n = nodesById[id];
+        if(!n) return;
+        const isMain = (id === rootId);
         html += `
           <div class="tree-node-wrap">
-            <div class="tree-node ${isRoot ? "tree-node-main":""}">
+            <div class="tree-node ${isMain ? "tree-node-main":""}">
               <div class="tree-node-name">${n.name}</div>
-              <div class="tree-node-meta">
-                M:${n.members} · P:${n.pairs} · ₹${n.commission}
-              </div>
+              <div class="tree-node-meta">M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}</div>
               <div class="tree-node-actions">
                 <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
                 <button class="btn btn-secondary btn-sm" onclick="editCustomer('${n.id}')">Edit</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button>
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
       });
       html += `</div>`;
 
       const next = [];
       ids.forEach(id=>{
-        const n = nodes[id];
-        if (!n) return;
-        if (n.left)  next.push(n.left);
-        if (n.right) next.push(n.right);
+        const n = nodesById[id];
+        if(!n) return;
+        if(n.leftId)  next.push(n.leftId);
+        if(n.rightId) next.push(n.rightId);
       });
-      if (next.length) buildLevel(next);
+      if(next.length) buildLevel(next);
     }
 
     buildLevel([startId]);
     area.innerHTML = html;
   }
 
-  /************ WEEKLY BUSINESS (FIREBASE) ************/
-  let weeklyChart = null;
-
-  function formatINR(value){
-    value = Number(value) || 0;
-    return value.toLocaleString("en-IN",{maximumFractionDigits:0});
-  }
-
-  async function loadWeeklyFromFirebase(){
-    try{
-      const doc = await weeklyCol.doc("current").get();
-      if(doc.exists){
-        const d = doc.data();
-        document.getElementById("sunIncome").value       = d.sunIncome       || 0;
-        document.getElementById("sunMemberIncome").value = d.sunMemberIncome || 0;
-        document.getElementById("wedIncome").value       = d.wedIncome       || 0;
-        document.getElementById("wedMemberIncome").value = d.wedMemberIncome || 0;
-      }else{
-        // पहली बार demo values
-        document.getElementById("sunIncome").value       = 3000;
-        document.getElementById("sunMemberIncome").value = 1200;
-        document.getElementById("wedIncome").value       = 2100;
-        document.getElementById("wedMemberIncome").value = 1107;
-      }
-      calculateWeekly(false); // सिर्फ calculate, अभी save नहीं
-    }catch(err){
-      console.warn("Weekly load error:", err);
-    }
-  }
-
-  async function calculateWeekly(saveToFirebase = true){
-    const sunIncome       = Number(document.getElementById("sunIncome").value)       || 0;
-    const sunMemberIncome = Number(document.getElementById("sunMemberIncome").value) || 0;
-    const wedIncome       = Number(document.getElementById("wedIncome").value)       || 0;
-    const wedMemberIncome = Number(document.getElementById("wedMemberIncome").value) || 0;
-
-    const sunProfit = sunIncome - sunMemberIncome;
-    const wedProfit = wedIncome - wedMemberIncome;
-
-    const weekIncome        = sunIncome + wedIncome;
-    const weekMembersIncome = sunMemberIncome + wedMemberIncome;
-    const weekProfit        = sunProfit + wedProfit;
-
-    document.getElementById("sunProfit").textContent        = "₹" + formatINR(sunProfit);
-    document.getElementById("wedProfit").textContent        = "₹" + formatINR(wedProfit);
-    document.getElementById("weekIncome").textContent       = "₹" + formatINR(weekIncome);
-    document.getElementById("weekMembersIncome").textContent= "₹" + formatINR(weekMembersIncome);
-    document.getElementById("weekProfit").textContent       = "₹" + formatINR(weekProfit);
-
-    updateWeeklyChart(
-      sunIncome, sunMemberIncome, sunProfit,
-      wedIncome, wedMemberIncome, wedProfit
-    );
-
-    if(saveToFirebase){
-      try{
-        await weeklyCol.doc("current").set({
-          sunIncome,
-          sunMemberIncome,
-          wedIncome,
-          wedMemberIncome,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge:true });
-      }catch(err){
-        alert("Weekly save error: " + err.message);
-      }
-    }
-  }
-
-  function updateWeeklyChart(
-    sunIncome, sunMemberIncome, sunProfit,
-    wedIncome, wedMemberIncome, wedProfit
-  ){
-    const ctx = document.getElementById("weeklyChart").getContext("2d");
-
-    const labels = ["Sunday","Wednesday"];
-    const incomeData = [sunIncome,       wedIncome];
-    const memberData = [sunMemberIncome, wedMemberIncome];
-    const profitData = [sunProfit,       wedProfit];
-
-    if(weeklyChart){
-      weeklyChart.data.labels = labels;
-      weeklyChart.data.datasets[0].data = incomeData;
-      weeklyChart.data.datasets[1].data = memberData;
-      weeklyChart.data.datasets[2].data = profitData;
-      weeklyChart.update();
+  /************ Add / Edit / Delete ************/
+  // Tree से कॉल – पहले side पूछेगा (Left / Right)
+  function treeAddMember(parentId){
+    const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
+    if(!sideAns) return;
+    const s = sideAns.trim().toLowerCase();
+    let side = null;
+    if(s==="l" || s==="1") side = "leftId";
+    else if(s==="r" || s==="2") side = "rightId";
+    else{
+      alert("गलत choice, L/1 या R/2 लिखें");
       return;
     }
 
-    weeklyChart = new Chart(ctx,{
-      type:"bar",
-      data:{
-        labels:labels,
-        datasets:[
-          {label:"Income",         data:incomeData},
-          {label:"Members Income", data:memberData},
-          {label:"Company Profit", data:profitData}
-        ]
-      },
-      options:{
-        responsive:true,
-        scales:{
-          y:{
-            beginAtZero:true,
-            ticks:{
-              callback:function(value){ return "₹"+formatINR(value); }
-            }
-          }
-        },
-        plugins:{
-          legend:{position:"bottom"},
-          tooltip:{
-            callbacks:{
-              label:function(ctx){
-                return ctx.dataset.label + ": ₹" + formatINR(ctx.parsed.y);
-              }
-            }
-          }
-        }
+    const name = prompt("नया member का नाम?");
+    if(!name) return;
+    const pass = prompt("उसका login password?");
+    if(!pass) return;
+
+    addMember(parentId, side, name, pass);
+  }
+
+  // main add logic – अगर जगह खाली है तो normal, अगर भरा है तो बीच में नया node
+  async function addMember(parentId, sideField, name, pass){
+    try{
+      const parentRef = treeCol.doc(parentId);
+      const parentSnap = await parentRef.get();
+      if(!parentSnap.exists){
+        alert("Parent नहीं मिला");
+        return;
       }
-    });
+      const parent = parentSnap.data();
+      const existingChildId = parent[sideField] || null;
+
+      // पहले नया node create
+      const newRef = await treeCol.add({
+        name,
+        password: pass,
+        parentId: parentId,
+        leftId: null,
+        rightId: null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      const newId = newRef.id;
+
+      if(!existingChildId){
+        // simple add
+        const update = {};
+        update[sideField] = newId;
+        await parentRef.update(update);
+      }else{
+        // बींच में insert:
+        // parent की उसी side पर नया node आएगा
+        // और पुराना child, नए node के left child के रूप में नीचे चला जाएगा
+        const updateParent = {};
+        updateParent[sideField] = newId;
+
+        await Promise.all([
+          parentRef.update(updateParent),
+          newRef.update({ leftId: existingChildId }),
+          treeCol.doc(existingChildId).update({ parentId: newId })
+        ]);
+      }
+    }catch(err){
+      alert("Error: " + err.message);
+    }
+  }
+
+  async function editCustomer(id){
+    const node = nodesById[id];
+    if(!node) return;
+    const newName = prompt("नया नाम?", node.name);
+    if(!newName) return;
+    const newPass = prompt("नया password? (खाली छोड़ो तो पुराना ही रहेगा)", "");
+    const update = { name:newName };
+    if(newPass && newPass.trim()) update.password = newPass.trim();
+
+    try{
+      await treeCol.doc(id).update(update);
+    }catch(err){
+      alert("Error: " + err.message);
+    }
+  }
+
+  async function deleteCustomer(id){
+    const node = nodesById[id];
+    if(!node) return;
+    if(!confirm(`"${node.name}" और उसका पूरा subtree delete होगा, आगे बढ़ें?`)) return;
+
+    // अगर main root है तो पूरी collection साफ नहीं कर रहे,
+    // सिर्फ इसी root का subtree delete करेंगे
+    // parent से link हटाओ
+    if(node.parentId){
+      const parentRef = treeCol.doc(node.parentId);
+      const parent = nodesById[node.parentId];
+      if(parent){
+        const upd = {};
+        if(parent.leftId === id) upd.leftId = null;
+        if(parent.rightId === id) upd.rightId = null;
+        await parentRef.update(upd);
+      }
+    }
+
+    // DFS से subtree delete
+    async function deleteSubTree(nid){
+      const n = nodesById[nid];
+      if(!n) return;
+      if(n.leftId)  await deleteSubTree(n.leftId);
+      if(n.rightId) await deleteSubTree(n.rightId);
+      await treeCol.doc(nid).delete();
+    }
+    await deleteSubTree(id);
+  }
+
+  /************ Weekly company profit ************/
+  async function calculateAndSaveWeekly(){
+    const sun = Number(document.getElementById("sunIncome").value) || 0;
+    const wed = Number(document.getElementById("wedIncome").value) || 0;
+    const msg = document.getElementById("weeklyMsg");
+    msg.style.display = "none";
+
+    const totalIncome = sun + wed;
+    const binaryPayout = globalTotalCommission; // पूरे tree की binary earning
+    const companyProfit = totalIncome - binaryPayout;
+
+    const now = new Date();
+    const stamp = now.toLocaleString("en-IN");
+
+    try{
+      await weeklyDoc.set({
+        sundayIncome: sun,
+        wednesdayIncome: wed,
+        totalIncome: totalIncome,
+        binaryPayout: binaryPayout,
+        companyProfit: companyProfit,
+        lastUpdated: stamp
+      });
+
+      msg.textContent = "Weekly report Firebase में save हो गया।";
+      msg.className = "ok";
+      msg.style.display = "block";
+
+      // UI refresh
+      document.getElementById("totalIncome").textContent   = "₹" + totalIncome;
+      document.getElementById("weeklyBinary").textContent  = "₹" + binaryPayout;
+      document.getElementById("companyProfit").textContent = "₹" + companyProfit;
+      document.getElementById("weeklyUpdated").textContent = stamp;
+
+      drawWeeklyChart(totalIncome, binaryPayout, companyProfit);
+    }catch(err){
+      msg.textContent = "Error: " + err.message;
+      msg.className = "error";
+      msg.style.display = "block";
+    }
+  }
+
+  function drawWeeklyChart(totalIncome, binaryPayout, companyProfit){
+    const canvas = document.getElementById("weeklyChart");
+    if(!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    const labels = ["Pkg Income","Binary Payout","Company Profit"];
+    const values = [totalIncome, binaryPayout, companyProfit];
+    const maxVal = Math.max(1, ...values);
+    const barWidth = 60;
+    const gap = 40;
+    const originX = 40;
+    const originY = canvas.height - 30;
+
+    // axis
+    ctx.strokeStyle = "#9ca3af";
+    ctx.beginPath();
+    ctx.moveTo(originX, 10);
+    ctx.lineTo(originX, originY);
+    ctx.lineTo(canvas.width - 10, originY);
+    ctx.stroke();
+
+    // bars
+    for(let i=0;i<values.length;i++){
+      const x = originX + gap + i*(barWidth+gap);
+      const h = (values[i]/maxVal) * (originY-40);
+      const y = originY - h;
+
+      ctx.fillStyle = i===0 ? "#3b82f6" : (i===1 ? "#f97316" : "#22c55e");
+      ctx.fillRect(x, y, barWidth, h);
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "11px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(labels[i], x+barWidth/2, originY+14);
+      ctx.fillText("₹"+values[i], x+barWidth/2, y-4);
+    }
   }
 </script>
+
 </body>
 </html>
