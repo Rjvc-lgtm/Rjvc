@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>Binary Tree Admin Panel</title>
+  <title>Binary Tree Admin Panel (RJVC Firebase)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto;}
@@ -61,7 +61,7 @@
       table{font-size:12px;}
     }
 
-    /* ==== Weekly Report extra styles ==== */
+    /* Weekly report */
     .grid2{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -116,7 +116,7 @@
   <div class="wrap">
     <div class="panel flex between">
       <div>
-        <h2>Binary Tree Admin</h2>
+        <h2>Binary Tree Admin (Firebase)</h2>
         <div style="font-size:13px;color:#4b5563;">
           हर customer 20₹ देता है, 2 members (1 pair) पर <b>3₹</b> binary earning auto calculate होगी।
         </div>
@@ -158,7 +158,7 @@
           <div id="totalPairs" class="wallet-value">0</div>
         </div>
         <div class="wallet-box">
-          <div class="wallet-title">कुल Commission Wallet (₹)</div>
+          <div class="wallet-title">कुल Commission (₹)</div>
           <div id="totalCommission" class="wallet-value">₹0</div>
         </div>
       </div>
@@ -203,7 +203,6 @@
     <div class="panel">
       <h3>Weekly Binary Business Report</h3>
       <div class="grid2">
-        <!-- Sunday -->
         <div>
           <h4>Sunday (रविवार)</h4>
           <label>Income from Package Sale (₹)</label>
@@ -211,8 +210,6 @@
           <label style="margin-top:8px;">Total Binary Pairs Income (Members को दिया) (₹)</label>
           <input id="sunMemberIncome" type="number" placeholder="जैसे: 1200" />
         </div>
-
-        <!-- Wednesday -->
         <div>
           <h4>Wednesday (बुधवार)</h4>
           <label>Income from Package Sale (₹)</label>
@@ -221,20 +218,18 @@
           <input id="wedMemberIncome" type="number" placeholder="जैसे: 1107" />
         </div>
       </div>
-
       <button class="btn btn-primary mt-3" onclick="calculateWeekly()">
-        Calculate Weekly Report
+        Calculate Weekly Report (Firebase Save)
       </button>
       <div class="small">
-        हर दिन Company Profit = Income from package sale − Members को दी गई binary income  
-        Weekly Profit = Sunday Profit + Wednesday Profit
+        हर दिन Company Profit = Income − Members को दी गई binary income.  
+        Weekly Profit = Sunday Profit + Wednesday Profit.
       </div>
     </div>
 
     <!-- WEEKLY OUTPUT + CHART -->
     <div class="panel">
       <h3>Weekly Result & Business Chart</h3>
-
       <div class="metric-grid">
         <div class="metric-box bg-blue">
           <div class="metric-title">Sunday Profit (Company)</div>
@@ -257,7 +252,6 @@
           <div class="metric-value" id="weekProfit">₹0</div>
         </div>
       </div>
-
       <div style="margin-top:16px;">
         <canvas id="weeklyChart" height="220"></canvas>
       </div>
@@ -266,35 +260,52 @@
   </div>
 </div>
 
-<!-- Chart.js CDN (business chart के लिए) -->
+<!-- Firebase + Chart.js -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+  /************ Firebase Config (RJVC PLAN) ************/
+  const firebaseConfig = {
+    apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+    authDomain: "rjvc-plan.firebaseapp.com",
+    projectId: "rjvc-plan",
+    storageBucket: "rjvc-plan.firebasestorage.app",
+    messagingSenderId: "265431528728",
+    appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d",
+    measurementId: "G-1Y7PN96H93"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const treeCol   = db.collection("TreeNodes");
+  const weeklyCol = db.collection("WeeklyReports");
+
   /************ ADMIN LOGIN CONFIG ************/
   const ADMIN_ID = "admin";
   const ADMIN_PASSWORD = "1234";
 
-  /************ DATA STRUCTURE ************/
+  /************ DATA STRUCTURE (memory में) ************/
   let nodes = {};      // id -> node
-  let rootId = null;   // सबसे ऊपर वाला root
-  let currentTreeRootId = null; // अभी tree किससे शुरू हो रहा है
+  let rootId = null;   // parentId == null
+  let currentTreeRootId = null;
 
-  function createNode(id, name, password) {
+  function createNodeObj(id, data){
     return {
       id,
-      name,
-      password,
-      left: null,
-      right: null,
-      parent: null,
-      members: 0,
-      pairs: 0,
-      commission: 0
+      name: data.name || "",
+      password: data.password || "",
+      left: data.leftChildId || null,
+      right: data.rightChildId || null,
+      parent: data.parentId || null,
+      members: data.members || 0,
+      pairs: data.pairs || 0,
+      commission: data.commission || 0
     };
   }
 
   /************ LOGIN ************/
-  function handleAdminLogin() {
+  async function handleAdminLogin() {
     const id = document.getElementById("adminId").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
     const err = document.getElementById("loginError");
@@ -303,10 +314,8 @@
       err.style.display = "none";
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("adminPage").style.display = "block";
-      loadData();
-      renderAll();
-      // demo values for weekly report (चाहो तो हटा सकते हो)
-      initWeeklyDemo();
+      await loadDataFromFirebase();
+      await loadWeeklyFromFirebase();
     } else {
       err.style.display = "block";
     }
@@ -318,29 +327,48 @@
     document.getElementById("adminPass").value = "";
   }
 
-  /************ STORAGE ************/
-  const STORAGE_KEY = "binary_admin_tree_v2";
-
-  function saveData() {
-    const payload = { nodes, rootId };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  /************ LOAD TREE FROM FIREBASE ************/
+  async function loadDataFromFirebase(){
+    nodes = {};
+    rootId = null;
+    try{
+      const snap = await treeCol.get();
+      snap.forEach(doc=>{
+        const data = doc.data();
+        nodes[doc.id] = createNodeObj(doc.id, data);
+      });
+      // root = कोई भी node जिसका parentId null है
+      Object.values(nodes).forEach(n=>{
+        if(!n.parent && !rootId){ rootId = n.id; }
+      });
+      recalcAll();   // members, pairs, commission calculate + save
+      renderTable();
+      renderTree();
+    }catch(err){
+      console.error("loadData error:", err);
+      alert("Tree load error: " + err.message);
+    }
   }
 
-  function loadData() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw);
-      nodes = parsed.nodes || {};
-      rootId = parsed.rootId || null;
-    } catch (e) {
-      console.error("Load error", e);
-    }
-    recalcAll();
+  /************ SAVE ONE NODE TO FIREBASE ************/
+  async function saveNodeToFirebase(nodeId){
+    const n = nodes[nodeId];
+    if(!n) return;
+    const payload = {
+      name: n.name,
+      password: n.password,
+      parentId: n.parent || null,
+      leftChildId: n.left || null,
+      rightChildId: n.right || null,
+      members: n.members || 0,
+      pairs: n.pairs || 0,
+      commission: n.commission || 0
+    };
+    await treeCol.doc(nodeId).set(payload, { merge:true });
   }
 
   /************ CREATE ROOT CUSTOMER ************/
-  function createRootCustomer() {
+  async function createRootCustomer() {
     const name = document.getElementById("newName").value.trim();
     const pass = document.getElementById("newPass").value.trim();
     if (!name || !pass) {
@@ -348,24 +376,28 @@
       return;
     }
 
-    const id = "CUST_" + Date.now();
-    const node = createNode(id, name, pass);
-
-    if (!rootId) {
-      rootId = id;
+    try{
+      const docRef = await treeCol.add({
+        name,
+        password: pass,
+        parentId: null,
+        leftChildId: null,
+        rightChildId: null,
+        members: 0,
+        pairs: 0,
+        commission: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById("newName").value = "";
+      document.getElementById("newPass").value = "";
+      await loadDataFromFirebase();
+    }catch(err){
+      alert("Error: " + err.message);
     }
-    nodes[id] = node;
-
-    document.getElementById("newName").value = "";
-    document.getElementById("newPass").value = "";
-
-    recalcAll();
-    saveData();
-    renderAll();
   }
 
   /************ ADD MEMBER ************/
-  function addMember(parentId, side) {
+  async function addMember(parentId, side) {
     const parent = nodes[parentId];
     if (!parent) {
       alert("Parent नहीं मिला");
@@ -377,35 +409,52 @@
     const pass = prompt("उसका login password?");
     if (!pass) return;
 
-    const newId = "CUST_" + Date.now();
-    const newNode = createNode(newId, name, pass);
-    nodes[newId] = newNode;
+    try{
+      // नया node Firestore में बनाओ
+      const newDocRef = await treeCol.add({
+        name,
+        password: pass,
+        parentId: parentId,
+        leftChildId: null,
+        rightChildId: null,
+        members: 0,
+        pairs: 0,
+        commission: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      const newId = newDocRef.id;
 
-    const existingChildId = parent[side];
+      // memory में node
+      nodes[newId] = createNodeObj(newId, {
+        name,
+        password: pass,
+        parentId: parentId
+      });
 
-    newNode.parent = parentId;
-    parent[side] = newId;
+      const existingChildId = parent[side];
 
-    if (existingChildId) {
-      const existingChild = nodes[existingChildId];
-      if (!newNode.left) {
-        newNode.left = existingChildId;
-      } else if (!newNode.right) {
-        newNode.right = existingChildId;
-      } else {
-        alert("नया node already दो बच्चे रखता है!");
+      // parent -> new child
+      parent[side] = newId;
+      nodes[parentId] = parent;
+      await saveNodeToFirebase(parentId);
+
+      if (existingChildId) {
+        // पुराना child अब new node का left बनाओ
+        const existingChild = nodes[existingChildId];
+        nodes[newId].left = existingChildId;
+        existingChild.parent = newId;
+        await saveNodeToFirebase(existingChildId);
+        await saveNodeToFirebase(newId);
       }
-      existingChild.parent = newId;
-    }
 
-    recalcAll();
-    saveData();
-    renderAll();
-    currentTreeRootId = parentId;
-    renderTree();
+      await loadDataFromFirebase();
+      currentTreeRootId = parentId;
+      renderTree();
+    }catch(err){
+      alert("Error: " + err.message);
+    }
   }
 
-  // Tree से call होगा – पहले पूछेगा Left या Right
   function treeAddMember(parentId) {
     const choice = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if (!choice) return;
@@ -421,53 +470,64 @@
   }
 
   /************ EDIT / DELETE ************/
-  function editCustomer(id) {
+  async function editCustomer(id) {
     const n = nodes[id];
     if (!n) return;
     const newName = prompt("नया नाम?", n.name);
     if (!newName) return;
     n.name = newName;
+    nodes[id] = n;
+    await saveNodeToFirebase(id);
     recalcAll();
-    saveData();
-    renderAll();
+    renderTable();
     renderTree();
   }
 
-  function deleteCustomer(id) {
+  async function deleteCustomer(id) {
     const n = nodes[id];
     if (!n) return;
     if (!confirm(`क्या आप "${n.name}" को delete करना चाहते हैं? उसके नीचे का सारा subtree भी delete होगा।`)) {
       return;
     }
 
-    if (rootId === id) {
-      rootId = null;
-      nodes = {};
-      currentTreeRootId = null;
-      saveData();
-      renderAll();
-      return;
-    }
+    try{
+      // अगर root delete कर रहे हैं
+      if (rootId === id) {
+        // पूरा TreeNodes collection साफ़ करना dangerous है,
+        // इस code में सिर्फ उसी subtree को delete करेंगे:
+        await deleteSubTreeFirebase(id);
+        nodes = {};
+        rootId = null;
+        currentTreeRootId = null;
+        renderTable();
+        renderTree();
+        return;
+      }
 
-    const p = nodes[n.parent];
-    if (p) {
-      if (p.left === id) p.left = null;
-      if (p.right === id) p.right = null;
-    }
+      // parent से link हटाओ
+      const pId = n.parent;
+      if (pId && nodes[pId]) {
+        const p = nodes[pId];
+        if (p.left === id) p.left = null;
+        if (p.right === id) p.right = null;
+        nodes[pId] = p;
+        await saveNodeToFirebase(pId);
+      }
 
-    function deleteSubTree(nodeId) {
-      const node = nodes[nodeId];
-      if (!node) return;
-      if (node.left) deleteSubTree(node.left);
-      if (node.right) deleteSubTree(node.right);
-      delete nodes[nodeId];
+      await deleteSubTreeFirebase(id);
+      await loadDataFromFirebase();
+    }catch(err){
+      alert("Error: " + err.message);
     }
-    deleteSubTree(id);
+  }
 
-    recalcAll();
-    saveData();
-    renderAll();
-    renderTree();
+  async function deleteSubTreeFirebase(nodeId){
+    const node = nodes[nodeId];
+    if (!node) return;
+    if (node.left)  await deleteSubTreeFirebase(node.left);
+    if (node.right) await deleteSubTreeFirebase(node.right);
+    delete nodes[nodeId];
+    await treeCol.doc(nodeId).delete();
   }
 
   /************ CALCULATIONS ************/
@@ -480,22 +540,42 @@
     return c;
   }
 
-  function recalcAll() {
+  async function recalcAll() {
     let totalPairs = 0;
     let totalComm = 0;
+    const updatePromises = [];
 
     Object.values(nodes).forEach(node => {
       const members = countDesc(node.id);
       const pairs = Math.floor(members / 2);
-      const commission = pairs * 3;
+      const commission = pairs * 3;   // 3₹ per pair
 
       node.members = members;
       node.pairs = pairs;
       node.commission = commission;
 
+      nodes[node.id] = node;
+
       totalPairs += pairs;
       totalComm += commission;
+
+      // Firestore में भी update
+      updatePromises.push(
+        treeCol.doc(node.id).set({
+          members,
+          pairs,
+          commission
+        }, { merge:true })
+      );
     });
+
+    try{
+      if(updatePromises.length){
+        await Promise.all(updatePromises);
+      }
+    }catch(err){
+      console.warn("recalcAll update error:", err);
+    }
 
     document.getElementById("totalPairs").textContent = totalPairs;
     document.getElementById("totalCommission").textContent = "₹" + totalComm;
@@ -543,7 +623,7 @@
     const area = document.getElementById("treeViewArea");
     const info = document.getElementById("treeRootInfo");
 
-    if (!rootId || !Object.keys(nodes).length) {
+    if (!Object.keys(nodes).length) {
       info.textContent = "Tree खाली है। पहले कोई customer जोड़ें।";
       area.textContent = "";
       return;
@@ -566,7 +646,7 @@
       ids.forEach(id => {
         const n = nodes[id];
         if (!n) return;
-        const isRoot = (id === rootId);
+        const isRoot = (!nodes[n.parent]); // सबसे ऊपर वाला
         html += `
           <div class="tree-node-wrap">
             <div class="tree-node ${isRoot ? "tree-node-main":""}">
@@ -599,14 +679,7 @@
     area.innerHTML = html;
   }
 
-  /************ RENDER ALL ************/
-  function renderAll() {
-    recalcAll();
-    renderTable();
-    renderTree();
-  }
-
-  /************ WEEKLY BUSINESS REPORT (Sunday + Wednesday) ************/
+  /************ WEEKLY BUSINESS (FIREBASE) ************/
   let weeklyChart = null;
 
   function formatINR(value){
@@ -614,7 +687,29 @@
     return value.toLocaleString("en-IN",{maximumFractionDigits:0});
   }
 
-  function calculateWeekly(){
+  async function loadWeeklyFromFirebase(){
+    try{
+      const doc = await weeklyCol.doc("current").get();
+      if(doc.exists){
+        const d = doc.data();
+        document.getElementById("sunIncome").value       = d.sunIncome       || 0;
+        document.getElementById("sunMemberIncome").value = d.sunMemberIncome || 0;
+        document.getElementById("wedIncome").value       = d.wedIncome       || 0;
+        document.getElementById("wedMemberIncome").value = d.wedMemberIncome || 0;
+      }else{
+        // पहली बार demo values
+        document.getElementById("sunIncome").value       = 3000;
+        document.getElementById("sunMemberIncome").value = 1200;
+        document.getElementById("wedIncome").value       = 2100;
+        document.getElementById("wedMemberIncome").value = 1107;
+      }
+      calculateWeekly(false); // सिर्फ calculate, अभी save नहीं
+    }catch(err){
+      console.warn("Weekly load error:", err);
+    }
+  }
+
+  async function calculateWeekly(saveToFirebase = true){
     const sunIncome       = Number(document.getElementById("sunIncome").value)       || 0;
     const sunMemberIncome = Number(document.getElementById("sunMemberIncome").value) || 0;
     const wedIncome       = Number(document.getElementById("wedIncome").value)       || 0;
@@ -627,16 +722,30 @@
     const weekMembersIncome = sunMemberIncome + wedMemberIncome;
     const weekProfit        = sunProfit + wedProfit;
 
-    document.getElementById("sunProfit").textContent  = "₹" + formatINR(sunProfit);
-    document.getElementById("wedProfit").textContent  = "₹" + formatINR(wedProfit);
-    document.getElementById("weekIncome").textContent = "₹" + formatINR(weekIncome);
-    document.getElementById("weekMembersIncome").textContent = "₹" + formatINR(weekMembersIncome);
-    document.getElementById("weekProfit").textContent = "₹" + formatINR(weekProfit);
+    document.getElementById("sunProfit").textContent        = "₹" + formatINR(sunProfit);
+    document.getElementById("wedProfit").textContent        = "₹" + formatINR(wedProfit);
+    document.getElementById("weekIncome").textContent       = "₹" + formatINR(weekIncome);
+    document.getElementById("weekMembersIncome").textContent= "₹" + formatINR(weekMembersIncome);
+    document.getElementById("weekProfit").textContent       = "₹" + formatINR(weekProfit);
 
     updateWeeklyChart(
       sunIncome, sunMemberIncome, sunProfit,
       wedIncome, wedMemberIncome, wedProfit
     );
+
+    if(saveToFirebase){
+      try{
+        await weeklyCol.doc("current").set({
+          sunIncome,
+          sunMemberIncome,
+          wedIncome,
+          wedMemberIncome,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+      }catch(err){
+        alert("Weekly save error: " + err.message);
+      }
+    }
   }
 
   function updateWeeklyChart(
@@ -664,9 +773,9 @@
       data:{
         labels:labels,
         datasets:[
-          {label:"Income",        data:incomeData},
-          {label:"Members Income",data:memberData},
-          {label:"Company Profit",data:profitData}
+          {label:"Income",         data:incomeData},
+          {label:"Members Income", data:memberData},
+          {label:"Company Profit", data:profitData}
         ]
       },
       options:{
@@ -692,16 +801,6 @@
       }
     });
   }
-
-  // Demo values auto-fill (optional)
-  function initWeeklyDemo(){
-    document.getElementById("sunIncome").value       = 3000;
-    document.getElementById("sunMemberIncome").value = 1200;
-    document.getElementById("wedIncome").value       = 2100;
-    document.getElementById("wedMemberIncome").value = 1107;
-    calculateWeekly();
-  }
 </script>
-
 </body>
 </html>
