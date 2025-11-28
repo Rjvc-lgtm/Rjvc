@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Weekly Binary Business Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f1f5f9; }
+    .page { max-width: 960px; margin: 0 auto; padding: 16px; }
+    h1 { text-align: center; margin: 8px 0 16px; color: #0f172a; }
+    h2 { margin: 0 0 12px; }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    label { font-size: 14px; display: block; margin-bottom: 4px; }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid #cbd5f5;
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus {
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #06b6d4;
+      color: #fff;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .metric-box {
+      border-radius: 16px;
+      color: #fff;
+      padding: 16px;
+    }
+    .metric-title {
+      font-size: 15px;
+      opacity: 0.95;
+      margin-bottom: 8px;
+    }
+    .metric-value {
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .bg-blue   { background: linear-gradient(135deg, #06b6d4, #0ea5e9); }
+    .bg-orange { background: linear-gradient(135deg, #fb923c, #f97316); }
+    .bg-green  { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+    .small { font-size: 13px; color: #6b7280; margin-top: 6px; }
+    canvas { max-width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Weekly Binary Business Report</h1>
+
+    <!-- INPUTS FOR SUNDAY & WEDNESDAY -->
+    <div class="card">
+      <h2>इस हफ्ते के इनपुट</h2>
+      <div class="grid2">
+        <!-- Sunday -->
+        <div>
+          <h3>Sunday (रविवार)</h3>
+          <label>Income from Package Sale (₹)</label>
+          <input id="sunIncome" type="number" placeholder="जैसे: 3000" />
+          <label style="margin-top:8px;">Total Binary Pairs Income (Members को दिया) (₹)</label>
+          <input id="sunMemberIncome" type="number" placeholder="जैसे: 1200" />
+        </div>
+
+        <!-- Wednesday -->
+        <div>
+          <h3>Wednesday (बुधवार)</h3>
+          <label>Income from Package Sale (₹)</label>
+          <input id="wedIncome" type="number" placeholder="जैसे: 2100" />
+          <label style="margin-top:8px;">Total Binary Pairs Income (Members को दिया) (₹)</label>
+          <input id="wedMemberIncome" type="number" placeholder="जैसे: 1107" />
+        </div>
+      </div>
+
+      <button class="btn" onclick="calculateWeekly()">Calculate Weekly Report</button>
+      <div class="small">
+        Company Profit (हर दिन) = Income from package sale − Members को दिया binary pairs income  
+        Weekly Profit = Sunday Profit + Wednesday Profit
+      </div>
+    </div>
+
+    <!-- DAILY RESULTS -->
+    <div class="card">
+      <h2>Day-wise Results</h2>
+      <div class="metric-grid">
+        <div class="metric-box bg-blue">
+          <div class="metric-title">Sunday Profit (Company)</div>
+          <div class="metric-value" id="sunProfit">0</div>
+        </div>
+        <div class="metric-box bg-blue">
+          <div class="metric-title">Wednesday Profit (Company)</div>
+          <div class="metric-value" id="wedProfit">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEKLY TOTALS -->
+    <div class="card">
+      <h2>Weekly Totals</h2>
+      <div class="metric-grid">
+        <div class="metric-box bg-blue">
+          <div class="metric-title">Total Weekly Income (Sun + Wed)</div>
+          <div class="metric-value" id="weekIncome">0</div>
+        </div>
+        <div class="metric-box bg-orange">
+          <div class="metric-title">Total Binary Pairs Income (Members को दिया)</div>
+          <div class="metric-value" id="weekMembersIncome">0</div>
+        </div>
+        <div class="metric-box bg-green">
+          <div class="metric-title">Total Weekly Company Profit</div>
+          <div class="metric-value" id="weekProfit">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUSINESS CHART -->
+    <div class="card">
+      <h2 style="text-align:center;">Business Chart (Sunday vs Wednesday)</h2>
+      <canvas id="weeklyChart" height="240"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    let weeklyChart = null;
+
+    function formatINR(value) {
+      value = Number(value) || 0;
+      return value.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+    }
+
+    function calculateWeekly() {
+      const sunIncome        = Number(document.getElementById("sunIncome").value)        || 0;
+      const sunMemberIncome  = Number(document.getElementById("sunMemberIncome").value)  || 0;
+      const wedIncome        = Number(document.getElementById("wedIncome").value)        || 0;
+      const wedMemberIncome  = Number(document.getElementById("wedMemberIncome").value)  || 0;
+
+      const sunProfit = sunIncome - sunMemberIncome;
+      const wedProfit = wedIncome - wedMemberIncome;
+
+      const weekIncome        = sunIncome + wedIncome;
+      const weekMembersIncome = sunMemberIncome + wedMemberIncome;
+      const weekProfit        = sunProfit + wedProfit;
+
+      // Day wise
+      document.getElementById("sunProfit").textContent = "₹" + formatINR(sunProfit);
+      document.getElementById("wedProfit").textContent = "₹" + formatINR(wedProfit);
+
+      // Weekly totals
+      document.getElementById("weekIncome").textContent        = "₹" + formatINR(weekIncome);
+      document.getElementById("weekMembersIncome").textContent = "₹" + formatINR(weekMembersIncome);
+      document.getElementById("weekProfit").textContent        = "₹" + formatINR(weekProfit);
+
+      updateWeeklyChart(
+        sunIncome, sunMemberIncome, sunProfit,
+        wedIncome, wedMemberIncome, wedProfit
+      );
+    }
+
+    function updateWeeklyChart(
+      sunIncome, sunMemberIncome, sunProfit,
+      wedIncome, wedMemberIncome, wedProfit
+    ) {
+      const ctx = document.getElementById("weeklyChart").getContext("2d");
+
+      const labels = ["Sunday", "Wednesday"];
+
+      const incomeData = [sunIncome,        wedIncome];
+      const memberData = [sunMemberIncome,  wedMemberIncome];
+      const profitData = [sunProfit,        wedProfit];
+
+      if (weeklyChart) {
+        weeklyChart.data.labels = labels;
+        weeklyChart.data.datasets[0].data = incomeData;
+        weeklyChart.data.datasets[1].data = memberData;
+        weeklyChart.data.datasets[2].data = profitData;
+        weeklyChart.update();
+        return;
+      }
+
+      weeklyChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            { label: "Income",        data: incomeData },
+            { label: "Members Income", data: memberData },
+            { label: "Company Profit", data: profitData }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return "₹" + formatINR(value);
+                }
+              }
+            }
+          },
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ": ₹" + formatINR(context.parsed.y);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Demo example values (आप चाहो तो हटा सकते हो)
+    window.addEventListener("load", () => {
+      document.getElementById("sunIncome").value        = 3000;
+      document.getElementById("sunMemberIncome").value  = 1200;
+      document.getElementById("wedIncome").value        = 2100;
+      document.getElementById("wedMemberIncome").value  = 1107;
+      calculateWeekly();
+    });
+  </script>
+</body>
+</html>
