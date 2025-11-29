@@ -2,178 +2,695 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>RJVC Customer Dashboard</title>
+  <title>RJVC Customer Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}
-    body{margin:0;background:#f3f4f6;}
-    h1{margin:0;}
-    .page{padding:16px;}
+    *{
+      box-sizing:border-box;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    body{
+      margin:0;
+      background:#f3f4f6;
+      color:#111827;
+    }
+    h1{
+      margin:0 0 12px;
+    }
+    .page{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
     .card{
-      background:#fff;border-radius:16px;padding:20px;
-      box-shadow:0 8px 25px rgba(0,0,0,.15);max-width:650px;margin:auto;
+      background:#fff;
+      border-radius:18px;
+      box-shadow:0 12px 30px rgba(15,23,42,.18);
+      padding:22px;
+      max-width:800px;
+      width:100%;
     }
+    label{
+      display:block;
+      font-size:14px;
+      margin-bottom:4px;
+    }
+    input, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid #d1d5db;
+      font-size:15px;
+      outline:none;
+    }
+    input:focus, textarea:focus{
+      border-color:#2563eb;
+      box-shadow:0 0 0 2px rgba(37,99,235,.25);
+    }
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:10px 18px;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .btn-primary{
+      background:#1d4ed8;
+      color:#fff;
+    }
+    .btn-outline{
+      background:#fff;
+      border:1px solid #d1d5db;
+    }
+    .btn-sm{
+      padding:6px 12px;
+      font-size:13px;
+    }
+    .mt-1{margin-top:4px;}
+    .mt-2{margin-top:8px;}
+    .mt-3{margin-top:12px;}
+    .mt-4{margin-top:16px;}
+    .mt-5{margin-top:20px;}
+    .flex{display:flex;align-items:center;}
+    .between{justify-content:space-between;}
+    .small{font-size:12px;color:#6b7280;}
+    .error{color:#b91c1c;font-size:13px;margin-top:6px;}
+    .ok{color:#166534;font-size:13px;margin-top:6px;}
+
     .wallet{
-      border-radius:14px;padding:14px;color:#fff;margin-top:14px;
+      border-radius:16px;
+      padding:14px;
+      color:#fff;
+      margin-top:10px;
     }
-    .wallet-comm{background:#0f172a;}
-    .wallet-bonus{background:#14532d;}
-    .wallet-label{font-size:13px;opacity:.9;}
-    .wallet-amount{font-size:26px;font-weight:700;}
-    .btn{padding:10px 18px;border-radius:999px;border:1px solid #d1d5db;background:#fff;}
-    .small{font-size:14px;color:#555;}
+    .wallet-comm{
+      background:#020617;
+    }
+    .wallet-bonus{
+      background:#14532d;
+    }
+    .wallet-label{
+      font-size:13px;
+      opacity:.9;
+    }
+    .wallet-amount{
+      font-size:26px;
+      font-weight:700;
+    }
+
+    .section-title{
+      font-size:18px;
+      font-weight:600;
+      margin:18px 0 6px;
+    }
+    .section-sub{
+      font-size:14px;
+      line-height:1.6;
+      margin-bottom:8px;
+    }
+    .intro-list{
+      margin:0 0 4px 16px;
+      padding:0;
+      font-size:14px;
+      line-height:1.6;
+    }
+    .intro-list li{
+      margin-bottom:2px;
+    }
+
+    .sub-card{
+      margin-top:18px;
+      padding:14px;
+      border-radius:14px;
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+    }
+    .sub-card h2{
+      margin:0 0 8px;
+      font-size:16px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+      margin-top:8px;
+    }
+    th,td{
+      padding:6px 4px;
+      border-bottom:1px solid #e5e7eb;
+      text-align:left;
+    }
+    th{
+      font-size:12px;
+      text-transform:uppercase;
+      color:#6b7280;
+    }
+
+    @media(max-width:640px){
+      .card{padding:16px;}
+    }
   </style>
 </head>
-
 <body>
 
 <!-- LOGIN PAGE -->
-<div id="loginPage" class="page" style="display:flex;justify-content:center;align-items:center;min-height:100vh;">
-  <div class="card" style="max-width:480px;width:100%;">
-    <h1 style="font-size:22px;margin-bottom:10px;">Customer Login</h1>
-
+<div id="loginPage" class="page">
+  <div class="card">
+    <h1>Customer Login</h1>
     <label>Customer Name</label>
-    <input id="custName" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;" />
-
-    <label style="margin-top:10px;">Password</label>
-    <input id="custPass" type="password" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;" />
-
-    <button id="loginBtn" style="margin-top:14px;width:100%;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-size:16px;">
-      Login
-    </button>
-
-    <div id="loginMsg" style="color:red;font-size:13px;margin-top:8px;display:none;"></div>
-
-    <p class="small" style="margin-top:10px;">
-      आप किसी भी customer की ID खोल सकते हैं, अगर नाम + सही password पता हो।
+    <input id="custName" placeholder="जैसे: Rajesh" />
+    <div class="mt-2"></div>
+    <label>Password</label>
+    <input id="custPass" type="password" placeholder="जैसे: 1234" />
+    <button class="btn btn-primary mt-3" style="width:100%;" id="loginBtn">Login</button>
+    <div id="loginMsg" class="error" style="display:none;"></div>
+    <p class="small mt-2">
+      आप इस login से किसी भी customer की ID खोल सकते हैं, अगर उसका नाम और सही password पता हो।
     </p>
   </div>
 </div>
 
-<!-- DASHBOARD PAGE -->
+<!-- CUSTOMER DASHBOARD -->
 <div id="dashboardPage" style="display:none;">
-  <div class="page">
+  <div class="page" style="align-items:flex-start;">
     <div class="card">
-
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+      <!-- Header -->
+      <div class="flex between">
         <div>
-          <h1 style="font-size:20px;">Customer Dashboard</h1>
-          <div id="welcomeText" class="small"></div>
+          <h1 style="font-size:20px;margin-bottom:4px;">Customer Dashboard</h1>
+          <div class="small" id="welcomeText"></div>
         </div>
-        <button id="logoutBtn" class="btn">Logout</button>
+        <button class="btn btn-outline btn-sm" id="logoutBtn">Logout</button>
       </div>
 
-      <!-- 🌟 RJVC INTRO (SIMPLE TEXT, NO BOX) -->
-      <div style="margin-top:18px;line-height:1.6;font-size:14.5px;color:#333;">
-        <p><b>⭐ RJVC – वो System जिससे आप “सोते हुए भी” कमाई बना सकते हैं।</b></p>
-        <p>RJVC आपके mobile को आपकी कमाई का auto-earning engine बना देता है।</p>
+      <!-- RJVC FULL INTRO (TEXT ONLY, NO BOX) -->
+      <div id="introBlock" class="mt-3">
+        <div class="section-title">⭐ एआई का ज़माना शुरू हो गया है… लेकिन आपकी कमाई रुकनी क्यों चाहिए?</div>
+        <p class="section-sub">
+          AI (Artificial Intelligence) ने पिछले कुछ महीनों में दुनिया की बड़ी कंपनियों में
+          लाखों लोगों की नौकरियाँ खा ली हैं। Google, Amazon, Meta, IBM जैसी कंपनियाँ
+          automation बढ़ा रही हैं – यानी <b>एक ही काम अब मशीनें कर रही हैं, इंसान नहीं।</b>
+        </p>
+        <p class="section-sub">
+          सवाल सिर्फ इतना है: <b>क्या आपकी नौकरी 100% सुरक्षित है?</b><br>
+          अगर नहीं, तो आपका दूसरा सुरक्षित income source होना ज़रूरी है – ऐसा जो
+          सिर्फ आपकी daily job पर depend न हो।
+        </p>
 
-        <ul style="margin-left:16px;">
+        <div class="section-title">⭐ RJVC – वो System जिससे आप “सोते हुए भी” कमाई बना सकते हैं।</div>
+        <p class="section-sub">
+          RJVC आपके mobile को आपकी कमाई का <b>auto-earning engine</b> बना देता है।
+        </p>
+        <ul class="intro-list">
           <li>कोई App नहीं</li>
           <li>कोई target नहीं</li>
           <li>कोई time limit नहीं</li>
-          <li>बस एक बार सेट करो — earning अपने आप होती रहती है</li>
+          <li>बस एक बार सेट करो – earning का calculation अपने आप होता रहता है</li>
         </ul>
 
-        <p><b>💡 अगर अभी नहीं जुड़ेंगे तो नुकसान क्या?</b></p>
-        <ul style="margin-left:16px;">
-          <li>AI अगले 1–2 साल में skill की value कम कर सकता है</li>
+        <div class="section-title">💡 अगर आप अभी नहीं जुड़ेंगे तो नुकसान क्या है?</div>
+        <p class="section-sub">
+          यह एक सच्चाई है – आज AI लोगों की नौकरियाँ ले रहा है… और जो लोग अभी दूसरा
+          income source नहीं बना रहे, <b>2–3 साल बाद उन्हें सिर्फ पछतावा मिलेगा।</b>
+        </p>
+        <ul class="intro-list">
+          <li>AI अगले 1–2 साल में आपकी skill की value कम कर सकता है</li>
           <li>कंपनियाँ cost-cut शुरू कर चुकी हैं</li>
-          <li>Backup income न होने से tension बढ़ेगी</li>
+          <li>Backup income न होने से financial tension बढ़ेगी</li>
+          <li>आप पैसे कमाने की speed में पीछे रह जाएँगे</li>
           <li>आज के मौके 2 साल बाद नहीं मिलेंगे</li>
         </ul>
+        <p class="section-sub">
+          👉 नौकरी रहे या न रहे… <b>extra income ज़रूरी है</b> – RJVC आपकी लाइफ़लाइन बन सकता है।
+        </p>
 
-        <p>
-          👉 नौकरी रहे या न रहे… <b>extra income ज़रूरी</b> है —  
-          RJVC आपकी लाइफलाइन बन सकता है।
+        <div class="section-title">🟢 RJVC क्यों ज़रूरी है? (Career की भाषा में समझिए)</div>
+        <p class="section-sub"><b>1️⃣ Job safe नहीं – लेकिन income safe हो सकती है</b></p>
+        <p class="section-sub">
+          RJVC आपको नौकरी के ऊपर एक extra कमाई देता है – बिना नौकरी छोड़े।
+        </p>
+
+        <p class="section-sub"><b>2️⃣ Career बदलने का डर Zero</b></p>
+        <p class="section-sub">
+          न नौकरी छोड़नी, न कोई risk, न कोई investment pressure। आप जो कर रहे हैं,
+          वही करते रहिए – RJVC side-income देता है।
+        </p>
+
+        <p class="section-sub"><b>3️⃣ Slow नहीं – Smart earning</b></p>
+        <p class="section-sub">
+          यहाँ मेहनत कम, calculation + system से कमाई ज़्यादा है। Members बढ़ते ही
+          binary pairs और bonus अपने-आप जुड़ते जाते हैं।
+        </p>
+
+        <p class="section-sub"><b>4️⃣ Family Income बढ़ती है</b></p>
+        <p class="section-sub">
+          आप अकेले नहीं – आपका भाई, बहन, पत्नी, बच्चे कोई भी इसके साथ जुड़कर
+          परिवार की total income बढ़ा सकते हैं।
+        </p>
+
+        <div class="section-title">💰 RJVC को Join करने के फायदे (Strong Benefits)</div>
+        <ul class="intro-list">
+          <li>आपकी earning mobile dashboard पर live दिखती है</li>
+          <li>Commission Wallet और Bonus Wallet अलग-अलग – earning clear रहती है</li>
+          <li>Bonus Wallet हर महीने withdraw कर सकते हैं (admin approval के बाद)</li>
+          <li>हर तीसरे महीने 1 direct member जोड़ने से bonus unlock rule follow होता है</li>
+          <li>Withdrawal हमेशा admin approved – safe & clean record</li>
+        </ul>
+
+        <div class="section-title">🔥 अगर नहीं जुड़ें तो नुकसान?</div>
+        <ul class="intro-list">
+          <li>AI आपकी current skill की value धीरे-धीरे कम कर सकता है</li>
+          <li>Company cost-cut करे तो income सीधे impact होगी</li>
+          <li>कोई backup income नहीं तो हर छोटी problem में tension ज़्यादा</li>
+          <li>2–3 साल बाद जब लोग extra income बना चुके होंगे, आप वहीं के वहीं रह जाएँगे</li>
+        </ul>
+
+        <div class="section-title">🏆 RJVC किन लोगों के लिए perfect है?</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Profession</th>
+              <th>क्यों सही है?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Students</td>
+              <td>Pocket money + skill-free earning</td>
+            </tr>
+            <tr>
+              <td>Housewives</td>
+              <td>घर संभालते हुए कमाई</td>
+            </tr>
+            <tr>
+              <td>Employees</td>
+              <td>नौकरी छोड़े बिना extra income</td>
+            </tr>
+            <tr>
+              <td>Engineers / IT</td>
+              <td>Job + additional earning (AI risk का backup)</td>
+            </tr>
+            <tr>
+              <td>Doctors / Professionals</td>
+              <td>Side income बिना extra time waste</td>
+            </tr>
+            <tr>
+              <td>Retired persons</td>
+              <td>Pension के साथ safe income</td>
+            </tr>
+            <tr>
+              <td>Shop owners</td>
+              <td>Time नहीं लगता, बस system चलता है</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="section-sub mt-3">
+          🔚 <b>Simple शब्दों में:</b> दुनिया बदल रही है, AI तेज़ी से आ रहा है।  
+          सिर्फ skill नहीं – <b>extra income source</b> आपकी असली ताकत है।  
+          RJVC आपको वही ताकत देता है।
         </p>
       </div>
 
-      <!-- COMMISSION WALLET -->
-      <div class="wallet wallet-comm">
+      <!-- WALLETS -->
+      <div class="wallet wallet-comm mt-4">
         <div class="wallet-label">COMMISSION WALLET</div>
         <div class="wallet-amount" id="commWalletText">₹0</div>
       </div>
 
-      <!-- BONUS WALLET -->
       <div class="wallet wallet-bonus">
         <div class="wallet-label">BONUS WALLET</div>
         <div class="wallet-amount" id="bonusWalletText">₹0</div>
+      </div>
+
+      <!-- BANK DETAILS -->
+      <div class="sub-card">
+        <h2>Bank Details (पैसे किस खाते में चाहिए?)</h2>
+        <div class="small">
+          ये details एक बार save होंगी। बाद में आप बदल भी सकते हैं – पूरा record admin के पास रहेगा।
+        </div>
+
+        <div id="bankView" class="mt-2" style="display:none;">
+          <div class="small"><b>Account Holder:</b> <span id="vAccName"></span></div>
+          <div class="small"><b>Account Number:</b> <span id="vAccNumber"></span></div>
+          <div class="small"><b>IFSC:</b> <span id="vIfsc"></span></div>
+          <div class="small"><b>UPI ID:</b> <span id="vUpi"></span></div>
+          <div class="small"><b>Note:</b> <span id="vNote"></span></div>
+          <button class="btn btn-outline btn-sm mt-2" id="editBankBtn">Change Bank Details</button>
+        </div>
+
+        <div id="bankEdit" class="mt-2">
+          <label>Account Holder Name</label>
+          <input id="bankAccName" placeholder="जैसे: Rajesh Kumar" />
+          <div class="mt-1"></div>
+
+          <label>Account Number</label>
+          <input id="bankAccNumber" placeholder="जैसे: 1234567890" />
+          <div class="mt-1"></div>
+
+          <label>IFSC Code</label>
+          <input id="bankIfsc" placeholder="जैसे: SBIN000000" />
+          <div class="mt-1"></div>
+
+          <label>UPI ID (optional)</label>
+          <input id="bankUpi" placeholder="जैसे: mobile@upi" />
+          <div class="mt-1"></div>
+
+          <label>Extra Note (optional)</label>
+          <textarea id="bankNote" rows="2" placeholder="कोई special instruction हो तो लिखें"></textarea>
+
+          <button class="btn btn-primary mt-2" id="saveBankBtn">Save Bank Details</button>
+          <div id="bankMsg" class="ok" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- WITHDRAWAL REQUEST -->
+      <div class="sub-card">
+        <h2>Withdrawal Request</h2>
+        <div class="small">
+          आप यहाँ से withdrawal request लगा सकते हैं।  
+          Request Firebase में save होगी और admin approve करेगा।
+        </div>
+
+        <div class="mt-2">
+          <div class="small">
+            Available Bonus Wallet: <b><span id="availableBonus">₹0</span></b>
+          </div>
+          <label class="mt-2">Withdraw Amount (₹)</label>
+          <input id="withdrawAmount" type="number" min="1" />
+          <button class="btn btn-primary mt-2" id="withdrawBtn">Send Withdrawal Request</button>
+          <div id="withdrawMsg" class="ok" style="display:none;"></div>
+        </div>
+
+        <div class="mt-3">
+          <div class="small"><b>आपकी पुरानी Withdrawal Requests</b></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Date/Time</th>
+                <th>Amount (₹)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="withdrawTableBody">
+              <!-- rows -->
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>
   </div>
 </div>
 
-<!-- FIREBASE -->
+<!-- Firebase CDN -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
 
 <script>
+  // वही Firebase config जो admin / index में है
   const firebaseConfig = {
     apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
     authDomain: "rjvc-plan.firebaseapp.com",
     projectId: "rjvc-plan",
     storageBucket: "rjvc-plan.firebasestorage.app",
     messagingSenderId: "265431528728",
-    appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d"
+    appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d",
+    measurementId: "G-1Y7PN96H93"
   };
 
   firebase.initializeApp(firebaseConfig);
+  try { firebase.analytics(); } catch(e){}
+
   const db = firebase.firestore();
   const usersCol = db.collection("Users");
+  const withdrawCol = db.collection("Withdrawals");
 
-  let unsub = null;
+  const loginPage   = document.getElementById("loginPage");
+  const dashboard   = document.getElementById("dashboardPage");
+  const loginBtn    = document.getElementById("loginBtn");
+  const logoutBtn   = document.getElementById("logoutBtn");
+  const loginMsg    = document.getElementById("loginMsg");
 
-  document.getElementById("loginBtn").onclick = async ()=>{
-    const name = custName.value.trim();
-    const pass = custPass.value.trim();
-    loginMsg.style.display="none";
+  const welcomeText    = document.getElementById("welcomeText");
+  const commWalletText = document.getElementById("commWalletText");
+  const bonusWalletText= document.getElementById("bonusWalletText");
+  const availableBonus = document.getElementById("availableBonus");
+
+  // bank view elements
+  const bankView   = document.getElementById("bankView");
+  const bankEdit   = document.getElementById("bankEdit");
+  const vAccName   = document.getElementById("vAccName");
+  const vAccNumber = document.getElementById("vAccNumber");
+  const vIfsc      = document.getElementById("vIfsc");
+  const vUpi       = document.getElementById("vUpi");
+  const vNote      = document.getElementById("vNote");
+  const bankAccName   = document.getElementById("bankAccName");
+  const bankAccNumber = document.getElementById("bankAccNumber");
+  const bankIfsc      = document.getElementById("bankIfsc");
+  const bankUpi       = document.getElementById("bankUpi");
+  const bankNote      = document.getElementById("bankNote");
+  const bankMsg       = document.getElementById("bankMsg");
+  const editBankBtn   = document.getElementById("editBankBtn");
+  const saveBankBtn   = document.getElementById("saveBankBtn");
+
+  // withdrawal
+  const withdrawAmount   = document.getElementById("withdrawAmount");
+  const withdrawBtn      = document.getElementById("withdrawBtn");
+  const withdrawMsg      = document.getElementById("withdrawMsg");
+  const withdrawTableBody= document.getElementById("withdrawTableBody");
+
+  let currentUserId = null;
+  let currentUnsub  = null;
+  let withdrawUnsub = null;
+  let currentUserData = null;
+
+  function formatRupees(x){
+    return "₹" + (x || 0);
+  }
+
+  // LOGIN
+  loginBtn.addEventListener("click", async ()=>{
+    const name = document.getElementById("custName").value.trim();
+    const pass = document.getElementById("custPass").value.trim();
+    loginMsg.style.display = "none";
 
     if(!name || !pass){
-      loginMsg.innerText="नाम और पासवर्ड भरें";
-      loginMsg.style.display="block";
+      loginMsg.textContent = "नाम और पासवर्ड दोनों भरें।";
+      loginMsg.style.display = "block";
       return;
     }
 
-    const snap = await usersCol
-      .where("name","==",name)
-      .where("password","==",pass)
-      .limit(1)
-      .get();
+    try{
+      const snap = await usersCol
+        .where("name","==",name)
+        .where("password","==",pass)
+        .limit(1)
+        .get();
 
-    if(snap.empty){
-      loginMsg.innerText="गलत नाम या पासवर्ड!";
-      loginMsg.style.display="block";
-      return;
+      if(snap.empty){
+        loginMsg.textContent = "गलत नाम या पासवर्ड!";
+        loginMsg.style.display = "block";
+        return;
+      }
+
+      const doc = snap.docs[0];
+      subscribeCustomer(doc.id);
+    }catch(err){
+      loginMsg.textContent = "Login error: " + err.message;
+      loginMsg.style.display = "block";
     }
+  });
 
-    const docId = snap.docs[0].id;
-    openDashboard(docId);
-  };
+  function subscribeCustomer(docId){
+    if(currentUnsub) currentUnsub();
+    if(withdrawUnsub) withdrawUnsub();
+    currentUserId = docId;
 
-  function openDashboard(id){
-    if(unsub) unsub();
+    // user live data
+    currentUnsub = usersCol.doc(docId).onSnapshot(snap=>{
+      if(!snap.exists) return;
+      const d = snap.data();
+      currentUserData = d;
 
-    unsub = usersCol.doc(id).onSnapshot(d=>{
-      const data = d.data();
-      welcomeText.innerText = "स्वागत है, " + (data.name||"") + " जी";
-      commWalletText.innerText = "₹" + (data.commissionWallet||0);
-      bonusWalletText.innerText = "₹" + (data.bonusWallet||0);
+      const name   = d.name || "";
+      const comm   = d.commissionWallet || 0;
+      const bonus  = d.bonusWallet || 0;
 
-      loginPage.style.display="none";
-      dashboardPage.style.display="block";
+      welcomeText.textContent     = "स्वागत है, " + name + " जी";
+      commWalletText.textContent  = formatRupees(comm);
+      bonusWalletText.textContent = formatRupees(bonus);
+      availableBonus.textContent  = formatRupees(bonus);
+
+      // bank details
+      const b = d.bankDetails || null;
+      if(b && (b.accName || b.accNumber || b.ifsc || b.upi)){
+        // show view
+        vAccName.textContent   = b.accName   || "";
+        vAccNumber.textContent = b.accNumber || "";
+        vIfsc.textContent      = b.ifsc      || "";
+        vUpi.textContent       = b.upi       || "";
+        vNote.textContent      = b.note      || "";
+        bankView.style.display = "block";
+        bankEdit.style.display = "none";
+      }else{
+        // edit mode
+        bankView.style.display = "none";
+        bankEdit.style.display = "block";
+      }
+
+      loginPage.style.display = "none";
+      dashboard.style.display = "block";
+    });
+
+    // withdrawal history for this user
+    withdrawUnsub = withdrawCol
+      .where("userId","==",docId)
+      .orderBy("createdAt","desc")
+      .onSnapshot(snap=>{
+        withdrawTableBody.innerHTML = "";
+        snap.forEach(doc=>{
+          const d = doc.data();
+          const tr = document.createElement("tr");
+          const ts = d.createdAt && d.createdAt.toDate
+            ? d.createdAt.toDate()
+            : null;
+          const dateStr = ts
+            ? ts.toLocaleString("en-IN")
+            : "--";
+          tr.innerHTML = `
+            <td>${dateStr}</td>
+            <td>₹${d.amount || 0}</td>
+            <td>${d.status || "pending"}</td>
+          `;
+          withdrawTableBody.appendChild(tr);
+        });
+      });
+  }
+
+  // LOGOUT
+  logoutBtn.addEventListener("click", ()=>{
+    if(currentUnsub) currentUnsub();
+    if(withdrawUnsub) withdrawUnsub();
+    currentUnsub = null;
+    withdrawUnsub = null;
+    currentUserId = null;
+    currentUserData = null;
+
+    document.getElementById("custName").value = "";
+    document.getElementById("custPass").value = "";
+    dashboard.style.display = "none";
+    loginPage.style.display = "flex";
+  });
+
+  // BANK – edit button
+  if(editBankBtn){
+    editBankBtn.addEventListener("click", ()=>{
+      // पुराने data form में भरें
+      if(currentUserData && currentUserData.bankDetails){
+        const b = currentUserData.bankDetails;
+        bankAccName.value   = b.accName   || "";
+        bankAccNumber.value = b.accNumber || "";
+        bankIfsc.value      = b.ifsc      || "";
+        bankUpi.value       = b.upi       || "";
+        bankNote.value      = b.note      || "";
+      }
+      bankView.style.display = "none";
+      bankEdit.style.display = "block";
+      bankMsg.style.display = "none";
     });
   }
 
-  logoutBtn.onclick = ()=>{
-    if(unsub) unsub();
-    unsub=null;
-    dashboardPage.style.display="none";
-    loginPage.style.display="flex";
-    custName.value="";
-    custPass.value="";
-  };
+  // BANK – save
+  if(saveBankBtn){
+    saveBankBtn.addEventListener("click", async ()=>{
+      if(!currentUserId) return;
+      bankMsg.style.display = "none";
+
+      const accName   = bankAccName.value.trim();
+      const accNumber = bankAccNumber.value.trim();
+      const ifsc      = bankIfsc.value.trim();
+      const upi       = bankUpi.value.trim();
+      const note      = bankNote.value.trim();
+
+      if(!accName || !accNumber || !ifsc){
+        bankMsg.textContent = "Name, Account Number और IFSC जरूरी हैं।";
+        bankMsg.className = "error";
+        bankMsg.style.display = "block";
+        return;
+      }
+
+      try{
+        await usersCol.doc(currentUserId).update({
+          bankDetails:{
+            accName,
+            accNumber,
+            ifsc,
+            upi,
+            note,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }
+        });
+        bankMsg.textContent = "Bank details save हो गईं।";
+        bankMsg.className = "ok";
+        bankMsg.style.display = "block";
+      }catch(err){
+        bankMsg.textContent = "Error: " + err.message;
+        bankMsg.className = "error";
+        bankMsg.style.display = "block";
+      }
+    });
+  }
+
+  // WITHDRAWAL – send request
+  if(withdrawBtn){
+    withdrawBtn.addEventListener("click", async ()=>{
+      if(!currentUserId || !currentUserData) return;
+      withdrawMsg.style.display = "none";
+
+      const amt = Number(withdrawAmount.value || 0);
+      const bonus = currentUserData.bonusWallet || 0;
+
+      if(!amt || amt <= 0){
+        withdrawMsg.textContent = "Amount सही भरें।";
+        withdrawMsg.className = "error";
+        withdrawMsg.style.display = "block";
+        return;
+      }
+      if(amt > bonus){
+        withdrawMsg.textContent = "Amount Bonus Wallet से ज्यादा नहीं हो सकता।";
+        withdrawMsg.className = "error";
+        withdrawMsg.style.display = "block";
+        return;
+      }
+
+      const bank = currentUserData.bankDetails || {};
+      try{
+        await withdrawCol.add({
+          userId: currentUserId,
+          customerName: currentUserData.name || "",
+          amount: amt,
+          status: "pending",
+          bankSnapshot: bank,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        withdrawMsg.textContent = "Withdrawal request भेज दी गई।";
+        withdrawMsg.className = "ok";
+        withdrawMsg.style.display = "block";
+        withdrawAmount.value = "";
+      }catch(err){
+        withdrawMsg.textContent = "Error: " + err.message;
+        withdrawMsg.className = "error";
+        withdrawMsg.style.display = "block";
+      }
+    });
+  }
 </script>
 
 </body>
