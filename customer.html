@@ -28,8 +28,6 @@
     .wallet-bonus{background:#14532d;}
     .wallet-label{font-size:13px;opacity:.9;}
     .wallet-amount{font-size:26px;font-weight:700;}
-    .stat-box{border-radius:14px;border:1px solid #e5e7eb;background:#f9fafb;padding:10px 12px;margin-top:10px;}
-    .stat-label{font-size:14px;font-weight:500;margin-bottom:4px;}
   </style>
 </head>
 <body>
@@ -63,7 +61,7 @@
         <button class="btn btn-outline" id="logoutBtn">Logout</button>
       </div>
 
-      <!-- wallets -->
+      <!-- केवल दो wallet, कोई extra message / boxes नहीं -->
       <div class="wallet wallet-comm mt-3">
         <div class="wallet-label">COMMISSION WALLET</div>
         <div class="wallet-amount" id="commWalletText">₹0</div>
@@ -72,27 +70,6 @@
       <div class="wallet wallet-bonus">
         <div class="wallet-label">BONUS WALLET</div>
         <div class="wallet-amount" id="bonusWalletText">₹0</div>
-      </div>
-
-      <!-- stats (messages हटाए गए) -->
-      <div class="stat-box">
-        <div class="stat-label">आपके नीचे कुल MEMBERS</div>
-        <div id="statMembers">0</div>
-      </div>
-
-      <div class="stat-box">
-        <div class="stat-label">कुल BINARY PAIRS</div>
-        <div id="statPairs">0</div>
-      </div>
-
-      <div class="stat-box">
-        <div class="stat-label">NEXT PAIR तक कितने MEMBER और?</div>
-        <div id="statNextNeed">0</div>
-      </div>
-
-      <div class="stat-box">
-        <div class="stat-label">कुल खाते में (COMM + BONUS)</div>
-        <div id="statTotalAmount">₹0</div>
       </div>
 
     </div>
@@ -129,25 +106,16 @@
   const logoutBtn   = document.getElementById("logoutBtn");
   const loginMsg    = document.getElementById("loginMsg");
 
-  const welcomeText = document.getElementById("welcomeText");
-  const commWalletText  = document.getElementById("commWalletText");
-  const bonusWalletText = document.getElementById("bonusWalletText");
-  const statMembers     = document.getElementById("statMembers");
-  const statPairs       = document.getElementById("statPairs");
-  const statNextNeed    = document.getElementById("statNextNeed");
-  const statTotalAmount = document.getElementById("statTotalAmount");
+  const welcomeText    = document.getElementById("welcomeText");
+  const commWalletText = document.getElementById("commWalletText");
+  const bonusWalletText= document.getElementById("bonusWalletText");
 
   let currentUserId = null;
   let currentUnsub  = null;
 
   function formatRupees(x){ return "₹" + (x || 0); }
 
-  function computeNextNeed(members){
-    const m = members || 0;
-    const rem = m % 2;
-    return rem === 0 ? 2 : 1;
-  }
-
+  // LOGIN
   loginBtn.addEventListener("click", async ()=>{
     const name = document.getElementById("custName").value.trim();
     const pass = document.getElementById("custPass").value.trim();
@@ -191,22 +159,17 @@
       const name   = d.name || "";
       const comm   = d.commissionWallet || 0;
       const bonus  = d.bonusWallet || 0;
-      const members= d.totalMembers || 0;
-      const pairs  = d.totalPairs || 0;
 
-      welcomeText.textContent = "स्वागत है, " + name + " जी";
-      commWalletText.textContent  = formatRupees(comm);
-      bonusWalletText.textContent = formatRupees(bonus);
-      statMembers.textContent  = members;
-      statPairs.textContent    = pairs;
-      statNextNeed.textContent = computeNextNeed(members);
-      statTotalAmount.textContent = formatRupees(comm + bonus);
+      welcomeText.textContent    = "स्वागत है, " + name + " जी";
+      commWalletText.textContent = formatRupees(comm);
+      bonusWalletText.textContent= formatRupees(bonus);
 
       loginPage.style.display = "none";
       dashboard.style.display = "block";
     });
   }
 
+  // LOGOUT
   logoutBtn.addEventListener("click", ()=>{
     if(currentUnsub) currentUnsub();
     currentUnsub = null;
