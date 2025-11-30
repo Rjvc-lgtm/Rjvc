@@ -82,7 +82,7 @@
     <div id="loginError" class="error" style="display:none;">गलत ID या Password</div>
     <p class="small" style="margin-top:12px;">
       अभी के लिए default login: <b>ID: admin</b>, <b>Password: 1234</b>  
-      (आप चाहें तो कोड में बदल सकते हैं)
+      (आप चाहें तो code में बदल सकते हैं)
     </p>
   </div>
 </div>
@@ -150,7 +150,7 @@
           <tr>
             <th>#</th>
             <th>Name</th>
-            <th>Members<br/>(नीचे)</th>
+            <th>MEMBERS (नीचे)</th>
             <th>Pairs</th>
             <th>Binary Income (₹)</th>
             <th>Tree</th>
@@ -189,7 +189,7 @@
       <h3>Company Business Report</h3>
       <p class="small">
         यहाँ company का कुल business, members को दिया गया binary payout
-        और hidden 20% profit (sub IDs से) दिखेगा। ये सब Firebase में भी save रहेगा।
+        और sub IDs से hidden 20% profit दिखेगा (customer को ये 20% नहीं दिखाई देगा)।
       </p>
 
       <div class="profit-panel mt-2">
@@ -288,7 +288,8 @@
   let globalJoinIncome = 0;
   let globalCompanyProfit = 0;
   let globalHiddenSubProfit = 0;
-  let lastNameStats = {};
+  let commissionByName = {};
+  let bonusByName = {};
 
   function startSubscriptions(){
     if(treeUnsub) treeUnsub();
@@ -309,7 +310,6 @@
       renderTree();
     });
 
-    // कंपनी वाला document load
     companyDoc.get().then(snap=>{
       if(!snap.exists) return;
       const d = snap.data();
@@ -394,7 +394,6 @@
     if(!name) return false;
     return /sub\s*\d+/i.test(name);
   }
-
   function getMainName(name){
     if(!name) return "";
     const lower = name.toLowerCase();
@@ -407,7 +406,8 @@
     globalTotalPairs = 0;
     globalTotalCommission = 0;
     globalHiddenSubProfit = 0;
-    lastNameStats = {};
+    commissionByName = {};
+    bonusByName = {};
 
     const list = Object.values(nodesById);
     globalTotalCustomers = list.length;
@@ -424,18 +424,16 @@
       globalTotalPairs += pairs;
       globalTotalCommission += commission;
 
-      const nm = n.name || "";
-      if(!lastNameStats[nm]) lastNameStats[nm] = {commission:0, bonus:0};
-      lastNameStats[nm].commission += commission;
+      const nm = (n.name || "").trim();
+      if(!commissionByName[nm]) commissionByName[nm] = 0;
+      commissionByName[nm] += commission;
 
-      // sub ID की income → main ID के bonus में 80% + company hidden 20%
       if(isSubName(nm) && commission > 0){
         const mainName = getMainName(nm);
         if(mainName){
-          if(!lastNameStats[mainName]) lastNameStats[mainName] = {commission:0, bonus:0};
-          const bonusPart = commission * 0.8;
-          lastNameStats[mainName].bonus += bonusPart;
-          globalHiddenSubProfit += commission * 0.2;
+          if(!bonusByName[mainName]) bonusByName[mainName] = 0;
+          bonusByName[mainName] += commission * 0.8; // 80% main ID को
+          globalHiddenSubProfit += commission * 0.2; // 20% company profit
         }
       }
     });
@@ -453,7 +451,6 @@
     document.getElementById("companyProfit").textContent= "₹" + globalCompanyProfit.toFixed(2);
     document.getElementById("hiddenSubProfit").textContent = "₹" + globalHiddenSubProfit.toFixed(2);
 
-    // Firebase में Users + Company document update
     await syncCustomerWalletsFromTree();
   }
 
@@ -462,15 +459,14 @@
       const snap = await usersCol.get();
       const updates = [];
       snap.forEach(doc=>{
-        const d   = doc.data();
-        const nm  = d.name || "";
-        const st  = lastNameStats[nm] || {commission:0, bonus:0};
-        const cw  = Number((st.commission || 0).toFixed(2));
-        const bw  = Number((st.bonus || 0).toFixed(2));
+        const d  = doc.data();
+        const nm = (d.name || "").trim();
+        const c  = commissionByName[nm] || 0;
+        const b  = bonusByName[nm] || 0;
         updates.push(
           doc.ref.update({
-            commissionWallet: cw,
-            bonusWallet: bw
+            commissionWallet: Number(c.toFixed(2)),
+            bonusWallet: Number(b.toFixed(2))
           })
         );
       });
@@ -661,7 +657,6 @@
 
     try{
       await treeCol.doc(id).update(update);
-      // Users में भी नाम / पासवर्ड update
       const snap = await usersCol
         .where("name","==",node.name)
         .where("password","==",node.password || "")
