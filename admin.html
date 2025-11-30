@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>RJVC Admin (Binary Tree + Company Profit)</title>
+  <title>RJVC Binary Tree Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
@@ -20,6 +20,7 @@
     .btn-danger{background:#dc2626;color:#fff;}
     .btn-sm{padding:6px 10px;font-size:12px;}
     .btn:disabled{opacity:.5;cursor:not-allowed;}
+    .mt-1{margin-top:4px;}
     .mt-2{margin-top:8px;}
     .mt-3{margin-top:12px;}
     .mt-4{margin-top:16px;}
@@ -51,6 +52,14 @@
     .tree-node-actions{margin-top:6px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
     .tree-node-actions .btn-sm{padding:3px 6px;font-size:10px;}
 
+    .profit-panel{background:#0f172a;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:10px;}
+    .profit-boxes{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+    .profit-box{flex:1 1 160px;background:#020617;border-radius:14px;padding:10px 12px;border:1px solid #1e293b;}
+    .profit-label{font-size:12px;color:#9ca3af;}
+    .profit-value{font-size:18px;font-weight:700;}
+
+    canvas{max-width:100%;}
+
     @media(max-width:720px){
       .panel{padding:14px;}
       table{font-size:12px;}
@@ -64,7 +73,7 @@
   <div class="card">
     <h1 class="center">RJVC Admin Login</h1>
     <p class="center" style="font-size:13px;color:#6b7280;margin-bottom:16px;">
-      यह पेज सिर्फ admin के लिए है।
+      यह पेज सिर्फ admin के लिए है। Customer को यह link न दें।
     </p>
     <label>Admin ID</label>
     <input id="adminId" placeholder="जैसे: admin" />
@@ -76,7 +85,7 @@
     </button>
     <div id="loginError" class="error" style="display:none;">गलत ID या Password</div>
     <p style="margin-top:12px;font-size:12px;color:#6b7280;">
-      अभी के लिए default: <b>ID: admin</b>, <b>Password: 1234</b> (आप चाहें तो code में बदल सकते हैं)
+      अभी के लिए default: <b>ID: admin</b>, <b>Password: 1234</b> (आप चाहो तो code में बदल सकते हैं)
     </p>
   </div>
 </div>
@@ -89,7 +98,8 @@
       <div>
         <h2>Binary Tree Admin (Firebase)</h2>
         <div class="small">
-          हर customer 20₹ देता है। हर 2 members = 1 pair, 1 pair की binary earning = 3₹।
+          हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
+          हर 2 members = 1 pair, 1 pair पर <b>3₹</b> binary earning (members को)।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -114,9 +124,46 @@
       <div id="rootMsg" class="ok" style="display:none;"></div>
       <p class="small" style="margin-top:6px;">
         Root में नया customer add होगा। बाद में Tree view में किसी भी node पर
-        <b>+Member / Edit / Delete</b> से पूरा binary tree manage कर सकते हैं  
-        (बीच में भी insert कर सकते हैं)। सबका नाम + password Firebase में भी save होगा।
+        <b>+Member / Edit / Delete</b> से पूरा binary tree manage कर सकते हैं (बीच में भी जोड़ सकते हैं)।
       </p>
+    </div>
+
+    <!-- COMPANY BUSINESS REPORT -->
+    <div class="panel">
+      <h3>Company Business Report (Auto)</h3>
+      <p class="small">
+        यहाँ पूरा tree से calculation होता है: <b>हर ID × 20₹ = Business Income</b>,  
+        minus total binary payout (members को) = <b>Company Profit</b>।
+        Sub IDs की commission से 20% company profit में रहता है, 80% उनकी main ID के bonus wallet में जाता है।
+      </p>
+
+      <div class="profit-panel">
+        <div class="flex between">
+          <div>
+            <div class="small">Current Summary (पूरा Tree)</div>
+          </div>
+        </div>
+
+        <div class="profit-boxes">
+          <div class="profit-box">
+            <div class="profit-label">Total Business Income (सभी IDs × 20₹)</div>
+            <div class="profit-value" id="bizTotalIncome">₹0</div>
+          </div>
+          <div class="profit-box">
+            <div class="profit-label">Total Binary Pairs Income (Members को) ₹</div>
+            <div class="profit-value" id="bizBinaryPayout">₹0</div>
+          </div>
+          <div class="profit-box">
+            <div class="profit-label">Company Profit (₹)</div>
+            <div class="profit-value" id="bizCompanyProfit">₹0</div>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <div class="small">Business Chart (Income vs Payout vs Profit)</div>
+          <canvas id="businessChart" width="400" height="220"></canvas>
+        </div>
+      </div>
     </div>
 
     <!-- CUSTOMER LIST -->
@@ -141,11 +188,11 @@
             <tr>
               <th>#</th>
               <th>Name</th>
-              <th>MEMBERS<br/>(नीचे)</th>
-              <th>PAIRS</th>
-              <th>BINARY INCOME<br/>(₹)</th>
-              <th>TREE</th>
-              <th>DEL</th>
+              <th>Members<br/>(नीचे)</th>
+              <th>Pairs</th>
+              <th>Binary Income<br/>(₹)</th>
+              <th>Tree</th>
+              <th>Del</th>
             </tr>
           </thead>
           <tbody id="customerTableBody">
@@ -154,9 +201,8 @@
         </table>
       </div>
       <p class="small" style="margin-top:6px;">
-        Logic: हर 2 member = 1 pair. 1 pair पर 3₹ binary earning.  
-        Sub IDs की commission का सिर्फ <b>80%</b> main ID के <b>Bonus Wallet</b> में जाता है,
-        20% company का hidden profit रहता है (customer को नहीं दिखेगा)।
+        Logic: हर 2 member = 1 pair. 1 pair की binary earning = 3₹ (20₹ का 15%)।  
+        यह earning members को जाती है। Company profit ऊपर वाले section में दिखता है।
       </p>
     </div>
 
@@ -170,7 +216,7 @@
           </div>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">
-          Main Root से दिखाओ
+          सिर्फ Root दिखाओ
         </button>
       </div>
       <div id="treeViewArea" style="margin-top:10px;font-size:12px;">
@@ -178,37 +224,10 @@
       </div>
     </div>
 
-    <!-- COMPANY BUSINESS -->
-    <div class="panel">
-      <h3>Company Business Summary</h3>
-      <p class="small">
-        हर ID से 20₹ joining income मानी गई है। नीचे total business, payout और profit admin को दिखेगा।
-      </p>
-      <div class="wallets">
-        <div class="wallet-box">
-          <div class="wallet-title">Total Customers</div>
-          <div id="companyCustomers" class="wallet-value">0</div>
-        </div>
-        <div class="wallet-box">
-          <div class="wallet-title">Total Business Income (20₹ × IDs)</div>
-          <div id="companyBusinessIncome" class="wallet-value">₹0</div>
-        </div>
-        <div class="wallet-box">
-          <div class="wallet-title">Total Payout (Commission + Bonus)</div>
-          <div id="companyBusinessPayout" class="wallet-value">₹0</div>
-        </div>
-        <div class="wallet-box">
-          <div class="wallet-title">Company Profit</div>
-          <div id="companyBusinessProfit" class="wallet-value">₹0</div>
-        </div>
-      </div>
-      <p class="small" id="companyLastUpdated" style="margin-top:6px;">Last update: --</p>
-    </div>
-
   </div>
 </div>
 
-<!-- FIREBASE -->
+<!-- FIREBASE CDN -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
@@ -228,10 +247,9 @@
   firebase.initializeApp(firebaseConfig);
   try { firebase.analytics(); } catch(e) {}
 
-  const db         = firebase.firestore();
-  const treeCol    = db.collection("TreeNodes");
-  const usersCol   = db.collection("Users");
-  const companyDoc = db.collection("CompanyBusiness").doc("current");
+  const db       = firebase.firestore();
+  const treeCol  = db.collection("TreeNodes");
+  const usersCol = db.collection("Users");   // wallets yahin पर
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -258,24 +276,23 @@
     document.getElementById("adminPass").value = "";
   }
 
-  /************ In-memory Tree ************/
-  let nodesById         = {};   // Firestore id -> node data
-  let rootId            = null;
+  /************ Tree data in memory ************/
+  let nodesById         = {};    // id -> node data
+  let rootId            = null;  // top root
   let currentTreeRootId = null;
   let treeUnsub         = null;
 
   function startSubscriptions(){
     if(treeUnsub) treeUnsub();
-
     treeUnsub = treeCol.orderBy("createdAt","asc").onSnapshot(snap=>{
       nodesById = {};
-      rootId    = null;
-
+      rootId = null;
       snap.forEach(doc=>{
         const d = doc.data();
-        nodesById[doc.id] = Object.assign({ id: doc.id }, d);
+        nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
+      // root = jisका parentId null है
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -284,30 +301,9 @@
       renderTable();
       renderTree();
     });
-
-    companyDoc.onSnapshot(snap=>{
-      if(!snap.exists) return;
-      const d = snap.data() || {};
-      const c = d.totalCustomers || 0;
-      const biz = d.businessIncome || 0;
-      const pay = d.payoutToCustomers || 0;
-      const prof = d.companyProfit || 0;
-
-      const elCust = document.getElementById("companyCustomers");
-      const elInc  = document.getElementById("companyBusinessIncome");
-      const elPay  = document.getElementById("companyBusinessPayout");
-      const elProf = document.getElementById("companyBusinessProfit");
-      const elUpd  = document.getElementById("companyLastUpdated");
-
-      if(elCust) elCust.textContent = c;
-      if(elInc)  elInc.textContent  = "₹" + biz;
-      if(elPay)  elPay.textContent  = "₹" + pay;
-      if(elProf) elProf.textContent = "₹" + prof;
-      if(elUpd)  elUpd.textContent  = "Last update: " + (d.lastUpdated || "--");
-    });
   }
 
-  /************ Root customer ************/
+  /************ Create Root Customer ************/
   async function createRootCustomer(){
     const name = document.getElementById("rootName").value.trim();
     const pass = document.getElementById("rootPass").value.trim();
@@ -316,13 +312,13 @@
 
     if(!name || !pass){
       msg.textContent = "Name और Password दोनों जरूरी हैं।";
-      msg.className   = "error";
+      msg.className = "error";
       msg.style.display = "block";
       return;
     }
 
     try{
-      const ref = await treeCol.add({
+      const newDoc = await treeCol.add({
         name,
         password: pass,
         parentId: null,
@@ -331,28 +327,29 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      // Users collection में भी create
-      await usersCol.doc(name).set({
+      // Users collection में भी entry
+      await usersCol.doc(newDoc.id).set({
         name,
         password: pass,
         commissionWallet: 0,
-        bonusWallet: 0
-      },{merge:true});
+        bonusWallet: 0,
+        mainAccountId: newDoc.id
+      }, {merge:true});
 
       document.getElementById("rootName").value = "";
       document.getElementById("rootPass").value = "";
 
       msg.textContent = "Customer root में सफलतापूर्वक जोड़ा गया।";
-      msg.className   = "ok";
+      msg.className = "ok";
       msg.style.display = "block";
     }catch(err){
       msg.textContent = "Error: " + err.message;
-      msg.className   = "error";
+      msg.className = "error";
       msg.style.display = "block";
     }
   }
 
-  /************ Descendant count ************/
+  /************ Utility – count descendants ************/
   function countDescendants(nodeId){
     const node = nodesById[nodeId];
     if(!node) return 0;
@@ -362,131 +359,111 @@
     return c;
   }
 
-  /************ Re-calc + wallets sync ************/
-  async function recalcAll(){
-    let globalPairs          = 0;
-    let globalBinaryIncome   = 0;   // सिर्फ direct commission (3₹ per pair)
-    const list               = Object.values(nodesById);
+  let globalTotalPairs      = 0;
+  let globalTotalCommission = 0;
+  let globalTotalCustomers  = 0;
+  let globalTotalBusinessInc= 0;
 
-    const commissionByName   = {};  // अपनी commission
-    const bonusByMain        = {};  // sub IDs से 80% bonus
-    let   payoutToCustomers  = 0;   // commission + bonus (actual payout)
+  // kisi bhi node ke लिए उसके main account की ID
+  function findMainAccountId(node){
+    const nm = (node.name || "").toLowerCase();
+    const idx = nm.indexOf(" sub");
+    if(idx === -1){
+      return node.id; // खुद ही main है
+    }
+    const baseName = node.name.slice(0, idx).trim().toLowerCase();
+    const all = Object.values(nodesById);
+    const main = all.find(n=>{
+      const nn = (n.name || "").toLowerCase();
+      return nn === baseName || (nn.indexOf(baseName) === 0 && nn.indexOf(" sub") === -1);
+    });
+    return main ? main.id : node.id;
+  }
 
-    // Step 1: per node commission
+  // MAIN RECALC + bonus / wallets update
+  function recalcAll(){
+    globalTotalPairs      = 0;
+    globalTotalCommission = 0;
+    globalTotalCustomers  = Object.keys(nodesById).length;
+
+    const list = Object.values(nodesById);
+
+    // members / pairs / commission
     list.forEach(n=>{
       const members    = countDescendants(n.id);
-      const pairs      = Math.floor(members / 2);
-      const commission = pairs * 3;       // 3₹ per pair
+      const pairs      = Math.floor(members/2);
+      const commission = pairs * 3; // 3₹ per pair
 
-      n.members        = members;
-      n.pairs          = pairs;
-      n.commission     = commission;
+      n.members    = members;
+      n.pairs      = pairs;
+      n.commission = commission;
 
-      commissionByName[n.name] = commission;
-
-      globalPairs        += pairs;
-      globalBinaryIncome += commission;
+      globalTotalPairs      += pairs;
+      globalTotalCommission += commission;
     });
 
-    // Step 2: bonus for mains (80% of each sub-id commission)
-    list.forEach(n=>{
-      const comm = commissionByName[n.name] || 0;
-      const lower = n.name.toLowerCase();
-      const parts = lower.split(" sub");
-      const base  = parts[0].trim();
-      const isSub = (parts.length > 1);   // नाम में "sub" word है?
+    // हर ID से 20₹ business income
+    globalTotalBusinessInc = globalTotalCustomers * 20;
+    const companyProfit = globalTotalBusinessInc - globalTotalCommission;
 
-      if(isSub && comm > 0){
-        // main name ढूँढो (exact match)
-        let mainName = null;
-        for(const x of list){
-          if(x.name.toLowerCase() === base){
-            mainName = x.name;
-            break;
-          }
-        }
-        const key = mainName || base;  // अगर main न मिले तो base use
-        const bonusPart = comm * 0.8;  // 80% main के bonus में
-        bonusByMain[key] = (bonusByMain[key] || 0) + bonusPart;
-        // बाकी 20% company के पास रहेगा (कहीं add नहीं कर रहे)
+    // top cards
+    document.getElementById("totalPairs").textContent      = globalTotalPairs;
+    document.getElementById("totalCommission").textContent = "₹" + globalTotalCommission;
+
+    document.getElementById("bizTotalIncome").textContent   = "₹" + globalTotalBusinessInc;
+    document.getElementById("bizBinaryPayout").textContent  = "₹" + globalTotalCommission;
+    document.getElementById("bizCompanyProfit").textContent = "₹" + companyProfit;
+
+    drawBusinessChart(globalTotalBusinessInc, globalTotalCommission, companyProfit);
+
+    // Users wallets update
+    updateUsersWallets().catch(e=>console.error(e));
+  }
+
+  async function updateUsersWallets(){
+    const list = Object.values(nodesById);
+
+    // main ID के bonus के लिए map
+    const bonusMap = {};   // mainId -> bonusAmount
+
+    // हर node का mainAccountId निकालें
+    list.forEach(n=>{
+      const mainId = findMainAccountId(n);
+      n.mainAccountId = mainId;
+
+      // अगर ये sub ID है, तो इसकी commission से 80% main के bonus में
+      if(mainId !== n.id){
+        const subComm   = n.commission || 0;
+        const mainBonus = +(subComm * 0.80).toFixed(2); // 20% company, 80% main
+        bonusMap[mainId] = (bonusMap[mainId] || 0) + mainBonus;
       }
     });
 
-    // Step 3: Users collection में wallets update (commission + bonus)
-    try{
-      const batch = db.batch();
-      let totalCommissionWallet = 0;
-      let totalBonusWallet      = 0;
+    const batch = db.batch();
+    list.forEach(n=>{
+      const uRef = usersCol.doc(n.id);
+      const data = {
+        name: n.name || "",
+        password: n.password || "",
+        commissionWallet: n.commission || 0,                 // खुद की binary
+        bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),  // sub IDs की 80% commission
+        mainAccountId: n.mainAccountId || n.id
+      };
+      batch.set(uRef, data, {merge:true});
+    });
 
-      list.forEach(n=>{
-        const comm  = commissionByName[n.name] || 0;
-        const bonus = bonusByMain[n.name]      || 0;
-
-        totalCommissionWallet += comm;
-        totalBonusWallet      += bonus;
-
-        const uRef = usersCol.doc(n.name);   // docId = name
-        batch.set(uRef,{
-          name: n.name,
-          password: n.password || "",
-          commissionWallet: comm,
-          bonusWallet: bonus
-        },{merge:true});
-      });
-
-      payoutToCustomers = totalCommissionWallet + totalBonusWallet;
-      await batch.commit();
-    }catch(err){
-      console.error("Wallet sync error:", err);
-    }
-
-    // Step 4: UI totals
-    const totalPairsEl   = document.getElementById("totalPairs");
-    const totalIncomeEl  = document.getElementById("totalCommission");
-    if(totalPairsEl)  totalPairsEl.textContent  = globalPairs;
-    if(totalIncomeEl) totalIncomeEl.textContent = "₹" + globalBinaryIncome;
-
-    // Step 5: Company business
-    const totalCustomers = list.length;
-    const businessIncome = totalCustomers * 20;       // हर ID से 20₹
-    const companyProfit  = businessIncome - payoutToCustomers;
-
-    try{
-      await companyDoc.set({
-        totalCustomers: totalCustomers,
-        businessIncome: businessIncome,
-        payoutToCustomers: payoutToCustomers,
-        companyProfit: companyProfit,
-        lastUpdated: new Date().toLocaleString("en-IN")
-      },{merge:true});
-    }catch(e){
-      console.error("Company doc update error:", e);
-    }
-
-    const elCust = document.getElementById("companyCustomers");
-    const elInc  = document.getElementById("companyBusinessIncome");
-    const elPay  = document.getElementById("companyBusinessPayout");
-    const elProf = document.getElementById("companyBusinessProfit");
-    const elUpd  = document.getElementById("companyLastUpdated");
-
-    if(elCust) elCust.textContent = totalCustomers;
-    if(elInc)  elInc.textContent  = "₹" + businessIncome;
-    if(elPay)  elPay.textContent  = "₹" + payoutToCustomers;
-    if(elProf) elProf.textContent = "₹" + companyProfit;
-    if(elUpd)  elUpd.textContent  = "Last update: " + new Date().toLocaleString("en-IN");
+    await batch.commit();
   }
 
-  /************ TABLE ************/
+  /************ Table render ************/
   function renderTable(){
     const tbody = document.getElementById("customerTableBody");
-    if(!tbody) return;
     tbody.innerHTML = "";
-
     const list = Object.values(nodesById);
     list.sort((a,b)=>a.name.localeCompare(b.name));
 
-    const badge = document.getElementById("totalCustomersBadge");
-    if(badge) badge.textContent = list.length + " Customers";
+    document.getElementById("totalCustomersBadge").textContent =
+      list.length + " Customers";
 
     list.forEach((n,idx)=>{
       const tr = document.createElement("tr");
@@ -494,7 +471,7 @@
         <td>${idx+1}</td>
         <td>${n.name}</td>
         <td>${n.members || 0}</td>
-        <td>${n.pairs   || 0}</td>
+        <td>${n.pairs || 0}</td>
         <td>₹${n.commission || 0}</td>
         <td><button class="btn btn-secondary btn-sm" onclick="viewTreeFrom('${n.id}')">Tree</button></td>
         <td><button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button></td>
@@ -503,7 +480,7 @@
     });
   }
 
-  /************ TREE VIEW ************/
+  /************ Tree view ************/
   function viewTreeFrom(id){
     currentTreeRootId = id;
     renderTree();
@@ -517,10 +494,9 @@
   function renderTree(){
     const area = document.getElementById("treeViewArea");
     const info = document.getElementById("treeRootInfo");
-    if(!area || !info) return;
 
     if(!Object.keys(nodesById).length){
-      info.textContent = "Tree खाली है।";
+      info.textContent = "Tree खाली है। पहले कोई customer जोड़ें।";
       area.textContent = "";
       return;
     }
@@ -537,16 +513,17 @@
       (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Binary Income: ₹${startNode.commission||0})`;
 
     let html = "";
+
     function buildLevel(ids){
       if(!ids.length) return;
       html += `<div class="tree-level">`;
       ids.forEach(id=>{
         const n = nodesById[id];
         if(!n) return;
-        const isMainRoot = (id === rootId);
+        const isMain = (id === rootId);
         html += `
           <div class="tree-node-wrap">
-            <div class="tree-node ${isMainRoot ? "tree-node-main" : ""}">
+            <div class="tree-node ${isMain ? "tree-node-main":""}">
               <div class="tree-node-name">${n.name}</div>
               <div class="tree-node-meta">M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}</div>
               <div class="tree-node-actions">
@@ -555,8 +532,7 @@
                 <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button>
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
       });
       html += `</div>`;
 
@@ -574,13 +550,13 @@
     area.innerHTML = html;
   }
 
-  /************ ADD / EDIT / DELETE ************/
+  /************ Add / Edit / Delete ************/
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if(!sideAns) return;
     const s = sideAns.trim().toLowerCase();
     let sideField = null;
-    if(s==="l" || s==="1")      sideField = "leftId";
+    if(s==="l" || s==="1") sideField = "leftId";
     else if(s==="r" || s==="2") sideField = "rightId";
     else{
       alert("गलत choice, L/1 या R/2 लिखें");
@@ -592,7 +568,7 @@
     const pass = prompt("उसका login password?");
     if(!pass) return;
 
-    addMember(parentId, sideField, name.trim(), pass.trim());
+    addMember(parentId, sideField, name, pass);
   }
 
   async function addMember(parentId, sideField, name, pass){
@@ -603,9 +579,10 @@
         alert("Parent नहीं मिला");
         return;
       }
-      const parent = parentSnap.data();
+      const parent          = parentSnap.data();
       const existingChildId = parent[sideField] || null;
 
+      // नया node create
       const newRef = await treeCol.add({
         name,
         password: pass,
@@ -614,27 +591,26 @@
         rightId: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      const newId = newRef.id;
 
-      // Users collection में भी create/update
-      await usersCol.doc(name).set({
+      // Users में भी entry
+      await usersCol.doc(newId).set({
         name,
         password: pass,
         commissionWallet: 0,
         bonusWallet: 0
-      },{merge:true});
-
-      const newId = newRef.id;
+      }, {merge:true});
 
       if(!existingChildId){
         const update = {};
         update[sideField] = newId;
         await parentRef.update(update);
       }else{
-        const updParent = {};
-        updParent[sideField] = newId;
+        const updateParent = {};
+        updateParent[sideField] = newId;
 
         await Promise.all([
-          parentRef.update(updParent),
+          parentRef.update(updateParent),
           newRef.update({ leftId: existingChildId }),
           treeCol.doc(existingChildId).update({ parentId: newId })
         ]);
@@ -649,20 +625,13 @@
     if(!node) return;
     const newName = prompt("नया नाम?", node.name);
     if(!newName) return;
-    const newPass = prompt("नया password? (खाली छोड़ें तो पुराना रहेगा)", "");
-
-    const updTree = { name: newName.trim() };
-    if(newPass && newPass.trim()) updTree.password = newPass.trim();
+    const newPass = prompt("नया password? (खाली छोड़ो तो पुराना ही रहेगा)", "");
+    const update = { name:newName };
+    if(newPass && newPass.trim()) update.password = newPass.trim();
 
     try{
-      await treeCol.doc(id).update(updTree);
-
-      // Users – पुराना doc हटाकर नया नाम से बना देते हैं
-      await usersCol.doc(node.name).delete().catch(()=>{});
-      await usersCol.doc(newName.trim()).set({
-        name: newName.trim(),
-        password: newPass && newPass.trim() ? newPass.trim() : (node.password || "")
-      },{merge:true});
+      await treeCol.doc(id).update(update);
+      await usersCol.doc(id).set(update,{merge:true});
     }catch(err){
       alert("Error: " + err.message);
     }
@@ -689,9 +658,48 @@
       if(!n) return;
       if(n.leftId)  await deleteSubTree(n.leftId);
       if(n.rightId) await deleteSubTree(n.rightId);
-      await treeCol.doc(nid).delete().catch(()=>{});
+      await treeCol.doc(nid).delete();
+      await usersCol.doc(nid).delete();
     }
     await deleteSubTree(id);
+  }
+
+  /************ Business Chart ************/
+  function drawBusinessChart(totalIncome, binaryPayout, companyProfit){
+    const canvas = document.getElementById("businessChart");
+    if(!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    const labels = ["Business Income","Binary Payout","Company Profit"];
+    const values = [totalIncome, binaryPayout, companyProfit];
+    const maxVal = Math.max(1, ...values);
+    const barWidth = 60;
+    const gap = 40;
+    const originX = 40;
+    const originY = canvas.height - 30;
+
+    ctx.strokeStyle = "#9ca3af";
+    ctx.beginPath();
+    ctx.moveTo(originX, 10);
+    ctx.lineTo(originX, originY);
+    ctx.lineTo(canvas.width - 10, originY);
+    ctx.stroke();
+
+    for(let i=0;i<values.length;i++){
+      const x = originX + gap + i*(barWidth+gap);
+      const h = (values[i]/maxVal) * (originY-40);
+      const y = originY - h;
+
+      ctx.fillStyle = i===0 ? "#3b82f6" : (i===1 ? "#f97316" : "#22c55e");
+      ctx.fillRect(x, y, barWidth, h);
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "11px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(labels[i], x+barWidth/2, originY+14);
+      ctx.fillText("₹"+values[i], x+barWidth/2, y-4);
+    }
   }
 </script>
 
