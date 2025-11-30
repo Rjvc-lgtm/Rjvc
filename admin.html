@@ -2,62 +2,194 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <title>Binary Tree Admin (Firebase)</title>
+  <title>RJVC Admin – Tree + Company Profit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
-    body{margin:0;background:#f3f4f6;color:#111827;}
+    *{
+      box-sizing:border-box;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    body{
+      margin:0;
+      background:#f3f4f6;
+      color:#111827;
+    }
     h1,h2,h3{margin:0 0 8px;}
 
-    .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-    .card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.15);padding:22px;max-width:480px;width:100%;}
-    label{display:block;font-size:14px;margin-bottom:4px;}
-    input{width:100%;padding:10px 12px;border-radius:999px;border:1px solid #d1d5db;font-size:15px;outline:none;}
-    input:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.25);}
-    .btn{border:none;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer;}
-    .btn-primary{background:#2563eb;color:#fff;}
-    .btn-secondary{background:#e5e7eb;color:#111827;}
-    .btn-danger{background:#dc2626;color:#fff;}
-    .btn-sm{padding:6px 10px;font-size:12px;}
-    .btn:disabled{opacity:.5;cursor:not-allowed;}
+    .page{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+    .card{
+      background:#fff;
+      border-radius:18px;
+      box-shadow:0 12px 30px rgba(15,23,42,.18);
+      padding:22px;
+      max-width:480px;
+      width:100%;
+    }
+    label{
+      display:block;
+      font-size:14px;
+      margin-bottom:4px;
+    }
+    input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid #d1d5db;
+      font-size:15px;
+      outline:none;
+    }
+    input:focus{
+      border-color:#2563eb;
+      box-shadow:0 0 0 2px rgba(37,99,235,.25);
+    }
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:10px 18px;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .btn-primary{
+      background:#2563eb;
+      color:#fff;
+    }
+    .btn-secondary{
+      background:#e5e7eb;
+      color:#111827;
+    }
+    .btn-danger{
+      background:#dc2626;
+      color:#fff;
+    }
+    .btn-sm{
+      padding:6px 10px;
+      font-size:12px;
+    }
+    .btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
     .mt-2{margin-top:8px;}
     .mt-3{margin-top:12px;}
     .mt-4{margin-top:16px;}
     .flex{display:flex;}
     .between{justify-content:space-between;align-items:center;}
-    .center{text-align:center;}
-    table{width:100%;border-collapse:collapse;font-size:13px;}
-    th,td{padding:6px 4px;border-bottom:1px solid #e5e7eb;text-align:left;}
-    th{font-size:12px;text-transform:uppercase;color:#6b7280;}
-    .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;background:#dbeafe;color:#1d4ed8;}
-    .wrap{max-width:1100px;width:100%;margin:24px auto;padding:0 8px;}
-    .panel{background:#fff;border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.1);padding:18px;margin-bottom:18px;}
-    .wallets{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;}
-    .wallet-box{flex:1 1 180px;background:#eff6ff;border-radius:14px;padding:10px 12px;}
-    .wallet-title{font-size:12px;color:#4b5563;}
-    .wallet-value{font-size:18px;font-weight:700;color:#1d4ed8;}
     .small{font-size:12px;color:#6b7280;}
-    .error{color:#dc2626;font-size:13px;margin-top:6px;}
-    .ok{color:#166534;font-size:13px;margin-top:6px;}
+    .error{color:#b91c1c;font-size:13px;margin-top:6px;}
+    .ok{color:#15803d;font-size:13px;margin-top:6px;}
 
-    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;}
-    .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th,td{
+      padding:6px 4px;
+      border-bottom:1px solid #e5e7eb;
+      text-align:left;
+    }
+    th{
+      font-size:12px;
+      text-transform:uppercase;
+      color:#6b7280;
+    }
+    .badge{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:11px;
+      background:#dbeafe;
+      color:#1d4ed8;
+    }
+
+    .wrap{
+      max-width:1100px;
+      width:100%;
+      margin:24px auto;
+      padding:0 8px;
+    }
+    .panel{
+      background:#fff;
+      border-radius:18px;
+      box-shadow:0 8px 24px rgba(15,23,42,.12);
+      padding:18px;
+      margin-bottom:18px;
+    }
+    .wallets{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:8px;
+    }
+    .wallet-box{
+      flex:1 1 180px;
+      background:#eff6ff;
+      border-radius:14px;
+      padding:10px 12px;
+    }
+    .wallet-title{
+      font-size:12px;
+      color:#4b5563;
+    }
+    .wallet-value{
+      font-size:18px;
+      font-weight:700;
+      color:#1d4ed8;
+    }
+
+    .tree-panel{
+      background:#020617;
+      color:#e5e7eb;
+      border-radius:18px;
+      padding:16px;
+      margin-top:10px;
+    }
+    .tree-root-label{
+      font-size:13px;
+      color:#a5b4fc;
+      margin-bottom:4px;
+    }
     .tree-level{text-align:center;margin:8px 0;}
     .tree-node-wrap{display:inline-block;margin:6px;}
-    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:12px;min-width:120px;}
-    .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
+    .tree-node{
+      padding:6px 10px;
+      border-radius:12px;
+      background:#111827;
+      border:1px solid #4b5563;
+      font-size:12px;
+      min-width:120px;
+    }
+    .tree-node-main{
+      background:#1d4ed8;
+      border-color:#93c5fd;
+    }
     .tree-node-name{font-weight:600;}
-    .tree-node-meta{font-size:10px;color:#9ca3af;margin-top:2px;}
-    .tree-node-actions{margin-top:6px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
-    .tree-node-actions .btn-sm{padding:3px 6px;font-size:10px;}
+    .tree-node-meta{
+      font-size:10px;
+      color:#9ca3af;
+      margin-top:2px;
+    }
+    .tree-node-actions{
+      margin-top:6px;
+      display:flex;
+      gap:4px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .tree-node-actions .btn-sm{
+      padding:3px 6px;
+      font-size:10px;
+    }
 
-    .biz-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;}
-    .biz-title{font-size:14px;font-weight:600;}
-    .biz-boxes{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
-    .biz-box{flex:1 1 180px;background:#020617;border-radius:14px;padding:10px 12px;border:1px solid #1e293b;}
-    .biz-label{font-size:12px;color:#9ca3af;}
-    .biz-value{font-size:18px;font-weight:700;}
     canvas{max-width:100%;}
+
     @media(max-width:720px){
       .panel{padding:14px;}
       table{font-size:12px;}
@@ -69,34 +201,35 @@
 <!-- LOGIN PAGE -->
 <div id="loginPage" class="page">
   <div class="card">
-    <h1 class="center">Admin Login</h1>
-    <p class="center small" style="margin-bottom:16px;">
-      नीचे ID और Password डालें।
+    <h1>RJVC Admin Login</h1>
+    <p class="small">
+      यह पेज सिर्फ admin के लिए है – customer को यह link न दें।
     </p>
     <label>Admin ID</label>
     <input id="adminId" placeholder="जैसे: admin" />
     <div class="mt-2"></div>
     <label>Password</label>
     <input id="adminPass" type="password" placeholder="जैसे: 1234" />
-    <button class="btn btn-primary mt-3" style="width:100%;" onclick="handleAdminLogin()">
-      Login
-    </button>
+    <button class="btn btn-primary mt-3" style="width:100%;" onclick="handleAdminLogin()">Login</button>
     <div id="loginError" class="error" style="display:none;">गलत ID या Password</div>
-    <p class="small" style="margin-top:12px;">
-      अभी के लिए default: <b>ID: admin</b>, <b>Password: 1234</b> (आप चाहो तो code में बदल सकते हैं)
+    <p class="small mt-2">
+      फिलहाल default: <b>ID: admin</b>, <b>Password: 1234</b> (आप code में change कर सकते हैं)
     </p>
   </div>
 </div>
 
-<!-- ADMIN MAIN PAGE -->
+<!-- MAIN ADMIN PAGE -->
 <div id="adminPage" style="display:none;">
   <div class="wrap">
+
     <!-- HEADER -->
     <div class="panel flex between">
       <div>
-        <h2>Binary Tree Admin (Firebase)</h2>
+        <h2>RJVC Admin – Binary Tree + Business</h2>
         <div class="small">
-          हर customer 20₹ देता है, 2 members (1 pair) पर <b>3₹</b> binary earning मानी गई है।
+          हर ID से <b>₹20</b> joining income, हर 2 members = 1 pair → 
+          1 pair की binary income = <b>₹3</b>.<br>
+          इस ₹3 में से <b>80% members</b> के Bonus Wallet में, और <b>20% company profit</b>.
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -108,20 +241,19 @@
       <div class="flex" style="gap:10px;flex-wrap:wrap;margin-top:8px;">
         <div style="flex:1 1 200px;">
           <label>Customer Name</label>
-          <input id="rootName" placeholder="जैसे: Rajesh" />
+          <input id="rootName" placeholder="जैसे: Rajesh parmar" />
         </div>
         <div style="flex:1 1 200px;">
           <label>Customer Password (Login के लिए)</label>
           <input id="rootPass" placeholder="जैसे: 1234" />
         </div>
       </div>
-      <button class="btn btn-primary mt-3" onclick="createRootCustomer()">
-        Root में नया Customer जोड़ें
-      </button>
+      <button class="btn btn-primary mt-3" onclick="createRootCustomer()">Root में नया Customer जोड़ें</button>
       <div id="rootMsg" class="ok" style="display:none;"></div>
-      <p class="small" style="margin-top:6px;">
+      <p class="small mt-2">
         Root में नया customer add होगा। बाद में Tree view में किसी भी node पर
-        <b>+Member / Edit / Delete</b> से पूरा binary tree manage कर सकते हैं (बीच में भी जोड़ सकते हैं)।
+        <b>+Member / Edit / Delete</b> से पूरा binary tree manage कर सकते हैं 
+        (बीच में भी नया member insert कर सकते हैं: पुराना बच्चा नीचे चला जाएगा)।
       </p>
     </div>
 
@@ -131,6 +263,7 @@
         <h3>Customer List (Tree Nodes)</h3>
         <span class="badge" id="totalCustomersBadge">0 Customers</span>
       </div>
+
       <div class="wallets">
         <div class="wallet-box">
           <div class="wallet-title">कुल Pairs (पूरा Tree)</div>
@@ -141,28 +274,25 @@
           <div id="totalCommission" class="wallet-value">₹0</div>
         </div>
       </div>
+
       <div class="mt-3" style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
               <th>#</th>
               <th>Name</th>
-              <th>Members<br/>(नीचे)</th>
+              <th>Members (नीचे)</th>
               <th>Pairs</th>
-              <th>Binary Income<br/>(₹)</th>
+              <th>Binary Income (₹)</th>
               <th>Tree</th>
               <th>Del</th>
             </tr>
           </thead>
           <tbody id="customerTableBody">
-            <!-- rows -->
+            <!-- rows JS से -->
           </tbody>
         </table>
       </div>
-      <p class="small" style="margin-top:6px;">
-        Logic: 2 member = 1 pair. 1 pair की binary earning = 3₹।<br>
-        Company profit नीचे वाले रिपोर्ट में calculate होकर दिख रहा है।
-      </p>
     </div>
 
     <!-- TREE VIEW -->
@@ -174,9 +304,7 @@
             अभी कोई root select नहीं है।
           </div>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">
-          सिर्फ Root दिखाओ
-        </button>
+        <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">सिर्फ main Root से Tree दिखाओ</button>
       </div>
       <div id="treeViewArea" style="margin-top:10px;font-size:12px;">
         अभी tree खाली है।
@@ -184,46 +312,47 @@
     </div>
 
     <!-- COMPANY BUSINESS REPORT -->
-    <div class="biz-panel">
-      <div class="flex between">
-        <div>
-          <div class="biz-title">Company Business Report</div>
-          <div class="small" id="bizUpdated">Current Summary</div>
+    <div class="panel">
+      <h3>Company Business Report</h3>
+      <p class="small">
+        Rule: हर ID = <b>₹20</b> business income, tree से total binary income = <b>pairs × ₹3</b>.<br>
+        उस binary income का <b>80% members</b> को Bonus Wallet में जाता है,
+        और <b>20% company का hidden profit</b> है।
+      </p>
+
+      <div class="wallets">
+        <div class="wallet-box">
+          <div class="wallet-title">Total Business Income (सभी IDs × ₹20)</div>
+          <div id="bizIncome" class="wallet-value">₹0</div>
         </div>
-        <div class="small">
-          Package Price: <b>₹20 / ID</b>, 1 pair = <b>₹3</b>
+        <div class="wallet-box">
+          <div class="wallet-title">Total Binary Pairs Income (Tree से) ₹</div>
+          <div id="bizBinaryGross" class="wallet-value">₹0</div>
+        </div>
+        <div class="wallet-box">
+          <div class="wallet-title">Members को दिया गया (80%) ₹</div>
+          <div id="bizBinaryPaid" class="wallet-value">₹0</div>
+        </div>
+        <div class="wallet-box">
+          <div class="wallet-title">Hidden 20% Binary Profit (Company) ₹</div>
+          <div id="bizProfit20" class="wallet-value">₹0</div>
+        </div>
+        <div class="wallet-box">
+          <div class="wallet-title">Business Profit (Income − Members payout) ₹</div>
+          <div id="bizProfitCore" class="wallet-value">₹0</div>
+        </div>
+        <div class="wallet-box">
+          <div class="wallet-title">Total Company Profit (Core + 20%) ₹</div>
+          <div id="bizProfitTotal" class="wallet-value">₹0</div>
         </div>
       </div>
 
-      <div class="biz-boxes">
-        <div class="biz-box">
-          <div class="biz-label">Total Business Income (₹) = Customers × 20</div>
-          <div class="biz-value" id="bizIncome">₹0</div>
-        </div>
-        <div class="biz-box">
-          <div class="biz-label">Total Binary Pairs Income (Gross) (₹)</div>
-          <div class="biz-value" id="bizBinaryGross">₹0</div>
-        </div>
-        <div class="biz-box">
-          <div class="biz-label">Members को दिया Payout (80%) (₹)</div>
-          <div class="biz-value" id="bizBinaryPaid">₹0</div>
-        </div>
-        <div class="biz-box">
-          <div class="biz-label">Hidden 20% Binary Profit (₹)</div>
-          <div class="biz-value" id="bizProfit20">₹0</div>
-        </div>
-        <div class="biz-box">
-          <div class="biz-label">Company Profit (Income – Payout) (₹)</div>
-          <div class="biz-value" id="bizProfitCore">₹0</div>
-        </div>
-        <div class="biz-box">
-          <div class="biz-label">Total Company Profit (Core + 20%) (₹)</div>
-          <div class="biz-value" id="bizProfitTotal">₹0</div>
-        </div>
+      <div class="small mt-2">
+        Last update: <span id="bizUpdated">--</span>
       </div>
 
-      <div class="mt-3">
-        <div class="small">Business Chart (Income vs Payout vs Profit)</div>
+      <div class="tree-panel" style="margin-top:12px;">
+        <div class="tree-root-label">Business Chart (Income vs Payout vs Profit)</div>
         <canvas id="bizChart" width="420" height="220"></canvas>
       </div>
     </div>
@@ -231,13 +360,13 @@
   </div>
 </div>
 
-<!-- FIREBASE CDN -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
 
 <script>
-  /************ Firebase config – RJVC PLAN ************/
+  /************ Firebase config (RJVC) ************/
   const firebaseConfig = {
     apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
     authDomain: "rjvc-plan.firebaseapp.com",
@@ -249,20 +378,20 @@
   };
 
   firebase.initializeApp(firebaseConfig);
-  try { firebase.analytics(); } catch(e) {}
+  try { firebase.analytics(); } catch(e){}
 
-  const db = firebase.firestore();
-  const treeCol = db.collection("TreeNodes");
+  const db       = firebase.firestore();
+  const treeCol  = db.collection("TreeNodes");  // binary tree
+  const usersCol = db.collection("Users");      // customer login
 
-  /************ Constants ************/
-  const ADMIN_ID = "admin";
+  // Business rules
+  const PACKAGE_PRICE = 20;   // हर ID से 20₹
+  const MEMBER_SHARE  = 0.8;  // 80% members को, 20% company को
+
+  /************ Simple Admin Login ************/
+  const ADMIN_ID       = "admin";
   const ADMIN_PASSWORD = "1234";
 
-  const PACKAGE_PRICE = 20;   // हर ID से 20₹
-  const PAIR_INCOME   = 3;    // 1 pair = 3₹
-  const MEMBER_SHARE  = 0.80; // 80% members को, 20% company hidden profit
-
-  /************ Login ************/
   function handleAdminLogin(){
     const id   = document.getElementById("adminId").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
@@ -270,8 +399,8 @@
 
     if(id === ADMIN_ID && pass === ADMIN_PASSWORD){
       err.style.display = "none";
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("adminPage").style.display = "block";
+      document.getElementById("loginPage").style.display  = "none";
+      document.getElementById("adminPage").style.display  = "block";
       startSubscriptions();
     }else{
       err.style.display = "block";
@@ -284,22 +413,25 @@
     document.getElementById("adminPass").value = "";
   }
 
-  /************ Tree data ************/
-  let nodesById = {};
-  let rootId = null;
+  /************ In-memory tree state ************/
+  let nodesById         = {};   // id -> node data
+  let rootId            = null; // top root id
   let currentTreeRootId = null;
-  let treeUnsub = null;
+  let treeUnsub         = null;
 
   function startSubscriptions(){
     if(treeUnsub) treeUnsub();
+
     treeUnsub = treeCol.orderBy("createdAt","asc").onSnapshot(snap=>{
       nodesById = {};
       rootId = null;
+
       snap.forEach(doc=>{
         const d = doc.data();
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
+      // root = जिसके parentId नहीं है
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -307,7 +439,6 @@
       recalcAll();
       renderTable();
       renderTree();
-      updateBusinessSummary();
     });
   }
 
@@ -320,35 +451,45 @@
 
     if(!name || !pass){
       msg.textContent = "Name और Password दोनों जरूरी हैं।";
-      msg.className = "error";
+      msg.className   = "error";
       msg.style.display = "block";
       return;
     }
 
     try{
+      // Tree node
       await treeCol.add({
         name,
         password: pass,
         parentId: null,
-        leftId: null,
-        rightId: null,
+        leftId:   null,
+        rightId:  null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Users collection में भी same नाम/पासवर्ड से एक account
+      await usersCol.add({
+        name,
+        password: pass,
+        commissionWallet: 0,
+        bonusWallet: 0,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
       document.getElementById("rootName").value = "";
       document.getElementById("rootPass").value = "";
 
-      msg.textContent = "Customer root में सफलतापूर्वक जोड़ा गया।";
-      msg.className = "ok";
+      msg.textContent   = "Customer root level पर जोड़ दिया गया।";
+      msg.className     = "ok";
       msg.style.display = "block";
     }catch(err){
-      msg.textContent = "Error: " + err.message;
-      msg.className = "error";
+      msg.textContent   = "Error: " + err.message;
+      msg.className     = "error";
       msg.style.display = "block";
     }
   }
 
-  /************ Helpers – descendants & commission ************/
+  /************ Utility – count descendants ************/
   function countDescendants(nodeId){
     const node = nodesById[nodeId];
     if(!node) return 0;
@@ -358,39 +499,176 @@
     return c;
   }
 
-  let globalTotalPairs = 0;
+  let globalTotalPairs      = 0;
   let globalTotalCommission = 0;
 
   function recalcAll(){
-    globalTotalPairs = 0;
+    globalTotalPairs      = 0;
     globalTotalCommission = 0;
 
-    Object.values(nodesById).forEach(n=>{
-      const members = countDescendants(n.id);
-      const pairs   = Math.floor(members/2);           // OPTION 1: 2 members = 1 pair
-      const comm    = pairs * PAIR_INCOME;             // 3₹ per pair
+    const list = Object.values(nodesById);
 
-      n.members = members;
-      n.pairs   = pairs;
-      n.commission = comm;
+    list.forEach(n=>{
+      const members    = countDescendants(n.id);
+      const pairs      = Math.floor(members / 2);
+      const commission = pairs * 3;    // 1 pair = ₹3
+
+      n.members    = members;
+      n.pairs      = pairs;
+      n.commission = commission;
 
       globalTotalPairs      += pairs;
-      globalTotalCommission += comm;
+      globalTotalCommission += commission;
     });
 
-    document.getElementById("totalPairs").textContent      = globalTotalPairs;
-    document.getElementById("totalCommission").textContent = "₹" + globalTotalCommission;
+    const totalPairsEl = document.getElementById("totalPairs");
+    const totalCommEl  = document.getElementById("totalCommission");
+    if(totalPairsEl) totalPairsEl.textContent = globalTotalPairs;
+    if(totalCommEl)  totalCommEl.textContent  = "₹" + globalTotalCommission;
+
+    updateBusinessSummary();
+    syncBonusToUsers();
   }
 
-  /************ Table render ************/
+  /************ Business summary (company profit) ************/
+  function updateBusinessSummary(){
+    const incomeEl      = document.getElementById("bizIncome");
+    const grossEl       = document.getElementById("bizBinaryGross");
+    const paidEl        = document.getElementById("bizBinaryPaid");
+    const profit20El    = document.getElementById("bizProfit20");
+    const profitCoreEl  = document.getElementById("bizProfitCore");
+    const profitTotalEl = document.getElementById("bizProfitTotal");
+    const updatedEl     = document.getElementById("bizUpdated");
+
+    if(!incomeEl) return; // UI नहीं मिला
+
+    const totalCustomers      = Object.keys(nodesById).length;
+    const totalBusinessIncome = totalCustomers * PACKAGE_PRICE; // हर ID = ₹20
+
+    const binaryGross = globalTotalCommission;                  // tree से total
+    const hidden20    = Math.round(binaryGross * (1 - MEMBER_SHARE)); // 20%
+    const binaryPaid  = binaryGross - hidden20;                 // 80% members को
+    const profitCore  = totalBusinessIncome - binaryPaid;       // joining से profit
+    const profitTotal = profitCore + hidden20;                  // final company profit
+
+    incomeEl.textContent      = "₹" + totalBusinessIncome;
+    grossEl.textContent       = "₹" + binaryGross;
+    paidEl.textContent        = "₹" + binaryPaid;
+    profit20El.textContent    = "₹" + hidden20;
+    profitCoreEl.textContent  = "₹" + profitCore;
+    profitTotalEl.textContent = "₹" + profitTotal;
+
+    if(updatedEl){
+      const now = new Date();
+      updatedEl.textContent =
+        now.toLocaleDateString("en-IN") + ", " + now.toLocaleTimeString("en-IN");
+    }
+
+    drawBizChart(totalBusinessIncome, binaryPaid, profitTotal);
+  }
+
+  function drawBizChart(income, paid, profit){
+    const canvas = document.getElementById("bizChart");
+    if(!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    const labels = ["Business Income","Members Payout","Company Profit"];
+    const values = [income, paid, profit];
+    const maxVal = Math.max(1, ...values);
+
+    const barWidth = 70;
+    const gap      = 40;
+    const originX  = 40;
+    const originY  = canvas.height - 30;
+
+    // axis
+    ctx.strokeStyle = "#9ca3af";
+    ctx.beginPath();
+    ctx.moveTo(originX, 10);
+    ctx.lineTo(originX, originY);
+    ctx.lineTo(canvas.width - 10, originY);
+    ctx.stroke();
+
+    for(let i=0;i<values.length;i++){
+      const x = originX + gap + i*(barWidth+gap);
+      const h = (values[i]/maxVal) * (originY-40);
+      const y = originY - h;
+
+      if(i===0)      ctx.fillStyle = "#3b82f6"; // blue
+      else if(i===1) ctx.fillStyle = "#f97316"; // orange
+      else           ctx.fillStyle = "#22c55e"; // green
+
+      ctx.fillRect(x, y, barWidth, h);
+
+      ctx.fillStyle = "#e5e7eb";
+      ctx.font = "11px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(labels[i], x+barWidth/2, originY+14);
+      ctx.fillText("₹"+values[i], x+barWidth/2, y-4);
+    }
+  }
+
+  /************ Bonus wallets → Users collection ************/
+  async function syncBonusToUsers(){
+    try{
+      // 1) हर main नाम के लिए कुल paid bonus निकालें
+      const bonusByMainName = {};  // { "Bhavna parmar": amount, ... }
+
+      Object.values(nodesById).forEach(n=>{
+        if(!n.name) return;
+        let mainName = n.name.trim();
+
+        // "Bhavna parmar sub 3" → main = "Bhavna parmar"
+        const m = mainName.match(/(.*)\s+sub\s*\d+$/i);
+        if(m) mainName = m[1].trim();
+
+        if(!bonusByMainName[mainName]) bonusByMainName[mainName] = 0;
+
+        const paidForThisNode = (n.commission || 0) * MEMBER_SHARE; // 80%
+        bonusByMainName[mainName] += paidForThisNode;
+      });
+
+      // 2) Users collection: नाम से docId map
+      const usersSnap = await usersCol.get();
+      const usersByName = {};
+      usersSnap.forEach(doc=>{
+        const d = doc.data();
+        if(d.name){
+          usersByName[d.name.trim().toLowerCase()] = doc.id;
+        }
+      });
+
+      // 3) Batch update bonusWallet
+      const batch = db.batch();
+      Object.keys(bonusByMainName).forEach(mainName=>{
+        const key    = mainName.trim().toLowerCase();
+        const userId = usersByName[key];
+        if(!userId) return; // ऐसा नाम Users में नहीं है
+
+        batch.update(usersCol.doc(userId), {
+          bonusWallet: Number(bonusByMainName[mainName].toFixed(2))
+        });
+      });
+
+      await batch.commit();
+      console.log("Bonus wallets synced from tree → Users.");
+    }catch(err){
+      console.error("syncBonusToUsers error:", err);
+    }
+  }
+
+  /************ TABLE RENDER ************/
   function renderTable(){
     const tbody = document.getElementById("customerTableBody");
+    if(!tbody) return;
     tbody.innerHTML = "";
+
     const list = Object.values(nodesById);
     list.sort((a,b)=>a.name.localeCompare(b.name));
 
-    document.getElementById("totalCustomersBadge").textContent =
-      list.length + " Customers";
+    const badge = document.getElementById("totalCustomersBadge");
+    if(badge) badge.textContent = list.length + " Customers";
 
     list.forEach((n,idx)=>{
       const tr = document.createElement("tr");
@@ -407,7 +685,7 @@
     });
   }
 
-  /************ Tree view ************/
+  /************ TREE VIEW ************/
   function viewTreeFrom(id){
     currentTreeRootId = id;
     renderTree();
@@ -421,6 +699,7 @@
   function renderTree(){
     const area = document.getElementById("treeViewArea");
     const info = document.getElementById("treeRootInfo");
+    if(!area || !info) return;
 
     if(!Object.keys(nodesById).length){
       info.textContent = "Tree खाली है। पहले कोई customer जोड़ें।";
@@ -428,7 +707,7 @@
       return;
     }
 
-    const startId = currentTreeRootId || rootId;
+    const startId   = currentTreeRootId || rootId;
     const startNode = nodesById[startId];
     if(!startNode){
       info.textContent = "Tree root नहीं मिला।";
@@ -436,10 +715,11 @@
       return;
     }
 
-    info.innerHTML = `अभी tree <b>${startNode.name}</b> से शुरू हो रहा है
-      (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Binary Income: ₹${startNode.commission||0})`;
+    info.innerHTML = `अभी tree <b>${startNode.name}</b> से शुरू हो रहा है 
+      (Members: ${startNode.members || 0}, Pairs: ${startNode.pairs || 0}, Binary Income: ₹${startNode.commission || 0})`;
 
     let html = "";
+
     function buildLevel(ids){
       if(!ids.length) return;
       html += `<div class="tree-level">`;
@@ -449,16 +729,17 @@
         const isMain = (id === rootId);
         html += `
           <div class="tree-node-wrap">
-            <div class="tree-node ${isMain ? "tree-node-main":""}">
+            <div class="tree-node ${isMain ? "tree-node-main" : ""}">
               <div class="tree-node-name">${n.name}</div>
-              <div class="tree-node-meta">M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}</div>
+              <div class="tree-node-meta">M:${n.members || 0} · P:${n.pairs || 0} · ₹${n.commission || 0}</div>
               <div class="tree-node-actions">
                 <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
                 <button class="btn btn-secondary btn-sm" onclick="editCustomer('${n.id}')">Edit</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button>
               </div>
             </div>
-          </div>`;
+          </div>
+        `;
       });
       html += `</div>`;
 
@@ -476,14 +757,14 @@
     area.innerHTML = html;
   }
 
-  /************ Add / Edit / Delete ************/
+  /************ ADD / EDIT / DELETE ************/
   function treeAddMember(parentId){
-    const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
-    if(!sideAns) return;
-    const s = sideAns.trim().toLowerCase();
+    const choice = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
+    if(!choice) return;
+    const c = choice.trim().toLowerCase();
     let sideField = null;
-    if(s === "l" || s === "1") sideField = "leftId";
-    else if(s === "r" || s === "2") sideField = "rightId";
+    if(c==="l" || c==="1") sideField = "leftId";
+    else if(c==="r" || c==="2") sideField = "rightId";
     else{
       alert("गलत choice, L/1 या R/2 लिखें");
       return;
@@ -499,32 +780,41 @@
 
   async function addMember(parentId, sideField, name, pass){
     try{
-      const parentRef = treeCol.doc(parentId);
+      const parentRef  = treeCol.doc(parentId);
       const parentSnap = await parentRef.get();
       if(!parentSnap.exists){
         alert("Parent नहीं मिला");
         return;
       }
-      const parent = parentSnap.data();
+      const parent          = parentSnap.data();
       const existingChildId = parent[sideField] || null;
 
-      // नया node
+      // पहले नया node बनाएं
       const newRef = await treeCol.add({
         name,
         password: pass,
         parentId: parentId,
-        leftId: null,
-        rightId: null,
+        leftId:   null,
+        rightId:  null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       const newId = newRef.id;
+
+      // Users collection में भी नया account
+      await usersCol.add({
+        name,
+        password: pass,
+        commissionWallet: 0,
+        bonusWallet: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
 
       if(!existingChildId){
         const update = {};
         update[sideField] = newId;
         await parentRef.update(update);
       }else{
-        // बीच में insert
+        // बीच में insert:
         const updateParent = {};
         updateParent[sideField] = newId;
 
@@ -545,6 +835,7 @@
     const newName = prompt("नया नाम?", node.name);
     if(!newName) return;
     const newPass = prompt("नया password? (खाली छोड़ो तो पुराना ही रहेगा)", "");
+
     const update = { name:newName };
     if(newPass && newPass.trim()) update.password = newPass.trim();
 
@@ -560,12 +851,13 @@
     if(!node) return;
     if(!confirm(`"${node.name}" और उसका पूरा subtree delete होगा, आगे बढ़ें?`)) return;
 
+    // parent से link हटाओ
     if(node.parentId){
       const parentRef = treeCol.doc(node.parentId);
-      const parent = nodesById[node.parentId];
+      const parent    = nodesById[node.parentId];
       if(parent){
         const upd = {};
-        if(parent.leftId === id) upd.leftId = null;
+        if(parent.leftId  === id) upd.leftId  = null;
         if(parent.rightId === id) upd.rightId = null;
         await parentRef.update(upd);
       }
@@ -579,72 +871,6 @@
       await treeCol.doc(nid).delete();
     }
     await deleteSubTree(id);
-  }
-
-  /************ Company business summary ************/
-  function updateBusinessSummary(){
-    const list = Object.values(nodesById);
-    const totalCustomers = list.length;
-
-    const totalBusinessIncome = totalCustomers * PACKAGE_PRICE; // सभी IDs × 20
-    const binaryGross = globalTotalCommission;                  // सभी pairs × 3
-    const hidden20 = Math.round(binaryGross * (1 - MEMBER_SHARE)); // 20% कंपनी को
-    const binaryPaid = binaryGross - hidden20;                  // members को
-    const profitCore = totalBusinessIncome - binaryPaid;        // income – payout(80%)
-    const profitTotal = profitCore + hidden20;                  // core + 20%
-
-    document.getElementById("bizIncome").textContent      = "₹" + totalBusinessIncome;
-    document.getElementById("bizBinaryGross").textContent = "₹" + binaryGross;
-    document.getElementById("bizBinaryPaid").textContent  = "₹" + binaryPaid;
-    document.getElementById("bizProfit20").textContent    = "₹" + hidden20;
-    document.getElementById("bizProfitCore").textContent  = "₹" + profitCore;
-    document.getElementById("bizProfitTotal").textContent = "₹" + profitTotal;
-
-    const now = new Date();
-    document.getElementById("bizUpdated").textContent =
-      now.toLocaleDateString("en-IN") + ", " + now.toLocaleTimeString("en-IN");
-
-    drawBizChart(totalBusinessIncome, binaryPaid, profitTotal);
-  }
-
-  function drawBizChart(totalIncome, payout, profit){
-    const canvas = document.getElementById("bizChart");
-    if(!canvas) return;
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    const labels = ["Income","Payout","Profit"];
-    const values = [totalIncome, payout, profit];
-    const maxVal = Math.max(1, ...values.map(v=>Math.abs(v)));
-
-    const barWidth = 60;
-    const gap = 40;
-    const originX = 40;
-    const originY = canvas.height - 30;
-
-    // axis
-    ctx.strokeStyle = "#9ca3af";
-    ctx.beginPath();
-    ctx.moveTo(originX, 10);
-    ctx.lineTo(originX, originY);
-    ctx.lineTo(canvas.width - 10, originY);
-    ctx.stroke();
-
-    // bars
-    for(let i=0;i<values.length;i++){
-      const x = originX + gap + i*(barWidth+gap);
-      const h = (Math.abs(values[i])/maxVal) * (originY-40);
-      const y = originY - h;
-
-      ctx.fillStyle = i===0 ? "#3b82f6" : (i===1 ? "#f97316" : "#22c55e");
-      ctx.fillRect(x, y, barWidth, h);
-
-      ctx.fillStyle = "#e5e7eb";
-      ctx.font = "11px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText(labels[i], x+barWidth/2, originY+14);
-      ctx.fillText("₹"+values[i], x+barWidth/2, y-4);
-    }
   }
 </script>
 
