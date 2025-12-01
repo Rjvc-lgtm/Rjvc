@@ -248,7 +248,7 @@
   const ADMIN_ID       = "admin";
   const ADMIN_PASSWORD = "1234";
 
-  function handleAdminLogin(){
+  async function handleAdminLogin(){
     const id   = document.getElementById("adminId").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
     const err  = document.getElementById("loginError");
@@ -258,6 +258,8 @@
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("adminPage").style.display = "block";
       startSubscriptions();
+      // पुराने duplicate users साफ करना
+      autoFixDuplicateUsers();
     }else{
       err.style.display = "block";
     }
@@ -409,76 +411,79 @@
     updateUsersWallets().catch(err=>console.error(err));
   }
 
-  /************ NEW updateUsersWallets – पुराने + नए सब IDs fix ************/
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
 
-    // 1) Bonus collect करने के लिए map
+    // Bonus collect करने के लिए map
     const bonusMap = {}; // mainId -> amount
+    const mainUpdates = [];
 
-    list.forEach(n => {
+    // पहले हर node का mainAccountId निकालो
+    list.forEach(n=>{
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
-      // TreeNodes में भी mainAccountId save
-      treeCol.doc(n.id).set({ mainAccountId: mainId }, { merge: true });
+      // TreeNodes में mainAccountId update
+      mainUpdates.push(
+        treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true})
+      );
 
-      // sub ID (खुद main नहीं) → इसकी commission का 80% main के bonus में
-      if (mainId !== n.id) {
+      // अगर ये sub ID है (खुद main नहीं)
+      if(mainId !== n.id){
         const subComm    = n.commission || 0;
-        const bonusShare = +(subComm * 0.80).toFixed(2);
+        const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को
         bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
       }
     });
 
-    // 2) New-style Users docs (ID = TreeNode ID) update
+    await Promise.all(mainUpdates);
+
     const batch = db.batch();
-    list.forEach(n => {
+    list.forEach(n=>{
       const uRef = usersCol.doc(n.id);
       const data = {
-        name:             n.name || "",
-        password:         n.password || "",
+        name: n.name || "",
+        password: n.password || "",
         commissionWallet: n.commission || 0,
-        bonusWallet:      +((bonusMap[n.id] || 0).toFixed(2)),
-        mainAccountId:    n.mainAccountId || n.id
+        bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
+        mainAccountId: n.mainAccountId || n.id
       };
-      batch.set(uRef, data, { merge: true });
+      batch.set(uRef, data, {merge:true});
     });
+
     await batch.commit();
+  }
 
-    // 3) OLD customers fix:
-    // वही name + password वाले पुराने documents भी update कर दें
-    const fixPromises = [];
+  /************ Duplicate Users साफ करना ************/
+  async function autoFixDuplicateUsers(){
+    try{
+      const snap = await usersCol.get();
+      const map = {}; // name|password -> [ids]
 
-    list.forEach(n => {
-      const name = n.name || "";
-      const pass = n.password || "";
-      if (!name || !pass) return;
+      snap.forEach(doc=>{
+        const d = doc.data();
+        const key = (d.name || "") + "|" + (d.password || "");
+        if(!map[key]) map[key] = [];
+        map[key].push(doc.id);
+      });
 
-      const mainId = n.mainAccountId || n.id;
-      const bonus  = +((bonusMap[mainId] || 0).toFixed(2));
-      const comm   = n.commission || 0;
-
-      fixPromises.push(
-        usersCol
-          .where("name", "==", name)
-          .where("password", "==", pass)
-          .get()
-          .then(qs => {
-            const innerBatch = db.batch();
-            qs.forEach(doc => {
-              innerBatch.set(doc.ref, {
-                commissionWallet: comm,
-                bonusWallet:      bonus,
-                mainAccountId:    mainId
-              }, { merge: true });
-            });
-            return innerBatch.commit();
-          })
-      );
-    });
-
-    await Promise.all(fixPromises);
+      let deleteCount = 0;
+      for(const key in map){
+        const arr = map[key];
+        if(arr.length > 1){
+          // पहला रहने दो, बाकी delete
+          for(let i=1; i<arr.length; i++){
+            await usersCol.doc(arr[i]).delete();
+            deleteCount++;
+          }
+        }
+      }
+      if(deleteCount > 0){
+        console.log("Duplicate users cleaned:", deleteCount);
+      }
+    }catch(err){
+      console.error("autoFixDuplicateUsers error:", err);
+    }
   }
 
   /************ Table render ************/
@@ -664,11 +669,13 @@
     }
   }
 
+  // ✅ IMPORTANT: delete करते समय TreeNodes + Users दोनों साफ
   async function deleteCustomer(id){
     const node = nodesById[id];
     if(!node) return;
     if(!confirm(`"${node.name}" और उसका पूरा subtree delete होगा, आगे बढ़ें?`)) return;
 
+    // Parent से unlink
     if(node.parentId){
       const parentRef = treeCol.doc(node.parentId);
       const parent    = nodesById[node.parentId];
@@ -680,15 +687,18 @@
       }
     }
 
+    // Subtree delete + Users delete
     async function deleteSubTree(nid){
       const n = nodesById[nid];
       if(!n) return;
       if(n.leftId)  await deleteSubTree(n.leftId);
       if(n.rightId) await deleteSubTree(n.rightId);
-      await treeCol.doc(nid).delete();
-      await usersCol.doc(nid).delete();
+      await treeCol.doc(nid).delete();   // TreeNodes
+      await usersCol.doc(nid).delete();  // Users
     }
+
     await deleteSubTree(id);
+    alert("Customer और उसका पूरा subtree सफलतापूर्वक delete हो गया।");
   }
 
   /************ Business Chart ************/
