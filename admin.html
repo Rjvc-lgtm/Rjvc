@@ -139,11 +139,7 @@
       </p>
 
       <div class="profit-panel">
-        <div class="flex between">
-          <div>
-            <div class="small">Current Summary (पूरा Tree)</div>
-          </div>
-        </div>
+        <div class="small">Current Summary (पूरा Tree)</div>
 
         <div class="profit-boxes">
           <div class="profit-box">
@@ -226,7 +222,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
 
 <script>
-  /************ Firebase config – RJVC PLAN ************/
   const firebaseConfig = {
     apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
     authDomain: "rjvc-plan.firebaseapp.com",
@@ -244,7 +239,6 @@
   const treeCol  = db.collection("TreeNodes");
   const usersCol = db.collection("Users");
 
-  /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
   const ADMIN_PASSWORD = "1234";
 
@@ -269,7 +263,6 @@
     document.getElementById("adminPass").value = "";
   }
 
-  /************ Tree data in memory ************/
   let nodesById         = {};
   let rootId            = null;
   let currentTreeRootId = null;
@@ -277,7 +270,7 @@
 
   function startSubscriptions(){
     if(treeUnsub) treeUnsub();
-    treeUnsub = treeCol.orderBy("createdAt","asc").onSnapshot(snap=>{
+    treeUnsub = treeCol.orderBy("createdAt","asc").onSnapshot(async (snap)=>{
       nodesById = {};
       rootId = null;
       snap.forEach(doc=>{
@@ -285,18 +278,16 @@
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
-      // root = जो सबसे ऊपर है (parentId null)
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
 
-      recalcAll();
+      await recalcAll();      // अब async
       renderTable();
       renderTree();
     });
   }
 
-  /************ Create Root Customer ************/
   async function createRootCustomer(){
     const name = document.getElementById("rootName").value.trim();
     const pass = document.getElementById("rootPass").value.trim();
@@ -317,19 +308,14 @@
         parentId: null,
         leftId: null,
         rightId: null,
-        mainAccountId: null,   // बाद में खुद को assign
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      await newDoc.update({ mainAccountId: newDoc.id });
-
-      // Users collection
       await usersCol.doc(newDoc.id).set({
         name,
         password: pass,
         commissionWallet: 0,
-        bonusWallet: 0,
-        mainAccountId: newDoc.id
+        bonusWallet: 0
       }, {merge:true});
 
       document.getElementById("rootName").value = "";
@@ -345,7 +331,6 @@
     }
   }
 
-  /************ Utility – descendants ************/
   function countDescendants(nodeId){
     const node = nodesById[nodeId];
     if(!node) return 0;
@@ -356,10 +341,7 @@
   }
 
   function getMainAccountId(node){
-    // अगर mainAccountId field है, वही use करो
-    if(node.mainAccountId) return node.mainAccountId;
-
-    // वरना ऊपर chain से सबसे ऊपर वाला node main माना जाएगा
+    // main account = chain में सबसे ऊपर वाला
     let current = node;
     while(current.parentId && nodesById[current.parentId]){
       current = nodesById[current.parentId];
@@ -372,14 +354,13 @@
   let globalTotalCustomers   = 0;
   let globalTotalBusinessInc = 0;
 
-  function recalcAll(){
+  async function recalcAll(){
     globalTotalPairs      = 0;
     globalTotalCommission = 0;
     globalTotalCustomers  = Object.keys(nodesById).length;
 
     const list = Object.values(nodesById);
 
-    // members + pairs + commission
     list.forEach(n=>{
       const members = countDescendants(n.id);
       const pairs   = Math.floor(members/2);
@@ -405,28 +386,22 @@
 
     drawBusinessChart(globalTotalBusinessInc, globalTotalCommission, companyProfit);
 
-    // wallets update
-    updateUsersWallets().catch(err=>console.error(err));
+    // सबसे important: Users collection update
+    await updateUsersWallets();
   }
 
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
+    const bonusMap = {};  // mainId -> bonus amount
 
-    // Bonus collect करने के लिए map
-    const bonusMap = {}; // mainId -> amount
-
-    // पहले हर node का mainAccountId निकालो
+    // पहले सबका main account निकालो व bonus जमा करो
     list.forEach(n=>{
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
-      // future के लिए TreeNodes में save कर दें
-      treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
-
-      // अगर ये sub ID है ( खुद main नहीं )
       if(mainId !== n.id){
         const subComm    = n.commission || 0;
-        const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को
+        const bonusShare = Math.round(subComm * 80) / 100; // 80%
         bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
       }
     });
@@ -437,17 +412,21 @@
       const data = {
         name: n.name || "",
         password: n.password || "",
+        mainAccountId: n.mainAccountId || n.id,
         commissionWallet: n.commission || 0,
-        bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
-        mainAccountId: n.mainAccountId || n.id
+        bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) )
       };
       batch.set(uRef, data, {merge:true});
     });
 
-    await batch.commit();
+    try{
+      await batch.commit();
+    }catch(err){
+      console.error("Wallet batch error:", err);
+      alert("Firebase wallet update error: " + err.message);
+    }
   }
 
-  /************ Table render ************/
   function renderTable(){
     const tbody = document.getElementById("customerTableBody");
     tbody.innerHTML = "";
@@ -472,7 +451,6 @@
     });
   }
 
-  /************ Tree view ************/
   function viewTreeFrom(id){
     currentTreeRootId = id;
     renderTree();
@@ -541,7 +519,6 @@
     area.innerHTML = html;
   }
 
-  /************ Add / Edit / Delete ************/
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if(!sideAns) return;
@@ -573,15 +550,12 @@
       const parent          = parentSnap.data();
       const existingChildId = parent[sideField] || null;
 
-      const mainForChild = parent.mainAccountId || parentId;
-
       const newRef = await treeCol.add({
         name,
         password: pass,
         parentId: parentId,
         leftId: null,
         rightId: null,
-        mainAccountId: mainForChild,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       const newId = newRef.id;
@@ -590,8 +564,7 @@
         name,
         password: pass,
         commissionWallet: 0,
-        bonusWallet: 0,
-        mainAccountId: mainForChild
+        bonusWallet: 0
       }, {merge:true});
 
       if(!existingChildId){
@@ -657,7 +630,6 @@
     await deleteSubTree(id);
   }
 
-  /************ Business Chart ************/
   function drawBusinessChart(totalIncome, binaryPayout, companyProfit){
     const canvas = document.getElementById("businessChart");
     if(!canvas) return;
