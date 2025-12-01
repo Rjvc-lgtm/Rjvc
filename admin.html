@@ -5,21 +5,79 @@
   <title>RJVC Binary Tree Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
-    body{margin:0;background:#f3f4f6;color:#111827;}
-    h1,h2,h3{margin:0 0 8px;}
+    *{
+      box-sizing:border-box;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    body{
+      margin:0;
+      background:#f3f4f6;
+      color:#111827;
+    }
+    h1,h2,h3{
+      margin:0 0 8px;
+    }
 
-    .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-    .card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.15);padding:22px;max-width:480px;width:100%;}
-    label{display:block;font-size:14px;margin-bottom:4px;}
-    input{width:100%;padding:10px 12px;border-radius:999px;border:1px solid #d1d5db;font-size:15px;outline:none;}
-    input:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.25);}
-    .btn{border:none;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer;}
-    .btn-primary{background:#2563eb;color:#fff;}
-    .btn-secondary{background:#e5e7eb;color:#111827;}
-    .btn-danger{background:#dc2626;color:#fff;}
-    .btn-sm{padding:6px 10px;font-size:12px;}
-    .btn:disabled{opacity:.5;cursor:not-allowed;}
+    .page{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+    .card{
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 10px 30px rgba(15,23,42,.15);
+      padding:22px;
+      max-width:480px;
+      width:100%;
+    }
+    label{
+      display:block;
+      font-size:14px;
+      margin-bottom:4px;
+    }
+    input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid #d1d5db;
+      font-size:15px;
+      outline:none;
+    }
+    input:focus{
+      border-color:#2563eb;
+      box-shadow:0 0 0 2px rgba(37,99,235,.25);
+    }
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:10px 18px;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .btn-primary{
+      background:#2563eb;
+      color:#fff;
+    }
+    .btn-secondary{
+      background:#e5e7eb;
+      color:#111827;
+    }
+    .btn-danger{
+      background:#dc2626;
+      color:#fff;
+    }
+    .btn-sm{
+      padding:6px 10px;
+      font-size:12px;
+    }
+    .btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
     .mt-1{margin-top:4px;}
     .mt-2{margin-top:8px;}
     .mt-3{margin-top:12px;}
@@ -27,38 +85,167 @@
     .flex{display:flex;}
     .between{justify-content:space-between;align-items:center;}
     .center{text-align:center;}
-    table{width:100%;border-collapse:collapse;font-size:13px;}
-    th,td{padding:6px 4px;border-bottom:1px solid #e5e7eb;text-align:left;}
-    th{font-size:12px;text-transform:uppercase;color:#6b7280;}
-    .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;background:#dbeafe;color:#1d4ed8;}
-    .wrap{max-width:1100px;width:100%;margin:24px auto;padding:0 8px;}
-    .panel{background:#fff;border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.1);padding:18px;margin-bottom:18px;}
-    .wallets{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;}
-    .wallet-box{flex:1 1 180px;background:#eff6ff;border-radius:14px;padding:10px 12px;}
-    .wallet-title{font-size:12px;color:#4b5563;}
-    .wallet-value{font-size:18px;font-weight:700;color:#1d4ed8;}
-    .small{font-size:12px;color:#6b7280;}
-    .error{color:#dc2626;font-size:13px;margin-top:6px;}
-    .ok{color:#166534;font-size:13px;margin-top:6px;}
 
-    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;}
-    .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
-    .tree-level{text-align:center;margin:8px 0;}
-    .tree-node-wrap{display:inline-block;margin:6px;}
-    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:12px;min-width:120px;}
-    .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
-    .tree-node-name{font-weight:600;}
-    .tree-node-meta{font-size:10px;color:#9ca3af;margin-top:2px;}
-    .tree-node-actions{margin-top:6px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
-    .tree-node-actions .btn-sm{padding:3px 6px;font-size:10px;}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th,td{
+      padding:6px 4px;
+      border-bottom:1px solid #e5e7eb;
+      text-align:left;
+      vertical-align:middle;
+    }
+    th{
+      font-size:12px;
+      text-transform:uppercase;
+      color:#6b7280;
+    }
+    th:nth-child(2){width:22%;}
+    th:nth-child(3){width:18%;}
 
-    .profit-panel{background:#0f172a;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:10px;}
-    .profit-boxes{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
-    .profit-box{flex:1 1 160px;background:#020617;border-radius:14px;padding:10px 12px;border:1px solid #1e293b;}
-    .profit-label{font-size:12px;color:#9ca3af;}
-    .profit-value{font-size:18px;font-weight:700;}
+    .badge{
+      display:inline-block;
+      padding:3px 10px;
+      border-radius:999px;
+      font-size:11px;
+      background:#dbeafe;
+      color:#1d4ed8;
+    }
+    .wrap{
+      max-width:1100px;
+      width:100%;
+      margin:24px auto;
+      padding:0 8px;
+    }
+    .panel{
+      background:#fff;
+      border-radius:18px;
+      box-shadow:0 8px 24px rgba(15,23,42,.1);
+      padding:18px;
+      margin-bottom:18px;
+    }
+    .wallets{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:8px;
+    }
+    .wallet-box{
+      flex:1 1 180px;
+      background:#eff6ff;
+      border-radius:14px;
+      padding:10px 12px;
+    }
+    .wallet-title{
+      font-size:12px;
+      color:#4b5563;
+    }
+    .wallet-value{
+      font-size:18px;
+      font-weight:700;
+      color:#1d4ed8;
+    }
+    .small{
+      font-size:12px;
+      color:#6b7280;
+    }
+    .error{
+      color:#dc2626;
+      font-size:13px;
+      margin-top:6px;
+    }
+    .ok{
+      color:#166534;
+      font-size:13px;
+      margin-top:6px;
+    }
 
-    canvas{max-width:100%;}
+    .tree-panel{
+      background:#020617;
+      color:#e5e7eb;
+      border-radius:18px;
+      padding:16px;
+      margin-top:8px;
+    }
+    .tree-root-label{
+      font-size:13px;
+      color:#a5b4fc;
+      margin-bottom:4px;
+    }
+    .tree-level{
+      text-align:center;
+      margin:8px 0;
+    }
+    .tree-node-wrap{
+      display:inline-block;
+      margin:6px;
+    }
+    .tree-node{
+      padding:6px 10px;
+      border-radius:12px;
+      background:#111827;
+      border:1px solid #4b5563;
+      font-size:12px;
+      min-width:120px;
+    }
+    .tree-node-main{
+      background:#1d4ed8;
+      border-color:#93c5fd;
+    }
+    .tree-node-name{
+      font-weight:600;
+    }
+    .tree-node-meta{
+      font-size:10px;
+      color:#9ca3af;
+      margin-top:2px;
+    }
+    .tree-node-actions{
+      margin-top:6px;
+      display:flex;
+      gap:4px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .tree-node-actions .btn-sm{
+      padding:3px 6px;
+      font-size:10px;
+    }
+
+    .profit-panel{
+      background:#0f172a;
+      color:#e5e7eb;
+      border-radius:18px;
+      padding:16px;
+      margin-top:10px;
+    }
+    .profit-boxes{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+    }
+    .profit-box{
+      flex:1 1 160px;
+      background:#020617;
+      border-radius:14px;
+      padding:10px 12px;
+      border:1px solid #1e293b;
+    }
+    .profit-label{
+      font-size:12px;
+      color:#9ca3af;
+    }
+    .profit-value{
+      font-size:18px;
+      font-weight:700;
+    }
+
+    canvas{
+      max-width:100%;
+    }
 
     @media(max-width:720px){
       .panel{padding:14px;}
@@ -68,7 +255,7 @@
 </head>
 <body>
 
-<!-- LOGIN PAGE -->
+<!-- ADMIN LOGIN PAGE -->
 <div id="loginPage" class="page">
   <div class="card">
     <h1 class="center">RJVC Admin Login</h1>
@@ -183,12 +370,14 @@
           <div id="totalCommission" class="wallet-value">₹0</div>
         </div>
       </div>
+
       <div class="mt-3" style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
               <th>#</th>
               <th>Name</th>
+              <th>Password</th>
               <th>Members<br/>(नीचे)</th>
               <th>Pairs</th>
               <th>Binary Income<br/>(₹)</th>
@@ -248,7 +437,7 @@
   const ADMIN_ID       = "admin";
   const ADMIN_PASSWORD = "1234";
 
-  async function handleAdminLogin(){
+  function handleAdminLogin(){
     const id   = document.getElementById("adminId").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
     const err  = document.getElementById("loginError");
@@ -258,8 +447,6 @@
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("adminPage").style.display = "block";
       startSubscriptions();
-      // पुराने duplicate users साफ करना
-      autoFixDuplicateUsers();
     }else{
       err.style.display = "block";
     }
@@ -287,7 +474,7 @@
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
-      // root = जो सबसे ऊपर है (parentId null)
+      // root = जिसका parentId null है
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -331,7 +518,8 @@
         password: pass,
         commissionWallet: 0,
         bonusWallet: 0,
-        mainAccountId: newDoc.id
+        mainAccountId: newDoc.id,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }, {merge:true});
 
       document.getElementById("rootName").value = "";
@@ -347,7 +535,7 @@
     }
   }
 
-  /************ Utility – descendants ************/
+  /************ Utility – descendants / main account ************/
   function countDescendants(nodeId){
     const node = nodesById[nodeId];
     if(!node) return 0;
@@ -358,10 +546,7 @@
   }
 
   function getMainAccountId(node){
-    // अगर mainAccountId field है, वही use करो
     if(node.mainAccountId) return node.mainAccountId;
-
-    // वरना ऊपर chain से सबसे ऊपर वाला node main माना जाएगा
     let current = node;
     while(current.parentId && nodesById[current.parentId]){
       current = nodesById[current.parentId];
@@ -381,7 +566,6 @@
 
     const list = Object.values(nodesById);
 
-    // members + pairs + commission
     list.forEach(n=>{
       const members = countDescendants(n.id);
       const pairs   = Math.floor(members/2);
@@ -416,27 +600,21 @@
 
     // Bonus collect करने के लिए map
     const bonusMap = {}; // mainId -> amount
-    const mainUpdates = [];
 
-    // पहले हर node का mainAccountId निकालो
     list.forEach(n=>{
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
-      // TreeNodes में mainAccountId update
-      mainUpdates.push(
-        treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true})
-      );
+      // TreeNodes में mainAccountId save
+      treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
-      // अगर ये sub ID है (खुद main नहीं)
+      // sub ID हो तो उसकी commission से bonus निकालो
       if(mainId !== n.id){
         const subComm    = n.commission || 0;
         const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को
         bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
       }
     });
-
-    await Promise.all(mainUpdates);
 
     const batch = db.batch();
     list.forEach(n=>{
@@ -446,44 +624,13 @@
         password: n.password || "",
         commissionWallet: n.commission || 0,
         bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
-        mainAccountId: n.mainAccountId || n.id
+        mainAccountId: n.mainAccountId || n.id,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       batch.set(uRef, data, {merge:true});
     });
 
     await batch.commit();
-  }
-
-  /************ Duplicate Users साफ करना ************/
-  async function autoFixDuplicateUsers(){
-    try{
-      const snap = await usersCol.get();
-      const map = {}; // name|password -> [ids]
-
-      snap.forEach(doc=>{
-        const d = doc.data();
-        const key = (d.name || "") + "|" + (d.password || "");
-        if(!map[key]) map[key] = [];
-        map[key].push(doc.id);
-      });
-
-      let deleteCount = 0;
-      for(const key in map){
-        const arr = map[key];
-        if(arr.length > 1){
-          // पहला रहने दो, बाकी delete
-          for(let i=1; i<arr.length; i++){
-            await usersCol.doc(arr[i]).delete();
-            deleteCount++;
-          }
-        }
-      }
-      if(deleteCount > 0){
-        console.log("Duplicate users cleaned:", deleteCount);
-      }
-    }catch(err){
-      console.error("autoFixDuplicateUsers error:", err);
-    }
   }
 
   /************ Table render ************/
@@ -501,11 +648,20 @@
       tr.innerHTML = `
         <td>${idx+1}</td>
         <td>${n.name}</td>
+        <td>${n.password || "-"}</td>
         <td>${n.members || 0}</td>
         <td>${n.pairs || 0}</td>
         <td>₹${n.commission || 0}</td>
-        <td><button class="btn btn-secondary btn-sm" onclick="viewTreeFrom('${n.id}')">Tree</button></td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button></td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="viewTreeFrom('${n.id}')">
+            Tree
+          </button>
+        </td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">
+            Del
+          </button>
+        </td>
       `;
       tbody.appendChild(tr);
     });
@@ -555,7 +711,9 @@
           <div class="tree-node-wrap">
             <div class="tree-node ${isMain ? "tree-node-main":""}">
               <div class="tree-node-name">${n.name}</div>
-              <div class="tree-node-meta">M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}</div>
+              <div class="tree-node-meta">
+                Pwd: ${n.password || "-"} · M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}
+              </div>
               <div class="tree-node-actions">
                 <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
                 <button class="btn btn-secondary btn-sm" onclick="editCustomer('${n.id}')">Edit</button>
@@ -630,7 +788,8 @@
         password: pass,
         commissionWallet: 0,
         bonusWallet: 0,
-        mainAccountId: mainForChild
+        mainAccountId: mainForChild,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }, {merge:true});
 
       if(!existingChildId){
@@ -669,13 +828,12 @@
     }
   }
 
-  // ✅ IMPORTANT: delete करते समय TreeNodes + Users दोनों साफ
   async function deleteCustomer(id){
     const node = nodesById[id];
     if(!node) return;
     if(!confirm(`"${node.name}" और उसका पूरा subtree delete होगा, आगे बढ़ें?`)) return;
 
-    // Parent से unlink
+    // Parent से reference हटाओ
     if(node.parentId){
       const parentRef = treeCol.doc(node.parentId);
       const parent    = nodesById[node.parentId];
@@ -687,18 +845,16 @@
       }
     }
 
-    // Subtree delete + Users delete
+    // पूरा subtree delete + Users में से भी delete
     async function deleteSubTree(nid){
       const n = nodesById[nid];
       if(!n) return;
       if(n.leftId)  await deleteSubTree(n.leftId);
       if(n.rightId) await deleteSubTree(n.rightId);
-      await treeCol.doc(nid).delete();   // TreeNodes
-      await usersCol.doc(nid).delete();  // Users
+      await treeCol.doc(nid).delete();
+      await usersCol.doc(nid).delete();
     }
-
     await deleteSubTree(id);
-    alert("Customer और उसका पूरा subtree सफलतापूर्वक delete हो गया।");
   }
 
   /************ Business Chart ************/
