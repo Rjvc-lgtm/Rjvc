@@ -73,7 +73,7 @@
   <div class="card">
     <h1 class="center">RJVC Admin Login</h1>
     <p class="center" style="font-size:13px;color:#6b7280;margin-bottom:16px;">
-      यह पेज सिर्फ admin के लिए है। Customer को यह link न दें।
+      यह पेज सिर्फ admin के लिए है।
     </p>
     <label>Admin ID</label>
     <input id="adminId" placeholder="जैसे: admin" />
@@ -85,7 +85,7 @@
     </button>
     <div id="loginError" class="error" style="display:none;">गलत ID या Password</div>
     <p style="margin-top:12px;font-size:12px;color:#6b7280;">
-      अभी के लिए default: <b>ID: admin</b>, <b>Password: 1234</b> (आप चाहो तो code में बदल सकते हैं)
+      Default: <b>ID: admin</b>, <b>Password: 1234</b>
     </p>
   </div>
 </div>
@@ -99,7 +99,9 @@
         <h2>Binary Tree Admin (Firebase)</h2>
         <div class="small">
           हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
-          हर 2 members = 1 pair, 1 pair पर <b>3₹</b> binary earning (members को)।
+          हर 2 members = 1 pair, 1 pair पर <b>3₹</b> binary earning (members को)।<br/>
+          हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
+          (20% company के पास रहता है – customer को नहीं दिखता)।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -123,8 +125,8 @@
       </button>
       <div id="rootMsg" class="ok" style="display:none;"></div>
       <p class="small" style="margin-top:6px;">
-        Root में नया customer add होगा। बाद में Tree view में किसी भी node पर
-        <b>+Member / Edit / Delete</b> से पूरा binary tree manage कर सकते हैं (बीच में भी जोड़ सकते हैं)।
+        एक main ID बनाओ, उसके नीचे +Member से उसकी sub IDs जोड़ो।  
+        System अपने-आप commission + bonus wallets calculate करेगा।
       </p>
     </div>
 
@@ -132,9 +134,8 @@
     <div class="panel">
       <h3>Company Business Report (Auto)</h3>
       <p class="small">
-        यहाँ पूरा tree से calculation होता है: <b>हर ID × 20₹ = Business Income</b>,  
-        minus total binary payout (members को) = <b>Company Profit</b>।
-        Sub IDs की commission से 20% company profit में रहता है, 80% उनकी main ID के bonus wallet में जाता है।
+        पूरा tree से calculation: <b>IDs × 20₹ = Business Income</b>,  
+        minus total binary payout (सभी commission wallets) = <b>Company Profit</b>।
       </p>
 
       <div class="profit-panel">
@@ -195,9 +196,7 @@
               <th>Del</th>
             </tr>
           </thead>
-          <tbody id="customerTableBody">
-            <!-- rows -->
-          </tbody>
+          <tbody id="customerTableBody"></tbody>
         </table>
       </div>
       <p class="small" style="margin-top:6px;">
@@ -211,17 +210,11 @@
       <div class="flex between">
         <div>
           <div class="tree-root-label">Binary Tree View</div>
-          <div id="treeRootInfo" style="font-size:13px;">
-            अभी कोई root select नहीं है।
-          </div>
+          <div id="treeRootInfo" style="font-size:13px;">अभी कोई root select नहीं है।</div>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">
-          सिर्फ Root दिखाओ
-        </button>
+        <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">सिर्फ Root दिखाओ</button>
       </div>
-      <div id="treeViewArea" style="margin-top:10px;font-size:12px;">
-        अभी tree खाली है।
-      </div>
+      <div id="treeViewArea" style="margin-top:10px;font-size:12px;">अभी tree खाली है।</div>
     </div>
 
   </div>
@@ -249,7 +242,7 @@
 
   const db       = firebase.firestore();
   const treeCol  = db.collection("TreeNodes");
-  const usersCol = db.collection("Users");   // wallets yahin पर
+  const usersCol = db.collection("Users");
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -277,8 +270,8 @@
   }
 
   /************ Tree data in memory ************/
-  let nodesById         = {};    // id -> node data
-  let rootId            = null;  // top root
+  let nodesById         = {};
+  let rootId            = null;
   let currentTreeRootId = null;
   let treeUnsub         = null;
 
@@ -292,7 +285,7 @@
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
-      // root = jisका parentId null है
+      // root = जो सबसे ऊपर है (parentId null)
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -324,10 +317,13 @@
         parentId: null,
         leftId: null,
         rightId: null,
+        mainAccountId: null,   // बाद में खुद को assign
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      // Users collection में भी entry
+      await newDoc.update({ mainAccountId: newDoc.id });
+
+      // Users collection
       await usersCol.doc(newDoc.id).set({
         name,
         password: pass,
@@ -349,7 +345,7 @@
     }
   }
 
-  /************ Utility – count descendants ************/
+  /************ Utility – descendants ************/
   function countDescendants(nodeId){
     const node = nodesById[nodeId];
     if(!node) return 0;
@@ -359,28 +355,23 @@
     return c;
   }
 
-  let globalTotalPairs      = 0;
-  let globalTotalCommission = 0;
-  let globalTotalCustomers  = 0;
-  let globalTotalBusinessInc= 0;
+  function getMainAccountId(node){
+    // अगर mainAccountId field है, वही use करो
+    if(node.mainAccountId) return node.mainAccountId;
 
-  // kisi bhi node ke लिए उसके main account की ID
-  function findMainAccountId(node){
-    const nm = (node.name || "").toLowerCase();
-    const idx = nm.indexOf(" sub");
-    if(idx === -1){
-      return node.id; // खुद ही main है
+    // वरना ऊपर chain से सबसे ऊपर वाला node main माना जाएगा
+    let current = node;
+    while(current.parentId && nodesById[current.parentId]){
+      current = nodesById[current.parentId];
     }
-    const baseName = node.name.slice(0, idx).trim().toLowerCase();
-    const all = Object.values(nodesById);
-    const main = all.find(n=>{
-      const nn = (n.name || "").toLowerCase();
-      return nn === baseName || (nn.indexOf(baseName) === 0 && nn.indexOf(" sub") === -1);
-    });
-    return main ? main.id : node.id;
+    return current.id;
   }
 
-  // MAIN RECALC + bonus / wallets update
+  let globalTotalPairs       = 0;
+  let globalTotalCommission  = 0;
+  let globalTotalCustomers   = 0;
+  let globalTotalBusinessInc = 0;
+
   function recalcAll(){
     globalTotalPairs      = 0;
     globalTotalCommission = 0;
@@ -388,25 +379,23 @@
 
     const list = Object.values(nodesById);
 
-    // members / pairs / commission
+    // members + pairs + commission
     list.forEach(n=>{
-      const members    = countDescendants(n.id);
-      const pairs      = Math.floor(members/2);
-      const commission = pairs * 3; // 3₹ per pair
+      const members = countDescendants(n.id);
+      const pairs   = Math.floor(members/2);
+      const comm    = pairs * 3;
 
       n.members    = members;
       n.pairs      = pairs;
-      n.commission = commission;
+      n.commission = comm;
 
       globalTotalPairs      += pairs;
-      globalTotalCommission += commission;
+      globalTotalCommission += comm;
     });
 
-    // हर ID से 20₹ business income
     globalTotalBusinessInc = globalTotalCustomers * 20;
     const companyProfit = globalTotalBusinessInc - globalTotalCommission;
 
-    // top cards
     document.getElementById("totalPairs").textContent      = globalTotalPairs;
     document.getElementById("totalCommission").textContent = "₹" + globalTotalCommission;
 
@@ -416,26 +405,29 @@
 
     drawBusinessChart(globalTotalBusinessInc, globalTotalCommission, companyProfit);
 
-    // Users wallets update
-    updateUsersWallets().catch(e=>console.error(e));
+    // wallets update
+    updateUsersWallets().catch(err=>console.error(err));
   }
 
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
 
-    // main ID के bonus के लिए map
-    const bonusMap = {};   // mainId -> bonusAmount
+    // Bonus collect करने के लिए map
+    const bonusMap = {}; // mainId -> amount
 
-    // हर node का mainAccountId निकालें
+    // पहले हर node का mainAccountId निकालो
     list.forEach(n=>{
-      const mainId = findMainAccountId(n);
+      const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
-      // अगर ये sub ID है, तो इसकी commission से 80% main के bonus में
+      // future के लिए TreeNodes में save कर दें
+      treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
+
+      // अगर ये sub ID है ( खुद main नहीं )
       if(mainId !== n.id){
-        const subComm   = n.commission || 0;
-        const mainBonus = +(subComm * 0.80).toFixed(2); // 20% company, 80% main
-        bonusMap[mainId] = (bonusMap[mainId] || 0) + mainBonus;
+        const subComm    = n.commission || 0;
+        const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को
+        bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
       }
     });
 
@@ -445,8 +437,8 @@
       const data = {
         name: n.name || "",
         password: n.password || "",
-        commissionWallet: n.commission || 0,                 // खुद की binary
-        bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),  // sub IDs की 80% commission
+        commissionWallet: n.commission || 0,
+        bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
         mainAccountId: n.mainAccountId || n.id
       };
       batch.set(uRef, data, {merge:true});
@@ -485,7 +477,6 @@
     currentTreeRootId = id;
     renderTree();
   }
-
   function showFullRootTree(){
     currentTreeRootId = rootId;
     renderTree();
@@ -582,23 +573,25 @@
       const parent          = parentSnap.data();
       const existingChildId = parent[sideField] || null;
 
-      // नया node create
+      const mainForChild = parent.mainAccountId || parentId;
+
       const newRef = await treeCol.add({
         name,
         password: pass,
         parentId: parentId,
         leftId: null,
         rightId: null,
+        mainAccountId: mainForChild,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       const newId = newRef.id;
 
-      // Users में भी entry
       await usersCol.doc(newId).set({
         name,
         password: pass,
         commissionWallet: 0,
-        bonusWallet: 0
+        bonusWallet: 0,
+        mainAccountId: mainForChild
       }, {merge:true});
 
       if(!existingChildId){
