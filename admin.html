@@ -41,7 +41,7 @@
     .error{color:#dc2626;font-size:13px;margin-top:6px;}
     .ok{color:#166534;font-size:13px;margin-top:6px;}
 
-    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;}
+    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:10px;}
     .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
     .tree-level{text-align:center;margin:8px 0;}
     .tree-node-wrap{display:inline-block;margin:6px;}
@@ -99,9 +99,9 @@
         <h2>Binary Tree Admin (Firebase)</h2>
         <div class="small">
           हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
-          हर 2 members = 1 pair, 1 pair पर <b>3₹</b> binary earning (commission wallet).<br/>
+          हर 2 members = 1 pair, 1 pair पर <b>3₹</b> binary earning (members को)।<br/>
           हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
-          (20% company के पास – customer को नहीं दिखता)।
+          (20% company के पास hidden profit रहता है – customer को नहीं दिखता)।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -140,7 +140,9 @@
 
       <div class="profit-panel">
         <div class="flex between">
-          <div><div class="small">Current Summary (पूरा Tree)</div></div>
+          <div>
+            <div class="small">Current Summary (पूरा Tree)</div>
+          </div>
         </div>
 
         <div class="profit-boxes">
@@ -187,6 +189,7 @@
             <tr>
               <th>#</th>
               <th>Name</th>
+              <th>Password</th>
               <th>Members<br/>(नीचे)</th>
               <th>Pairs</th>
               <th>Binary Income<br/>(₹)</th>
@@ -198,8 +201,8 @@
         </table>
       </div>
       <p class="small" style="margin-top:6px;">
-        Har node ke niche jitne members, utne se pairs aur commission nikalta hai.  
-        Ye commission user ke Commission Wallet me jata hai (customer login me dikhega).
+        Logic: हर 2 member = 1 pair. 1 pair की binary earning = 3₹ (20₹ का 15%)।  
+        यह earning members को जाती है। Company profit ऊपर वाले section में दिखता है।
       </p>
     </div>
 
@@ -241,6 +244,7 @@
   const db       = firebase.firestore();
   const treeCol  = db.collection("TreeNodes");
   const usersCol = db.collection("Users");
+  const currentCol = db.collection("current"); // summary save करने के लिए (1 ही doc)
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -283,7 +287,7 @@
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
-      // root = jiska parentId null hai
+      // root = parentId null
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -315,18 +319,20 @@
         parentId: null,
         leftId: null,
         rightId: null,
-        mainAccountId: null,
+        mainAccountId: null,   // बाद में खुद को assign
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
       await newDoc.update({ mainAccountId: newDoc.id });
 
+      // Users collection
       await usersCol.doc(newDoc.id).set({
         name,
         password: pass,
         commissionWallet: 0,
         bonusWallet: 0,
-        mainAccountId: newDoc.id
+        mainAccountId: newDoc.id,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }, {merge:true});
 
       document.getElementById("rootName").value = "";
@@ -342,7 +348,7 @@
     }
   }
 
-  /************ Utility – descendants & main account ************/
+  /************ Utility – descendants ************/
   function countDescendants(nodeId){
     const node = nodesById[nodeId];
     if(!node) return 0;
@@ -366,14 +372,13 @@
   let globalTotalCustomers   = 0;
   let globalTotalBusinessInc = 0;
 
-  function recalcAll(){
+  async function recalcAll(){
     globalTotalPairs      = 0;
     globalTotalCommission = 0;
     globalTotalCustomers  = Object.keys(nodesById).length;
 
     const list = Object.values(nodesById);
 
-    // members + pairs + commission
     list.forEach(n=>{
       const members = countDescendants(n.id);
       const pairs   = Math.floor(members/2);
@@ -399,41 +404,51 @@
 
     drawBusinessChart(globalTotalBusinessInc, globalTotalCommission, companyProfit);
 
+    // current collection me summary save
+    try{
+      await currentCol.doc("current").set({
+        joinIncome: globalTotalBusinessInc,
+        binaryIncome: globalTotalCommission,
+        companyProfit: companyProfit,
+        customers: globalTotalCustomers,
+        updatedAt: new Date().toISOString()
+      }, {merge:true});
+    }catch(e){ console.log("current write error", e); }
+
     updateUsersWallets().catch(err=>console.error(err));
   }
 
-  /************ Users commission + bonus update ************/
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
-    const bonusMap = {}; // mainId -> bonus amount
 
-    // mainAccountId set + bonus collect
-    for(const n of list){
+    const bonusMap = {}; // mainId -> bonus
+
+    list.forEach(n=>{
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
-      // TreeNodes me mainAccountId save (safety)
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
       if(mainId !== n.id){
         const subComm    = n.commission || 0;
-        const bonusShare = +(subComm * 0.80).toFixed(2); // 80%
+        const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को
         bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
       }
-    }
+    });
 
     const batch = db.batch();
-    for(const n of list){
+    list.forEach(n=>{
       const uRef = usersCol.doc(n.id);
       const data = {
         name: n.name || "",
         password: n.password || "",
         commissionWallet: n.commission || 0,
-        bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
-        mainAccountId: n.mainAccountId || n.id
+        bonusWallet: +((bonusMap[n.id] || 0).toFixed(2)),
+        mainAccountId: n.mainAccountId || n.id,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       batch.set(uRef, data, {merge:true});
-    }
+    });
 
     await batch.commit();
   }
@@ -453,6 +468,7 @@
       tr.innerHTML = `
         <td>${idx+1}</td>
         <td>${n.name}</td>
+        <td><span style="font-size:11px;color:#6b7280;">${n.password || ""}</span></td>
         <td>${n.members || 0}</td>
         <td>${n.pairs || 0}</td>
         <td>₹${n.commission || 0}</td>
@@ -553,6 +569,7 @@
     addMember(parentId, sideField, name, pass);
   }
 
+  // >>>>>>>>>>>>>>>  SPECIAL ROTATION LOGIC  <<<<<<<<<<<<<<
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -561,11 +578,10 @@
         alert("Parent नहीं मिला");
         return;
       }
-      const parent          = parentSnap.data();
-      const existingChildId = parent[sideField] || null;
-
+      const parent = parentSnap.data();
       const mainForChild = parent.mainAccountId || parentId;
 
+      // Pehle new node bana lo
       const newRef = await treeCol.add({
         name,
         password: pass,
@@ -577,32 +593,92 @@
       });
       const newId = newRef.id;
 
+      // Users collection me bhi
       await usersCol.doc(newId).set({
         name,
         password: pass,
         commissionWallet: 0,
         bonusWallet: 0,
-        mainAccountId: mainForChild
+        mainAccountId: mainForChild,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }, {merge:true});
 
-      if(!existingChildId){
-        const update = {};
-        update[sideField] = newId;
-        await parentRef.update(update);
-      }else{
-        const updateParent = {};
-        updateParent[sideField] = newId;
+      const otherSideField = (sideField === "leftId") ? "rightId" : "leftId";
+      const childOnSide   = parent[sideField]      || null; // A
+      const childOnOther  = parent[otherSideField] || null; // B
 
-        await Promise.all([
-          parentRef.update(updateParent),
-          newRef.update({ leftId: existingChildId }),
-          treeCol.doc(existingChildId).update({ parentId: newId })
-        ]);
+      const batch = db.batch();
+      const parentUpdate = {};
+      const newUpdate    = {};
+
+      // CASE 1: jis side pe add kar rahe ho waha kuch nahi hai -> direct attach
+      if(!childOnSide){
+        parentUpdate[sideField] = newId;
+        batch.update(parentRef, parentUpdate);
+        await batch.commit();
+        return;
       }
+
+      // CASE 2: special rotation – Rajesh + sub1 + sub2 + sub3 jaisa pattern
+      let rotated = false;
+      if(childOnSide && childOnOther){
+        const aRef  = treeCol.doc(childOnSide);
+        const aSnap = await aRef.get();
+        if(aSnap.exists){
+          const A = aSnap.data();
+          const cId = A.leftId || null;   // sub3
+          const hasRight = !!A.rightId;   // pattern me right null hona chahiye
+
+          if(cId && !hasRight){
+            const cRef = treeCol.doc(cId);
+
+            // parent update
+            parentUpdate[sideField]      = newId; // Bhavna
+            parentUpdate[otherSideField] = cId;   // sub3
+            batch.update(parentRef, parentUpdate);
+
+            // new node ke children
+            newUpdate.leftId  = childOnSide;   // sub1
+            newUpdate.rightId = childOnOther;  // sub2
+            batch.update(newRef, newUpdate);
+
+            // A (sub1) ka parent new, left null
+            batch.update(aRef, {
+              parentId: newId,
+              leftId: null
+            });
+
+            // B (sub2) ka parent new
+            const bRef = treeCol.doc(childOnOther);
+            batch.update(bRef, { parentId: newId });
+
+            // C (sub3) ka parent wapas main parent
+            batch.update(cRef, { parentId: parentId });
+
+            rotated = true;
+          }
+        }
+      }
+
+      // CASE 3: rotation nahi hua -> simple push-down
+      if(!rotated){
+        const aRef = treeCol.doc(childOnSide);
+
+        parentUpdate[sideField] = newId;
+        batch.update(parentRef, parentUpdate);
+
+        newUpdate.leftId = childOnSide;
+        batch.update(newRef, newUpdate);
+
+        batch.update(aRef, { parentId: newId });
+      }
+
+      await batch.commit();
     }catch(err){
       alert("Error: " + err.message);
     }
   }
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   async function editCustomer(id){
     const node = nodesById[id];
