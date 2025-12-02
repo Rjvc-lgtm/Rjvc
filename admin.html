@@ -45,7 +45,7 @@
     .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
     .tree-level{text-align:center;margin:8px 0;}
     .tree-node-wrap{display:inline-block;margin:6px;}
-    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:12px;min-width:130px;}
+    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:12px;min-width:120px;}
     .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
     .tree-node-name{font-weight:600;}
     .tree-node-meta{font-size:10px;color:#9ca3af;margin-top:2px;}
@@ -99,11 +99,9 @@
         <h2>Binary Tree Admin (Firebase)</h2>
         <div class="small">
           हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
-          हर 2 members = 1 pair, 1 pair पर <b>3₹</b> binary earning (members को)।<br/>
+          हर 2 members = 1 pair, 1 pair पर <b>3₹</b> binary earning (commission wallet).<br/>
           हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
-          (20% company के पास रहता है – customer को नहीं दिखता)।<br/>
-          अब नया member जोड़ते समय side पूछने की ज़रूरत नहीं –  
-          system sponsor के नीचे <b>auto Left → Right (level-wise)</b> जगह ढूँढकर add करेगा।
+          (20% company के पास – customer को नहीं दिखता)।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -127,8 +125,8 @@
       </button>
       <div id="rootMsg" class="ok" style="display:none;"></div>
       <p class="small" style="margin-top:6px;">
-        Root main ID बनती है। उसके नीचे Tree view में किसी भी नाम पर <b>+Member</b>
-        दबाकर उसके नीचे auto-placement से sub IDs जोड़ सकते हैं।
+        एक main ID बनाओ, उसके नीचे +Member से उसकी sub IDs जोड़ो।  
+        System अपने-आप commission + bonus wallets calculate करेगा।
       </p>
     </div>
 
@@ -142,9 +140,7 @@
 
       <div class="profit-panel">
         <div class="flex between">
-          <div>
-            <div class="small">Current Summary (पूरा Tree)</div>
-          </div>
+          <div><div class="small">Current Summary (पूरा Tree)</div></div>
         </div>
 
         <div class="profit-boxes">
@@ -185,14 +181,12 @@
           <div id="totalCommission" class="wallet-value">₹0</div>
         </div>
       </div>
-
       <div class="mt-3" style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
               <th>#</th>
               <th>Name</th>
-              <th>Password</th>
               <th>Members<br/>(नीचे)</th>
               <th>Pairs</th>
               <th>Binary Income<br/>(₹)</th>
@@ -204,8 +198,8 @@
         </table>
       </div>
       <p class="small" style="margin-top:6px;">
-        Logic: हर 2 member = 1 pair. 1 pair की binary earning = 3₹ (20₹ का 15%)।  
-        यह earning members को जाती है। Company profit ऊपर वाले section में दिखता है।
+        Har node ke niche jitne members, utne se pairs aur commission nikalta hai.  
+        Ye commission user ke Commission Wallet me jata hai (customer login me dikhega).
       </p>
     </div>
 
@@ -289,7 +283,7 @@
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
-      // root = parentId null
+      // root = jiska parentId null hai
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -327,14 +321,12 @@
 
       await newDoc.update({ mainAccountId: newDoc.id });
 
-      // Users collection
       await usersCol.doc(newDoc.id).set({
         name,
         password: pass,
         commissionWallet: 0,
         bonusWallet: 0,
-        mainAccountId: newDoc.id,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        mainAccountId: newDoc.id
       }, {merge:true});
 
       document.getElementById("rootName").value = "";
@@ -350,7 +342,7 @@
     }
   }
 
-  /************ Utility – descendants ************/
+  /************ Utility – descendants & main account ************/
   function countDescendants(nodeId){
     const node = nodesById[nodeId];
     if(!node) return 0;
@@ -381,6 +373,7 @@
 
     const list = Object.values(nodesById);
 
+    // members + pairs + commission
     list.forEach(n=>{
       const members = countDescendants(n.id);
       const pairs   = Math.floor(members/2);
@@ -406,20 +399,20 @@
 
     drawBusinessChart(globalTotalBusinessInc, globalTotalCommission, companyProfit);
 
-    // wallets update
     updateUsersWallets().catch(err=>console.error(err));
   }
 
-  /************ Wallet sync (commission + bonus) ************/
+  /************ Users commission + bonus update ************/
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
-    const bonusMap = {}; // mainId -> amount
+    const bonusMap = {}; // mainId -> bonus amount
 
-    // mainAccountId resolve + bonus calculation
-    list.forEach(n=>{
+    // mainAccountId set + bonus collect
+    for(const n of list){
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
+      // TreeNodes me mainAccountId save (safety)
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
       if(mainId !== n.id){
@@ -427,21 +420,20 @@
         const bonusShare = +(subComm * 0.80).toFixed(2); // 80%
         bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
       }
-    });
+    }
 
     const batch = db.batch();
-    list.forEach(n=>{
+    for(const n of list){
       const uRef = usersCol.doc(n.id);
       const data = {
         name: n.name || "",
         password: n.password || "",
         commissionWallet: n.commission || 0,
         bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
-        mainAccountId: n.mainAccountId || n.id,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        mainAccountId: n.mainAccountId || n.id
       };
       batch.set(uRef, data, {merge:true});
-    });
+    }
 
     await batch.commit();
   }
@@ -461,7 +453,6 @@
       tr.innerHTML = `
         <td>${idx+1}</td>
         <td>${n.name}</td>
-        <td>${n.password || ""}</td>
         <td>${n.members || 0}</td>
         <td>${n.pairs || 0}</td>
         <td>₹${n.commission || 0}</td>
@@ -511,10 +502,10 @@
       ids.forEach(id=>{
         const n = nodesById[id];
         if(!n) return;
-        const isMainRoot = (id === rootId);
+        const isMain = (id === rootId);
         html += `
           <div class="tree-node-wrap">
-            <div class="tree-node ${isMainRoot ? "tree-node-main":""}">
+            <div class="tree-node ${isMain ? "tree-node-main":""}">
               <div class="tree-node-name">${n.name}</div>
               <div class="tree-node-meta">M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}</div>
               <div class="tree-node-actions">
@@ -541,59 +532,27 @@
     area.innerHTML = html;
   }
 
-  /************ AUTO-PLACEMENT ADD MEMBER ************/
-  function treeAddMember(sponsorId){
+  /************ Add / Edit / Delete ************/
+  function treeAddMember(parentId){
+    const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
+    if(!sideAns) return;
+    const s = sideAns.trim().toLowerCase();
+    let sideField = null;
+    if(s==="l" || s==="1") sideField = "leftId";
+    else if(s==="r" || s==="2") sideField = "rightId";
+    else{
+      alert("गलत choice, L/1 या R/2 लिखें");
+      return;
+    }
+
     const name = prompt("नया member का नाम?");
     if(!name) return;
     const pass = prompt("उसका login password?");
     if(!pass) return;
 
-    autoPlaceNewCustomer(sponsorId, name, pass);
+    addMember(parentId, sideField, name, pass);
   }
 
-  // BFS से sponsor के subtree में पहली खाली Left / Right seat खोजो,
-  // फिर वहीं addMember से assign कर दो (insert logic same).
-  async function autoPlaceNewCustomer(sponsorId, name, pass){
-    // safety: snapshot से data ready न हो तो
-    if(!nodesById[sponsorId]){
-      alert("Sponsor नहीं मिला, page reload करें।");
-      return;
-    }
-
-    let targetParentId = null;
-    let targetSide     = null;
-
-    const queue = [sponsorId];
-    while(queue.length && !targetParentId){
-      const nid = queue.shift();
-      const node = nodesById[nid];
-      if(!node) continue;
-
-      if(!node.leftId){
-        targetParentId = nid;
-        targetSide = "leftId";
-        break;
-      }
-      if(!node.rightId){
-        targetParentId = nid;
-        targetSide = "rightId";
-        break;
-      }
-
-      if(node.leftId)  queue.push(node.leftId);
-      if(node.rightId) queue.push(node.rightId);
-    }
-
-    if(!targetParentId || !targetSide){
-      alert("Sponsor के नीचे जगह नहीं मिली (data error).");
-      return;
-    }
-
-    await addMember(targetParentId, targetSide, name, pass);
-  }
-
-  // पुराना insert logic: अगर उस side पर पहले से child है,
-  // तो नया ऊपर आएगा, पुराना child उसके left में shift हो जाएगा।
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -605,7 +564,6 @@
       const parent          = parentSnap.data();
       const existingChildId = parent[sideField] || null;
 
-      // sponsor वही, लेकिन mainAccountId chain का top
       const mainForChild = parent.mainAccountId || parentId;
 
       const newRef = await treeCol.add({
@@ -624,8 +582,7 @@
         password: pass,
         commissionWallet: 0,
         bonusWallet: 0,
-        mainAccountId: mainForChild,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        mainAccountId: mainForChild
       }, {merge:true});
 
       if(!existingChildId){
@@ -647,7 +604,6 @@
     }
   }
 
-  /************ Edit / Delete ************/
   async function editCustomer(id){
     const node = nodesById[id];
     if(!node) return;
@@ -670,7 +626,6 @@
     if(!node) return;
     if(!confirm(`"${node.name}" और उसका पूरा subtree delete होगा, आगे बढ़ें?`)) return;
 
-    // parent से लिंक हटाओ
     if(node.parentId){
       const parentRef = treeCol.doc(node.parentId);
       const parent    = nodesById[node.parentId];
@@ -682,7 +637,6 @@
       }
     }
 
-    // subtree delete (TreeNodes + Users दोनों)
     async function deleteSubTree(nid){
       const n = nodesById[nid];
       if(!n) return;
