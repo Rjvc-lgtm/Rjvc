@@ -12,7 +12,7 @@
     .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
     .card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.15);padding:22px;max-width:480px;width:100%;}
     label{display:block;font-size:14px;margin-bottom:4px;}
-    input{width:100%;padding:10px 12px;border-radius:999px;border:1px solid:#d1d5db;font-size:15px;outline:none;}
+    input{width:100%;padding:10px 12px;border-radius:999px;border:1px solid #d1d5db;font-size:15px;outline:none;}
     input:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.25);}
     .btn{border:none;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer;}
     .btn-primary{background:#2563eb;color:#fff;}
@@ -28,7 +28,7 @@
     .between{justify-content:space-between;align-items:center;}
     .center{text-align:center;}
     table{width:100%;border-collapse:collapse;font-size:13px;}
-    th,td{padding:6px 4px;border-bottom:1px solid:#e5e7eb;text-align:left;}
+    th,td{padding:6px 4px;border-bottom:1px solid #e5e7eb;text-align:left;}
     th{font-size:12px;text-transform:uppercase;color:#6b7280;}
     .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;background:#dbeafe;color:#1d4ed8;}
     .wrap{max-width:1100px;width:100%;margin:24px auto;padding:0 8px;}
@@ -45,7 +45,7 @@
     .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
     .tree-level{text-align:center;margin:8px 0;}
     .tree-node-wrap{display:inline-block;margin:6px;}
-    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid:#4b5563;font-size:12px;min-width:120px;}
+    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:12px;min-width:120px;}
     .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
     .tree-node-name{font-weight:600;}
     .tree-node-meta{font-size:10px;color:#9ca3af;margin-top:2px;}
@@ -54,7 +54,7 @@
 
     .profit-panel{background:#0f172a;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:10px;}
     .profit-boxes{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
-    .profit-box{flex:1 1 160px;background:#020617;border-radius:14px;padding:10px 12px;border:1px solid:#1e293b;}
+    .profit-box{flex:1 1 160px;background:#020617;border-radius:14px;padding:10px 12px;border:1px solid #1e293b;}
     .profit-label{font-size:12px;color:#9ca3af;}
     .profit-value{font-size:18px;font-weight:700;}
 
@@ -99,13 +99,9 @@
         <h2>Binary Tree Admin (Firebase)</h2>
         <div class="small">
           हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
-          हर 2 members = 1 pair.<br/>
-          1 से 10 level तक pairs पर commission इस rule से दिया जा रहा है  
-          (पूरा level पूरा होने पर ही commission):<br/>
-          1–4 level: 10₹/pair, 5: 8₹, 6: 7₹, 7: 6₹, 8: 5₹, 9: 4₹, 10: 3₹.
-          <br/>
-          हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
-          (20% company के पास रहता है – customer को नहीं दिखता)।
+          हर 2 members = 1 pair, अभी हर pair पर <b>10₹</b> binary earning (members को)।<br/>
+          हर sub ID की commission का <b>20%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
+          (20% company profit + main ID bonus में गिना जाता है, customer को अलग से नहीं दिखता)।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -139,7 +135,7 @@
       <h3>Company Business Report (Auto)</h3>
       <p class="small">
         पूरा tree से calculation: <b>IDs × 20₹ = Business Income</b>,  
-        minus total binary payout (सभी commission wallets) = <b>Company Profit</b>।
+        माइनस total binary payout (सभी commission wallets + bonus share) = <b>Company Profit</b>।
       </p>
 
       <div class="profit-panel">
@@ -155,7 +151,7 @@
             <div class="profit-value" id="bizTotalIncome">₹0</div>
           </div>
           <div class="profit-box">
-            <div class="profit-label">Total Binary Pairs Income (Members को) ₹</div>
+            <div class="profit-label">Total Binary Pairs Income (Members को net) ₹</div>
             <div class="profit-value" id="bizBinaryPayout">₹0</div>
           </div>
           <div class="profit-box">
@@ -183,7 +179,7 @@
           <div id="totalPairs" class="wallet-value">0</div>
         </div>
         <div class="wallet-box">
-          <div class="wallet-title">कुल Binary Income (सभी IDs से) ₹</div>
+          <div class="wallet-title">कुल Binary Income (net, सभी IDs से) ₹</div>
           <div id="totalCommission" class="wallet-value">₹0</div>
         </div>
       </div>
@@ -205,8 +201,8 @@
         </table>
       </div>
       <p class="small" style="margin-top:6px;">
-        Logic: हर 2 member = 1 pair. Commission ऊपर वाले level-rule से auto calculate हो रहा है।  
-        यह earning members को जाती है। Company profit ऊपर वाले section में दिखता है।
+        Logic: हर 2 member = 1 pair. अभी demo के लिए हर pair = 10₹ रखा है।  
+        sub IDs की commission में से 20% उनकी main ID के bonus में जाता है।
       </p>
     </div>
 
@@ -248,6 +244,7 @@
   const db       = firebase.firestore();
   const treeCol  = db.collection("TreeNodes");
   const usersCol = db.collection("Users");
+  const companyCol = db.collection("CompanyReport");
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -290,7 +287,7 @@
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
-      // root = जिसके parentId null है
+      // root = parentId null वाला
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -301,7 +298,7 @@
     });
   }
 
-  /************ Create Root Customer ************/
+  /************ Root customer create ************/
   async function createRootCustomer(){
     const name = document.getElementById("rootName").value.trim();
     const pass = document.getElementById("rootPass").value.trim();
@@ -349,7 +346,7 @@
     }
   }
 
-  /************ Utility – descendants ************/
+  /************ Helper – descendants ************/
   function countDescendants(nodeId){
     const node = nodesById[nodeId];
     if(!node) return 0;
@@ -368,36 +365,15 @@
     return current.id;
   }
 
-  // level-wise pairs & rates
-  const LEVEL_PAIRS = [1,2,4,8,16,32,64,128,256,512]; // level 1..10 ke pairs
-  const LEVEL_RATE  = [10,10,10,10,8,7,6,5,4,3];       // per pair rupees
-
-  function computeCommissionForPairs(totalPairs){
-    let remaining = totalPairs;
-    let commission = 0;
-
-    for(let i=0; i<LEVEL_PAIRS.length; i++){
-      const need = LEVEL_PAIRS[i];
-      if(remaining >= need){
-        commission += need * LEVEL_RATE[i];
-        remaining -= need;
-      }else{
-        // level पूरा नहीं हुआ → आगे ke levels bhi नहीं मिलेंगे
-        return commission;
-      }
-    }
-
-    // अगर 10 level ke baad bhi extra pairs बचे हों, unpe last slab 3₹ दे देते हैं
-    if(remaining > 0){
-      commission += remaining * 3;
-    }
-    return commission;
+  /************ Pair commission rate (per node) ************/
+  function getPairRateForNode(node){
+    // अभी simple: हर pair = 10₹
+    return 10;
   }
 
-  let globalTotalPairs       = 0;
-  let globalTotalCommission  = 0;
-  let globalTotalCustomers   = 0;
-  let globalTotalBusinessInc = 0;
+  let globalTotalPairs      = 0;
+  let globalTotalCommission = 0;
+  let globalTotalCustomers  = 0;
 
   function recalcAll(){
     globalTotalPairs      = 0;
@@ -406,68 +382,97 @@
 
     const list = Object.values(nodesById);
 
+    // Step 1: हर node की pairs और gross commission
     list.forEach(n=>{
       const members = countDescendants(n.id);
       const pairs   = Math.floor(members/2);
+      const rate    = getPairRateForNode(n);
+      const gross   = pairs * rate;
 
-      const comm    = computeCommissionForPairs(pairs);
-
-      n.members    = members;
-      n.pairs      = pairs;
-      n.commission = comm;
-
-      globalTotalPairs      += pairs;
-      globalTotalCommission += comm;
+      n.members         = members;
+      n.pairs           = pairs;
+      n.grossCommission = gross;
     });
 
-    globalTotalBusinessInc = globalTotalCustomers * 20;
-    const companyProfit = globalTotalBusinessInc - globalTotalCommission;
+    // Step 2: 20% कट sub IDs से, main bonus collect
+    const bonusMap = {};  // mainId -> bonus
+    const netMap   = {};  // nodeId -> net commission (कट के बाद)
 
-    document.getElementById("totalPairs").textContent      = globalTotalPairs;
-    document.getElementById("totalCommission").textContent = "₹" + globalTotalCommission;
-
-    document.getElementById("bizTotalIncome").textContent   = "₹" + globalTotalBusinessInc;
-    document.getElementById("bizBinaryPayout").textContent  = "₹" + globalTotalCommission;
-    document.getElementById("bizCompanyProfit").textContent = "₹" + companyProfit;
-
-    drawBusinessChart(globalTotalBusinessInc, globalTotalCommission, companyProfit);
-
-    // wallets update
-    updateUsersWallets().catch(err=>console.error(err));
-  }
-
-  async function updateUsersWallets(){
-    const list = Object.values(nodesById);
-    const bonusMap = {};
-
-    // mainAccountId fix + bonus map
-    for(const n of list){
+    list.forEach(n=>{
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
+      // future के लिए tree में save
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
-      if(mainId !== n.id){
-        const subComm    = n.commission || 0;
-        const bonusShare = +(subComm * 0.80).toFixed(2);
-        bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
-      }
-    }
+      const gross = n.grossCommission || 0;
+      let net = gross;
 
+      if(mainId !== n.id && gross > 0){
+        const cut = +(gross * 0.20).toFixed(2);     // 20% main को
+        net = +(gross - cut).toFixed(2);            // 80% sub को
+        bonusMap[mainId] = +((bonusMap[mainId] || 0) + cut).toFixed(2);
+      }
+
+      n.commission = net;
+      netMap[n.id] = net;
+
+      globalTotalPairs      += n.pairs;
+      globalTotalCommission += net;
+    });
+
+    // Users + CompanyReport update
+    updateUsersWallets(list, netMap, bonusMap).catch(console.error);
+
+    // ऊपर summary
+    document.getElementById("totalPairs").textContent      = globalTotalPairs;
+    document.getElementById("totalCommission").textContent = "₹" + globalTotalCommission;
+
+    const joinIncome   = globalTotalCustomers * 20; // हर ID × 20₹
+    const totalBonus   = Object.values(bonusMap).reduce((a,b)=>a+(b||0),0);
+    const totalPayout  = globalTotalCommission + totalBonus;
+    const companyProfit= joinIncome - totalPayout;
+
+    document.getElementById("bizTotalIncome").textContent   = "₹" + joinIncome;
+    document.getElementById("bizBinaryPayout").textContent  = "₹" + globalTotalCommission;
+    document.getElementById("bizCompanyProfit").textContent = "₹" + companyProfit;
+
+    drawBusinessChart(joinIncome, globalTotalCommission, companyProfit);
+  }
+
+  /************ Users wallets + CompanyReport ************/
+  async function updateUsersWallets(list, netMap, bonusMap){
     const batch = db.batch();
-    for(const n of list){
+
+    list.forEach(n=>{
       const uRef = usersCol.doc(n.id);
       const data = {
         name: n.name || "",
         password: n.password || "",
-        commissionWallet: n.commission || 0,
-        bonusWallet: +((bonusMap[n.id] || 0).toFixed(2)),
+        commissionWallet: +(netMap[n.id] || 0),
+        bonusWallet: +(bonusMap[n.id] || 0),
         mainAccountId: n.mainAccountId || n.id
       };
       batch.set(uRef, data, {merge:true});
-    }
+    });
 
     await batch.commit();
+
+    const customers   = list.length;
+    const joinIncome  = customers * 20;
+    const totalComm   = Object.values(netMap).reduce((a,b)=>a+(b||0),0);
+    const totalBonus  = Object.values(bonusMap).reduce((a,b)=>a+(b||0),0);
+    const totalPayout = totalComm + totalBonus;
+    const companyProfit = joinIncome - totalPayout;
+
+    await companyCol.doc("current").set({
+      customers,
+      joinIncome,
+      binaryIncome: totalComm,
+      bonusPayout: totalBonus,
+      companyProfit,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
   }
 
   /************ Table render ************/
