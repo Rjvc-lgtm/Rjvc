@@ -99,7 +99,8 @@
         <h2>Binary Tree Admin (Firebase)</h2>
         <div class="small">
           हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
-          हर 2 members = 1 pair, 1 pair पर <b>3₹</b> binary earning (commissionWallet में)।<br/>
+          Binary pairs पर commission level के हिसाब से:  
+          1–4 level: ₹10 / pair, 5: ₹8, 6: ₹7, 7: ₹6, 8: ₹5, 9: ₹4, 10+ : ₹3 / pair।<br/>
           हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
           (20% company के पास – customer को नहीं दिखता)।
         </div>
@@ -196,8 +197,9 @@
         </table>
       </div>
       <p class="small" style="margin-top:6px;">
-        Logic: हर 2 member = 1 pair. 1 pair की binary earning = 3₹।  
-        यह earning commissionWallet में जाती है। Sub IDs की commission में से 80% उनकी main ID के bonusWallet में जाता है।
+        Binary logic: हर 2 member = 1 pair.  
+        Commission level-wise slab से निकलेगा (1–10 level rates ऊपर लिखे हैं)।  
+        Sub IDs की commission में से 80% उनकी main ID के Bonus Wallet में जाता है।
       </p>
     </div>
 
@@ -360,15 +362,47 @@
   }
 
   function getMainAccountId(node){
-    // अगर mainAccountId field है, वही use करो
     if(node.mainAccountId) return node.mainAccountId;
-
-    // वरना ऊपर chain से सबसे ऊपर वाला node main माना जाएगा
     let current = node;
     while(current.parentId && nodesById[current.parentId]){
       current = nodesById[current.parentId];
     }
     return current.id;
+  }
+
+  /************ Commission Slabs (per pair) ************/
+  // Level-wise pairs count: L1=1, L2=2, L3=4, L4=8, L5=16, L6=32, L7=64, L8=128, L9=256, L10=512
+  const LEVEL_RATES = [
+    { level:1, pairs:1,   rate:10 },
+    { level:2, pairs:2,   rate:10 },
+    { level:3, pairs:4,   rate:10 },
+    { level:4, pairs:8,   rate:10 },
+    { level:5, pairs:16,  rate:8  },
+    { level:6, pairs:32,  rate:7  },
+    { level:7, pairs:64,  rate:6  },
+    { level:8, pairs:128, rate:5  },
+    { level:9, pairs:256, rate:4  },
+    { level:10,pairs:512, rate:3  }
+  ];
+
+  function computeCommissionForPairs(totalPairs){
+    let remaining   = totalPairs;
+    let commission  = 0;
+
+    for(let i=0;i<LEVEL_RATES.length && remaining>0;i++){
+      const slab = LEVEL_RATES[i];
+      const usePairs = Math.min(remaining, slab.pairs);
+      commission += usePairs * slab.rate;
+      remaining  -= usePairs;
+    }
+
+    // अगर pairs 10 level से भी ज़्यादा हो जाएं, बाकी pairs भी last rate (3₹) से मान लेते हैं
+    if(remaining > 0){
+      const lastRate = LEVEL_RATES[LEVEL_RATES.length-1].rate;
+      commission += remaining * lastRate;
+    }
+
+    return commission;
   }
 
   let globalTotalPairs       = 0;
@@ -383,13 +417,12 @@
 
     const list = Object.values(nodesById);
 
-    // members + pairs + commission
     list.forEach(n=>{
       const members    = countDescendants(n.id);
       const leftCount  = countSideMembers(n.id,"leftId");
       const rightCount = countSideMembers(n.id,"rightId");
       const pairs      = Math.floor(members/2);
-      const comm       = pairs * 3; // 3₹ per pair
+      const comm       = computeCommissionForPairs(pairs);
 
       n.members    = members;
       n.leftCount  = leftCount;
@@ -413,29 +446,23 @@
 
     drawBusinessChart(globalTotalBusinessInc, globalTotalCommission, companyProfit);
 
-    // wallets update
     updateUsersWallets().catch(err=>console.error(err));
   }
 
   /************ Users wallets update (commission + bonus 80%) ************/
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
+    const bonusMap = {}; // mainId -> total bonus
 
-    // Bonus collect करने के लिए map: mainId -> total bonus
-    const bonusMap = {};
-
-    // पहले हर node का mainAccountId निकालो और sub IDs की commission से bonus build करो
     list.forEach(n=>{
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
-      // TreeNodes में mainAccountId save कर दें (future के लिए)
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
-      // अगर ये sub ID है ( खुद main नहीं )
       if(mainId !== n.id){
         const subComm    = n.commission || 0;
-        const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को, 20% company
+        const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को
         bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
       }
     });
@@ -449,7 +476,6 @@
         commissionWallet: n.commission || 0,
         bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
         mainAccountId: n.mainAccountId || n.id
-        // payoutBlocked field अगर पहले से है तो वही रहेगा
       };
       batch.set(uRef, data, {merge:true});
     });
@@ -457,7 +483,7 @@
     await batch.commit();
   }
 
-  /************ Table render ************/
+  /************ Payout toggle ************/
   async function togglePayout(id){
     const uRef = usersCol.doc(id);
     const snap = await uRef.get();
@@ -465,6 +491,7 @@
     await uRef.set({payoutBlocked: !cur},{merge:true});
   }
 
+  /************ Table render ************/
   function renderTable(){
     const tbody = document.getElementById("customerTableBody");
     tbody.innerHTML = "";
@@ -477,8 +504,9 @@
     list.forEach((n,idx)=>{
       const leftC  = n.leftCount  || 0;
       const rightC = n.rightCount || 0;
-      const payoutText = n.payoutBlocked ? "Blocked" : "Active";
 
+      // payoutBlocked users collection में है, पर nodesById में नहीं;
+      // यहाँ सिर्फ नाम+password दिखा रहे हैं, payout बटन users collection से control होगा.
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${idx+1}</td>
@@ -491,9 +519,8 @@
         <td>${n.pairs || 0}</td>
         <td>₹${n.commission || 0}</td>
         <td>
-          <button class="btn btn-sm ${n.payoutBlocked ? "btn-danger":"btn-secondary"}"
-                  onclick="togglePayout('${n.id}')">
-            ${payoutText}
+          <button class="btn btn-sm btn-secondary" onclick="togglePayout('${n.id}')">
+            Toggle
           </button>
         </td>
         <td><button class="btn btn-secondary btn-sm" onclick="viewTreeFrom('${n.id}')">Tree</button></td>
@@ -577,7 +604,7 @@
   }
 
   /************ Add / Edit / Delete ************/
-  // +Member: सिर्फ left/right seat – अगर seat भरी है तो insert नहीं करेगा (error दिखाएगा)
+  // +Member: सिर्फ left/right seat – अगर seat भरी है तो allow नहीं (बीच में auto shift नहीं करेंगे)
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if(!sideAns) return;
@@ -608,7 +635,6 @@
       }
       const parent = parentSnap.data();
 
-      // अगर seat already भरी है, तो allow नहीं करेंगे
       if(parent[sideField]){
         alert("इस side पर seat already भरी है. किसी और जगह पर +Member करें।");
         return;
@@ -667,7 +693,6 @@
     if(!node) return;
     if(!confirm(`"${node.name}" और उसका पूरा subtree delete होगा, आगे बढ़ें?`)) return;
 
-    // Parent से link हटाओ
     if(node.parentId){
       const parentRef = treeCol.doc(node.parentId);
       const parent    = nodesById[node.parentId];
@@ -679,7 +704,6 @@
       }
     }
 
-    // subtree delete (TreeNodes + Users)
     async function deleteSubTree(nid){
       const n = nodesById[nid];
       if(!n) return;
