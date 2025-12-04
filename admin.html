@@ -99,8 +99,8 @@
         <h2>Binary Tree Admin (Firebase)</h2>
         <div class="small">
           हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
-          Binary pairs पर commission level के हिसाब से:  
-          1–4 level: ₹10 / pair, 5: ₹8, 6: ₹7, 7: ₹6, 8: ₹5, 9: ₹4, 10+ : ₹3 / pair।<br/>
+          Binary pairs commission (per pair):  
+          1–4 level: ₹10, 5: ₹8, 6: ₹7, 7: ₹6, 8: ₹5, 9: ₹4, 10+ : ₹3।<br/>
           हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
           (20% company के पास – customer को नहीं दिखता)।
         </div>
@@ -198,7 +198,7 @@
       </div>
       <p class="small" style="margin-top:6px;">
         Binary logic: हर 2 member = 1 pair.  
-        Commission level-wise slab से निकलेगा (1–10 level rates ऊपर लिखे हैं)।  
+        Commission level-wise slab से निकलेगा।  
         Sub IDs की commission में से 80% उनकी main ID के Bonus Wallet में जाता है।
       </p>
     </div>
@@ -371,7 +371,6 @@
   }
 
   /************ Commission Slabs (per pair) ************/
-  // Level-wise pairs count: L1=1, L2=2, L3=4, L4=8, L5=16, L6=32, L7=64, L8=128, L9=256, L10=512
   const LEVEL_RATES = [
     { level:1, pairs:1,   rate:10 },
     { level:2, pairs:2,   rate:10 },
@@ -396,12 +395,11 @@
       remaining  -= usePairs;
     }
 
-    // अगर pairs 10 level से भी ज़्यादा हो जाएं, बाकी pairs भी last rate (3₹) से मान लेते हैं
+    // अगर pairs 10 level से भी ज़्यादा हो जाएँ
     if(remaining > 0){
       const lastRate = LEVEL_RATES[LEVEL_RATES.length-1].rate;
       commission += remaining * lastRate;
     }
-
     return commission;
   }
 
@@ -505,8 +503,6 @@
       const leftC  = n.leftCount  || 0;
       const rightC = n.rightCount || 0;
 
-      // payoutBlocked users collection में है, पर nodesById में नहीं;
-      // यहाँ सिर्फ नाम+password दिखा रहे हैं, payout बटन users collection से control होगा.
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${idx+1}</td>
@@ -604,7 +600,8 @@
   }
 
   /************ Add / Edit / Delete ************/
-  // +Member: सिर्फ left/right seat – अगर seat भरी है तो allow नहीं (बीच में auto shift नहीं करेंगे)
+
+  // +Member: अब बीच में भी add कर सकते हैं
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if(!sideAns) return;
@@ -625,6 +622,7 @@
     addMember(parentId, sideField, name, pass);
   }
 
+  // *** IMPORTANT PART: बीच में member जोड़ने पर पुराना subtree नीचे shift हो कर 2–2 seats में redistribute होगा ***
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -634,14 +632,11 @@
         return;
       }
       const parent = parentSnap.data();
-
-      if(parent[sideField]){
-        alert("इस side पर seat already भरी है. किसी और जगह पर +Member करें।");
-        return;
-      }
+      const existingChildId = parent[sideField] || null;
 
       const mainForChild = parent.mainAccountId || parentId;
 
+      // पहले नया node बनाओ
       const newRef = await treeCol.add({
         name,
         password: pass,
@@ -653,6 +648,7 @@
       });
       const newId = newRef.id;
 
+      // Users collection
       await usersCol.doc(newId).set({
         name,
         password: pass,
@@ -662,9 +658,83 @@
         payoutBlocked: false
       }, {merge:true});
 
-      const update = {};
-      update[sideField] = newId;
-      await parentRef.update(update);
+      // अगर side पहले खाली था तो simple attach
+      if(!existingChildId){
+        const update = {};
+        update[sideField] = newId;
+        await parentRef.update(update);
+        return;
+      }
+
+      // ---- यहाँ से "बीच में insert + subtree rearrange" ----
+
+      // 1) existing child subtree के सारे nodes collect करो (BFS)
+      const subtreeIds = [];
+      const queue = [existingChildId];
+      while(queue.length){
+        const nid = queue.shift();
+        if(!nodesById[nid]) continue;
+        subtreeIds.push(nid);
+        const nd = nodesById[nid];
+        if(nd.leftId)  queue.push(nd.leftId);
+        if(nd.rightId) queue.push(nd.rightId);
+      }
+
+      // 2) parent पर newId set कर दो (पुराना child new node के नीचे जाएगा)
+      const parentUpdate = {};
+      parentUpdate[sideField] = newId;
+      await parentRef.update(parentUpdate);
+
+      // 3) नया subtree layout calculate करो:
+      // newId root रहेगा, subtreeIds उसके नीचे 2–2 seats के हिसाब से लगेंगे
+      const linkMap = {}; // nodeId -> {parentId,leftId,rightId}
+      subtreeIds.forEach(id=>{
+        linkMap[id] = {parentId:null,leftId:null,rightId:null};
+      });
+
+      const parentsQueue = [newId];
+      let idx = 0;
+      const newNodeLinks = {leftId:null,rightId:null};
+
+      while(idx < subtreeIds.length && parentsQueue.length){
+        const pId = parentsQueue.shift();
+        for(let k=0;k<2 && idx<subtreeIds.length;k++){
+          const childId = subtreeIds[idx++];
+          if(pId === newId){
+            // new node के लिए
+            if(!newNodeLinks.leftId) newNodeLinks.leftId = childId;
+            else newNodeLinks.rightId = childId;
+          }else{
+            const pLink = linkMap[pId];
+            if(!pLink.leftId) pLink.leftId = childId;
+            else pLink.rightId = childId;
+          }
+          linkMap[childId].parentId = (pId === newId ? newId : pId);
+          parentsQueue.push(childId);
+        }
+      }
+
+      // 4) Firestore में सब update करो (batch)
+      const batch = db.batch();
+
+      // new node के left/right
+      batch.update(newRef, {
+        leftId:  newNodeLinks.leftId  || null,
+        rightId: newNodeLinks.rightId || null
+      });
+
+      // पुराने subtree nodes
+      subtreeIds.forEach(id=>{
+        const l = linkMap[id];
+        const ref = treeCol.doc(id);
+        batch.update(ref, {
+          parentId: l.parentId || null,
+          leftId:   l.leftId   || null,
+          rightId:  l.rightId  || null
+        });
+      });
+
+      await batch.commit();
 
     }catch(err){
       alert("Error: " + err.message);
