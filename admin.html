@@ -41,24 +41,16 @@
     .error{color:#dc2626;font-size:13px;margin-top:6px;}
     .ok{color:#166534;font-size:13px;margin-top:6px;}
 
-    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;}
+    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:10px;}
     .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
     .tree-level{text-align:center;margin:8px 0;}
     .tree-node-wrap{display:inline-block;margin:6px;}
-    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:12px;min-width:140px;}
+    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:12px;min-width:120px;}
     .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
     .tree-node-name{font-weight:600;}
     .tree-node-meta{font-size:10px;color:#9ca3af;margin-top:2px;}
     .tree-node-actions{margin-top:6px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
     .tree-node-actions .btn-sm{padding:3px 6px;font-size:10px;}
-
-    .profit-panel{background:#0f172a;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:10px;}
-    .profit-boxes{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
-    .profit-box{flex:1 1 160px;background:#020617;border-radius:14px;padding:10px 12px;border:1px solid #1e293b;}
-    .profit-label{font-size:12px;color:#9ca3af;}
-    .profit-value{font-size:18px;font-weight:700;}
-
-    canvas{max-width:100%;}
 
     @media(max-width:720px){
       .panel{padding:14px;}
@@ -99,9 +91,8 @@
         <h2>Binary Tree Admin (Firebase)</h2>
         <div class="small">
           हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
-          हर 2 members = 1 pair. अभी demo के लिए हर pair पर <b>10₹</b> binary earning है (members को)।<br/>
-          हर sub ID की commission में से <b>20%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
-          (customer को यह कटौती अलग से नहीं दिखती)।
+          हर 2 members = 1 pair, अभी demo के लिए हर pair = <b>10₹</b>।<br/>
+          हर sub ID की commission में से <b>20%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -133,39 +124,26 @@
     <!-- COMPANY BUSINESS REPORT -->
     <div class="panel">
       <h3>Company Business Report (Auto)</h3>
-      <p class="small">
-        पूरा tree से calculation: <b>IDs × 20₹ = Business Income</b>,  
-        minus total binary payout = <b>Company Profit</b>.  
-        Sub IDs से जो 20% bonus जाता है, वह भी profit से minus किया जाता है।
-      </p>
-
-      <div class="profit-panel">
-        <div class="flex between">
-          <div class="small">Current Summary (पूरा Tree)</div>
+      <div class="wallets">
+        <div class="wallet-box">
+          <div class="wallet-title">Total Customers (IDs)</div>
+          <div id="bizCustomers" class="wallet-value">0</div>
         </div>
-
-        <div class="profit-boxes">
-          <div class="profit-box">
-            <div class="profit-label">Total Business Income (सभी IDs × 20₹)</div>
-            <div class="profit-value" id="bizTotalIncome">₹0</div>
-          </div>
-          <div class="profit-box">
-            <div class="profit-label">Total Binary Income (सभी IDs को) ₹</div>
-            <div class="profit-value" id="bizBinaryPayout">₹0</div>
-          </div>
-          <div class="profit-box">
-            <div class="profit-label">Total Bonus (main IDs को) ₹</div>
-            <div class="profit-value" id="bizBonusPayout">₹0</div>
-          </div>
-          <div class="profit-box">
-            <div class="profit-label">Company Profit (₹)</div>
-            <div class="profit-value" id="bizCompanyProfit">₹0</div>
-          </div>
+        <div class="wallet-box">
+          <div class="wallet-title">Total Binary Pairs (Tree)</div>
+          <div id="bizPairs" class="wallet-value">0</div>
         </div>
-
-        <div class="mt-3">
-          <div class="small">Business Chart (Income vs Payout vs Profit)</div>
-          <canvas id="businessChart" width="400" height="220"></canvas>
+        <div class="wallet-box">
+          <div class="wallet-title">Total Binary Commission (Members को) ₹</div>
+          <div id="bizCommission" class="wallet-value">₹0</div>
+        </div>
+        <div class="wallet-box">
+          <div class="wallet-title">Total Join Income (20₹ × IDs)</div>
+          <div id="bizJoinIncome" class="wallet-value">₹0</div>
+        </div>
+        <div class="wallet-box">
+          <div class="wallet-title">Company Approx Profit (Join − payout)</div>
+          <div id="bizProfit" class="wallet-value">₹0</div>
         </div>
       </div>
     </div>
@@ -182,7 +160,7 @@
           <div id="totalPairs" class="wallet-value">0</div>
         </div>
         <div class="wallet-box">
-          <div class="wallet-title">कुल Binary Income (सभी IDs से) ₹</div>
+          <div class="wallet-title">कुल Binary Income (सभी IDs से, कट के बाद) ₹</div>
           <div id="totalCommission" class="wallet-value">₹0</div>
         </div>
       </div>
@@ -195,7 +173,7 @@
               <th>Password</th>
               <th>Members<br/>(नीचे)</th>
               <th>Pairs</th>
-              <th>Binary Income<br/>(₹)</th>
+              <th>Binary Income<br/>(कट के बाद, ₹)</th>
               <th>Tree</th>
               <th>Del</th>
             </tr>
@@ -204,9 +182,8 @@
         </table>
       </div>
       <p class="small" style="margin-top:6px;">
-        Logic: हर 2 member = 1 pair. अभी हर pair की binary earning = 10₹ है।  
-        यह earning members को जाती है। Company profit ऊपर वाले section में दिखता है।  
-        Sub IDs की commission में से 20% उनकी main ID के bonus wallet में जाता है।
+        Logic: हर 2 member = 1 pair. अभी demo के लिए हर pair = 10₹ रखा है।  
+        Sub IDs की commission में से 20% उनकी main ID के bonus में जाता है।
       </p>
     </div>
 
@@ -248,7 +225,11 @@
   const db       = firebase.firestore();
   const treeCol  = db.collection("TreeNodes");
   const usersCol = db.collection("Users");
-  const companyCol = db.collection("CompanyReport");
+
+  // Commission rules
+  const PAIR_INCOME       = 10; // हर pair पर 10₹
+  const JOIN_INCOME_PERID = 20; // हर ID से 20₹ business
+  const SUB_CUT_PERCENT   = 0.20; // sub ID commission में से 20% main को bonus
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -291,7 +272,7 @@
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
-      // root = जो सबसे ऊपर है (parentId null)
+      // root = parentId null
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -323,7 +304,7 @@
         parentId: null,
         leftId: null,
         rightId: null,
-        mainAccountId: null,   // बाद में खुद को assign
+        mainAccountId: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
@@ -370,97 +351,72 @@
     return current.id;
   }
 
-  let globalTotalPairs       = 0;
-  let globalTotalCommission  = 0;
-  let globalTotalCustomers   = 0;
-  let globalTotalBusinessInc = 0;
-  let globalTotalBonus       = 0;
+  let globalTotalPairs      = 0;
+  let globalTotalCommission = 0;
 
-  const PAIR_RATE = 10; // अभी demo – हर pair 10₹
-
-  function recalcAll(){
+  async function recalcAll(){
     globalTotalPairs      = 0;
     globalTotalCommission = 0;
-    globalTotalCustomers  = Object.keys(nodesById).length;
-    globalTotalBonus      = 0;
 
     const list = Object.values(nodesById);
+    const bonusMap = {}; // mainId -> bonus
 
-    // members + pairs + commission
     list.forEach(n=>{
       const members = countDescendants(n.id);
       const pairs   = Math.floor(members/2);
-      const comm    = pairs * PAIR_RATE;
+      const baseComm= pairs * PAIR_INCOME;
 
-      n.members    = members;
-      n.pairs      = pairs;
-      n.commission = comm;
+      n.members = members;
+      n.pairs   = pairs;
 
-      globalTotalPairs      += pairs;
-      globalTotalCommission += comm;
-    });
-
-    // bonus calculation
-    const bonusMap = {}; // mainId -> bonus amount (sub commissions के 20%)
-    list.forEach(n=>{
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
-      treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
+
+      let finalComm = baseComm;
 
       if(mainId !== n.id){
-        const bonusShare = +( (n.commission || 0) * 0.20 ).toFixed(2);
-        bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
+        const cut   = baseComm * SUB_CUT_PERCENT;
+        const left  = baseComm - cut;    // sub ID को दिखेगा
+        finalComm   = left;
+        bonusMap[mainId] = (bonusMap[mainId] || 0) + cut;
       }
+
+      n.commission = finalComm;
+
+      globalTotalPairs      += pairs;
+      globalTotalCommission += finalComm;
     });
 
-    globalTotalBusinessInc = globalTotalCustomers * 20;
-    globalTotalBonus = Object.values(bonusMap).reduce((a,b)=>a+b,0);
-    const companyProfit = globalTotalBusinessInc - globalTotalCommission - globalTotalBonus;
+    // Global business summary
+    const totalCustomers = list.length;
+    const joinIncome     = totalCustomers * JOIN_INCOME_PERID;
+    const companyPayout  = globalTotalCommission + Object.values(bonusMap).reduce((a,b)=>a+b,0);
+    const companyProfit  = joinIncome - companyPayout;
 
-    // UI update
     document.getElementById("totalPairs").textContent      = globalTotalPairs;
-    document.getElementById("totalCommission").textContent = "₹" + globalTotalCommission;
-    document.getElementById("bizTotalIncome").textContent   = "₹" + globalTotalBusinessInc;
-    document.getElementById("bizBinaryPayout").textContent  = "₹" + globalTotalCommission;
-    document.getElementById("bizBonusPayout").textContent   = "₹" + globalTotalBonus.toFixed(2);
-    document.getElementById("bizCompanyProfit").textContent = "₹" + companyProfit.toFixed(2);
+    document.getElementById("totalCommission").textContent = "₹" + globalTotalCommission.toFixed(2);
+    document.getElementById("totalCustomersBadge").textContent = totalCustomers + " Customers";
 
-    drawBusinessChart(globalTotalBusinessInc, globalTotalCommission, globalTotalBonus, companyProfit);
+    document.getElementById("bizCustomers").textContent  = totalCustomers;
+    document.getElementById("bizPairs").textContent      = globalTotalPairs;
+    document.getElementById("bizCommission").textContent = "₹" + globalTotalCommission.toFixed(2);
+    document.getElementById("bizJoinIncome").textContent = "₹" + joinIncome.toFixed(2);
+    document.getElementById("bizProfit").textContent     = "₹" + companyProfit.toFixed(2);
 
-    // wallets update + company report
-    updateUsersWallets(bonusMap).catch(err=>console.error(err));
-    updateCompanyReport(companyProfit).catch(err=>console.error(err));
-  }
-
-  async function updateUsersWallets(bonusMap){
-    const list = Object.values(nodesById);
+    // Users wallets update
     const batch = db.batch();
-
     list.forEach(n=>{
       const uRef = usersCol.doc(n.id);
       const data = {
         name: n.name || "",
         password: n.password || "",
-        commissionWallet: n.commission || 0,
+        commissionWallet: +(n.commission || 0).toFixed(2),
         bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
         mainAccountId: n.mainAccountId || n.id
       };
       batch.set(uRef, data, {merge:true});
     });
-
     await batch.commit();
-  }
-
-  async function updateCompanyReport(companyProfit){
-    const docRef = companyCol.doc("current");
-    await docRef.set({
-      customers: globalTotalCustomers,
-      joinIncome: globalTotalBusinessInc,
-      binaryIncome: globalTotalCommission,
-      bonusPayout: globalTotalBonus,
-      companyProfit: +(companyProfit.toFixed(2)),
-      updatedAt: new Date().toLocaleString("en-IN")
-    }, {merge:true});
   }
 
   /************ Table render ************/
@@ -470,18 +426,15 @@
     const list = Object.values(nodesById);
     list.sort((a,b)=>a.name.localeCompare(b.name));
 
-    document.getElementById("totalCustomersBadge").textContent =
-      list.length + " Customers";
-
     list.forEach((n,idx)=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${idx+1}</td>
-        <td>${n.name}</td>
+        <td>${n.name || ""}</td>
         <td>${n.password || ""}</td>
         <td>${n.members || 0}</td>
         <td>${n.pairs || 0}</td>
-        <td>₹${n.commission || 0}</td>
+        <td>₹${(n.commission || 0).toFixed(2)}</td>
         <td><button class="btn btn-secondary btn-sm" onclick="viewTreeFrom('${n.id}')">Tree</button></td>
         <td><button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button></td>
       `;
@@ -518,7 +471,7 @@
     }
 
     info.innerHTML = `अभी tree <b>${startNode.name}</b> से शुरू हो रहा है
-      (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Binary Income: ₹${startNode.commission||0})`;
+      (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Binary Income: ₹${(startNode.commission||0).toFixed(2)})`;
 
     let html = "";
 
@@ -533,7 +486,7 @@
           <div class="tree-node-wrap">
             <div class="tree-node ${isMain ? "tree-node-main":""}">
               <div class="tree-node-name">${n.name}</div>
-              <div class="tree-node-meta">M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}</div>
+              <div class="tree-node-meta">M:${n.members||0} · P:${n.pairs||0} · ₹${(n.commission||0).toFixed(2)}</div>
               <div class="tree-node-actions">
                 <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
                 <button class="btn btn-secondary btn-sm" onclick="editCustomer('${n.id}')">Edit</button>
@@ -579,7 +532,7 @@
     addMember(parentId, sideField, name, pass);
   }
 
-  // *** नया बीच-में-घुसने वाला logic ***
+  // नया बीच-में-घुसने वाला logic (Rajesh gas वाला rule)
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -605,7 +558,6 @@
       });
       const newId = newRef.id;
 
-      // Users collection में भी entry
       await usersCol.doc(newId).set({
         name,
         password: pass,
@@ -614,7 +566,7 @@
         mainAccountId: mainForChild
       }, {merge:true});
 
-      // अगर पहले से उस side पर कोई बच्चा नहीं था → simple connect
+      // अगर पहले उस side पर कोई child नहीं था → simple
       if(!existingChildId){
         const upd = {};
         upd[sideField] = newId;
@@ -629,65 +581,66 @@
       const oldChildSnap = await oldChildRef.get();
       const oldChild     = oldChildSnap.data() || {};
 
-      const oldLeftId  = oldChild.leftId  || null;
-      const oldRightId = oldChild.rightId || null;
+      const grand = [];
+      if(oldChild.leftId)  grand.push(oldChild.leftId);
+      if(oldChild.rightId) grand.push(oldChild.rightId);
 
-      // 2) Parent की उसी side पर अब नया member लगेगा
+      const promoteId  = grand[0] || null;                 // new के right पर आएगा
+      const leftoverId = grand.length > 1 ? grand[1] : null; // दूसरी side वाले tree में जाएगा
+
+      // 2) Parent की उसी side पर अब new लगेगा
       const updParent = {};
       updParent[sideField] = newId;
       await parentRef.update(updParent);
 
-      // 3) नया member:
-      //    left = पुराना child
-      //    right = पुराना child का left child
-      const updNew = {
+      // 3) new: left = पुराना child, right = promoteId
+      await newRef.update({
         leftId: existingChildId,
-        rightId: oldLeftId || null
-      };
-      await newRef.update(updNew);
+        rightId: promoteId || null
+      });
 
-      // 4) पुराना child: अब उसका parent नया member
-      //    उसका left child हमने ऊपर shift कर दिया, तो left null
-      const updOldChild = {
+      // 4) पुराना child: उसका parent new, उसके अपने बच्चे reset
+      await oldChildRef.update({
         parentId: newId,
-        leftId: null
-      };
-      await oldChildRef.update(updOldChild);
+        leftId: null,
+        rightId: null
+      });
 
-      // 5) अगर पुराना left child था, उसका parent भी नया member
-      if(oldLeftId){
-        await treeCol.doc(oldLeftId).update({
-          parentId: newId
-        });
+      // 5) promote किया हुआ grandchild
+      if(promoteId){
+        await treeCol.doc(promoteId).update({ parentId: newId });
       }
 
-      // 6) पुराना right child को parent की दूसरी side वाले child के नीचे भेजो
-      if(oldRightId){
+      // 6) leftover grandchild को दूसरी side वाले tree में भेजो
+      if(leftoverId){
         let otherSideField = sideField === "leftId" ? "rightId" : "leftId";
         let otherChildId   = parent[otherSideField] || null;
 
         if(!otherChildId){
           const updParent2 = {};
-          updParent2[otherSideField] = oldRightId;
+          updParent2[otherSideField] = leftoverId;
           await parentRef.update(updParent2);
-          await treeCol.doc(oldRightId).update({ parentId: parentId });
+          await treeCol.doc(leftoverId).update({ parentId: parentId });
         }else{
-          const otherRef  = treeCol.doc(otherChildId);
-          const otherSnap = await otherRef.get();
-          const other     = otherSnap.data() || {};
+          // BFS से पहली खाली left/right seat
+          const queue = [otherChildId];
+          while(queue.length){
+            const curId   = queue.shift();
+            const curSnap = await treeCol.doc(curId).get();
+            const cur     = curSnap.data() || {};
 
-          let updOther = {};
-          if(!other.leftId){
-            updOther.leftId = oldRightId;
-            await otherRef.update(updOther);
-            await treeCol.doc(oldRightId).update({ parentId: otherChildId });
-          }else if(!other.rightId){
-            updOther.rightId = oldRightId;
-            await otherRef.update(updOther);
-            await treeCol.doc(oldRightId).update({ parentId: otherChildId });
-          }else{
-            // अगर वहाँ भी दोनों side full हैं, तो पुराना right child वहीं रहने दो (fallback)
-            await oldChildRef.update({ rightId: oldRightId });
+            if(!cur.leftId){
+              await treeCol.doc(curId).update({ leftId: leftoverId });
+              await treeCol.doc(leftoverId).update({ parentId: curId });
+              break;
+            }else if(!cur.rightId){
+              await treeCol.doc(curId).update({ rightId: leftoverId });
+              await treeCol.doc(leftoverId).update({ parentId: curId });
+              break;
+            }else{
+              if(cur.leftId)  queue.push(cur.leftId);
+              if(cur.rightId) queue.push(cur.rightId);
+            }
           }
         }
       }
@@ -719,7 +672,6 @@
     if(!node) return;
     if(!confirm(`"${node.name}" और उसका पूरा subtree delete होगा, आगे बढ़ें?`)) return;
 
-    // parent से link हटाओ
     if(node.parentId){
       const parentRef = treeCol.doc(node.parentId);
       const parent    = nodesById[node.parentId];
@@ -731,7 +683,6 @@
       }
     }
 
-    // subtree delete (TreeNodes + Users)
     async function deleteSubTree(nid){
       const n = nodesById[nid];
       if(!n) return;
@@ -741,44 +692,6 @@
       await usersCol.doc(nid).delete();
     }
     await deleteSubTree(id);
-  }
-
-  /************ Business Chart ************/
-  function drawBusinessChart(totalIncome, binaryPayout, bonusPayout, companyProfit){
-    const canvas = document.getElementById("businessChart");
-    if(!canvas) return;
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    const labels = ["Business Income","Binary Payout","Bonus Payout","Company Profit"];
-    const values = [totalIncome, binaryPayout, bonusPayout, companyProfit];
-    const maxVal = Math.max(1, ...values);
-    const barWidth = 60;
-    const gap = 30;
-    const originX = 40;
-    const originY = canvas.height - 30;
-
-    ctx.strokeStyle = "#9ca3af";
-    ctx.beginPath();
-    ctx.moveTo(originX, 10);
-    ctx.lineTo(originX, originY);
-    ctx.lineTo(canvas.width - 10, originY);
-    ctx.stroke();
-
-    for(let i=0;i<values.length;i++){
-      const x = originX + gap + i*(barWidth+gap);
-      const h = (values[i]/maxVal) * (originY-40);
-      const y = originY - h;
-
-      ctx.fillStyle = i===0 ? "#3b82f6" : (i===1 ? "#f97316" : (i===2 ? "#22c55e" : "#a855f7"));
-      ctx.fillRect(x, y, barWidth, h);
-
-      ctx.fillStyle = "#111827";
-      ctx.font = "11px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText(labels[i], x+barWidth/2, originY+14);
-      ctx.fillText("₹"+values[i].toFixed ? values[i].toFixed(2) : values[i], x+barWidth/2, y-4);
-    }
   }
 </script>
 
