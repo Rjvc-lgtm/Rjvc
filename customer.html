@@ -187,7 +187,7 @@
         <button class="btn btn-outline btn-sm" id="logoutBtn">Logout</button>
       </div>
 
-      <!-- RJVC FULL INTRO (TEXT ONLY, NO BOX) -->
+      <!-- RJVC FULL INTRO (TEXT ABOVE DASHBOARD) -->
       <div id="introBlock" class="mt-3">
         <div class="section-title">⭐ एआई का ज़माना शुरू हो गया है… लेकिन आपकी कमाई रुकनी क्यों चाहिए?</div>
         <p class="section-sub">
@@ -327,6 +327,35 @@
         <div class="wallet-amount" id="bonusWalletText">₹0</div>
       </div>
 
+      <!-- PAYMENT / JOINING HISTORY -->
+      <div class="sub-card">
+        <h2>Payment / Joining History</h2>
+        <div class="small">
+          यहाँ दिखेगा कि आपके <b>main account</b> के लिए admin / sponsor ने कब-कब 120₹ या कोई और payment डाली है।
+          इसी से आपकी commission activate होती है।
+        </div>
+
+        <div class="mt-2">
+          <div class="small">
+            Total Paid: <b><span id="totalPaid">₹0</span></b><br/>
+            Last Payment: <b><span id="lastPayment">--</span></b>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Date / Time</th>
+                <th>Amount (₹)</th>
+                <th>Remark</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTableBody">
+              <!-- rows via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- BANK DETAILS -->
       <div class="sub-card">
         <h2>Bank Details (पैसे किस खाते में चाहिए?)</h2>
@@ -427,9 +456,10 @@
   firebase.initializeApp(firebaseConfig);
   try { firebase.analytics(); } catch(e){}
 
-  const db = firebase.firestore();
-  const usersCol = db.collection("Users");
-  const withdrawCol = db.collection("Withdrawals");
+  const db           = firebase.firestore();
+  const usersCol     = db.collection("Users");
+  const withdrawCol  = db.collection("Withdrawals");
+  const paymentsCol  = db.collection("Payments");   // NEW
 
   const loginPage   = document.getElementById("loginPage");
   const dashboard   = document.getElementById("dashboardPage");
@@ -460,15 +490,22 @@
   const saveBankBtn   = document.getElementById("saveBankBtn");
 
   // withdrawal
-  const withdrawAmount   = document.getElementById("withdrawAmount");
-  const withdrawBtn      = document.getElementById("withdrawBtn");
-  const withdrawMsg      = document.getElementById("withdrawMsg");
-  const withdrawTableBody= document.getElementById("withdrawTableBody");
+  const withdrawAmount    = document.getElementById("withdrawAmount");
+  const withdrawBtn       = document.getElementById("withdrawBtn");
+  const withdrawMsg       = document.getElementById("withdrawMsg");
+  const withdrawTableBody = document.getElementById("withdrawTableBody");
 
-  let currentUserId = null;
-  let currentUnsub  = null;
-  let withdrawUnsub = null;
-  let currentUserData = null;
+  // payments
+  const totalPaidSpan     = document.getElementById("totalPaid");
+  const lastPaymentSpan   = document.getElementById("lastPayment");
+  const paymentsTableBody = document.getElementById("paymentsTableBody");
+
+  let currentUserId    = null;
+  let currentUnsub     = null;
+  let withdrawUnsub    = null;
+  let paymentsUnsub    = null;
+  let currentUserData  = null;
+  let currentMainId    = null;
 
   function formatRupees(x){
     return "₹" + (x || 0);
@@ -508,9 +545,13 @@
   });
 
   function subscribeCustomer(docId){
-    if(currentUnsub) currentUnsub();
-    if(withdrawUnsub) withdrawUnsub();
-    currentUserId = docId;
+    if(currentUnsub)   currentUnsub();
+    if(withdrawUnsub)  withdrawUnsub();
+    if(paymentsUnsub)  paymentsUnsub();
+
+    currentUserId   = docId;
+    currentUserData = null;
+    currentMainId   = null;
 
     // user live data
     currentUnsub = usersCol.doc(docId).onSnapshot(snap=>{
@@ -527,10 +568,12 @@
       bonusWalletText.textContent = formatRupees(bonus);
       availableBonus.textContent  = formatRupees(bonus);
 
+      // mainAccountId (root id) – अगर न हो तो खुद को मान लो
+      currentMainId = d.mainAccountId || docId;
+
       // bank details
       const b = d.bankDetails || null;
       if(b && (b.accName || b.accNumber || b.ifsc || b.upi)){
-        // show view
         vAccName.textContent   = b.accName   || "";
         vAccNumber.textContent = b.accNumber || "";
         vIfsc.textContent      = b.ifsc      || "";
@@ -539,16 +582,18 @@
         bankView.style.display = "block";
         bankEdit.style.display = "none";
       }else{
-        // edit mode
         bankView.style.display = "none";
         bankEdit.style.display = "block";
       }
 
       loginPage.style.display = "none";
       dashboard.style.display = "block";
+
+      // payments listener (main account के लिए)
+      subscribePayments();
     });
 
-    // withdrawal history for this user
+    // withdrawal history for this user (यह सिर्फ इस login ID के हिसाब से)
     withdrawUnsub = withdrawCol
       .where("userId","==",docId)
       .orderBy("createdAt","desc")
@@ -573,17 +618,70 @@
       });
   }
 
+  function subscribePayments(){
+    if(paymentsUnsub) paymentsUnsub();
+    if(!currentMainId) return;
+
+    // Payments: mainAccountId के आधार पर
+    paymentsUnsub = paymentsCol
+      .where("mainAccountId","==", currentMainId)
+      .orderBy("createdAt","desc")
+      .onSnapshot(snap=>{
+        paymentsTableBody.innerHTML = "";
+        let total = 0;
+        let lastTime = "--";
+
+        snap.forEach((doc, index)=>{
+          const d = doc.data();
+          const amt = d.amount || 0;
+          total += amt;
+
+          const ts = d.createdAt && d.createdAt.toDate
+            ? d.createdAt.toDate()
+            : null;
+          const dateStr = ts
+            ? ts.toLocaleString("en-IN")
+            : "--";
+          if(index === 0) lastTime = dateStr;
+
+          const note = d.note || d.remark || d.source || "";
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${dateStr}</td>
+            <td>₹${amt}</td>
+            <td>${note}</td>
+          `;
+          paymentsTableBody.appendChild(tr);
+        });
+
+        totalPaidSpan.textContent   = "₹" + total;
+        lastPaymentSpan.textContent = lastTime;
+      });
+  }
+
   // LOGOUT
   logoutBtn.addEventListener("click", ()=>{
-    if(currentUnsub) currentUnsub();
-    if(withdrawUnsub) withdrawUnsub();
-    currentUnsub = null;
-    withdrawUnsub = null;
-    currentUserId = null;
+    if(currentUnsub)   currentUnsub();
+    if(withdrawUnsub)  withdrawUnsub();
+    if(paymentsUnsub)  paymentsUnsub();
+
+    currentUnsub    = null;
+    withdrawUnsub   = null;
+    paymentsUnsub   = null;
+    currentUserId   = null;
     currentUserData = null;
+    currentMainId   = null;
 
     document.getElementById("custName").value = "";
     document.getElementById("custPass").value = "";
+
+    // clear some UI
+    paymentsTableBody.innerHTML = "";
+    withdrawTableBody.innerHTML = "";
+    totalPaidSpan.textContent   = "₹0";
+    lastPaymentSpan.textContent = "--";
+
     dashboard.style.display = "none";
     loginPage.style.display = "flex";
   });
@@ -591,7 +689,6 @@
   // BANK – edit button
   if(editBankBtn){
     editBankBtn.addEventListener("click", ()=>{
-      // पुराने data form में भरें
       if(currentUserData && currentUserData.bankDetails){
         const b = currentUserData.bankDetails;
         bankAccName.value   = b.accName   || "";
