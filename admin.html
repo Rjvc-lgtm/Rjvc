@@ -102,7 +102,9 @@
           Binary pairs commission (per pair):  
           1–4 level: ₹10, 5: ₹8, 6: ₹7, 7: ₹6, 8: ₹5, 9: ₹4, 10+ : ₹3।<br/>
           हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
-          (20% company के पास – customer को नहीं दिखता)।
+          (20% company के पास – customer को नहीं दिखता)।<br/>
+          जब भी customer से पैसा आता है, आप किसी भी ID पर <b>+Payment</b> दबाकर उसकी main ID के लिए
+          पूरा amount (जैसे 120₹) save कर सकते हैं – customer login में वही total दिखेगा।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -162,49 +164,6 @@
       </div>
     </div>
 
-    <!-- WALLET TRANSFER REQUESTS -->
-    <div class="panel">
-      <h3>Wallet Transfer Requests (नाम से नाम)</h3>
-      <p class="small">
-        Customer अपनी ID से दूसरी main ID पर commission + bonus transfer की request करेगा।  
-        यहाँ से admin approve / reject कर सकता है। Transfer हमेशा main ID से main ID पर होगा।
-      </p>
-
-      <!-- Pending list -->
-      <div class="mt-2">
-        <h4 style="font-size:14px;margin-bottom:4px;">Pending Requests</h4>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>From (ID / Name)</th>
-                <th>To (ID / Name)</th>
-                <th>Comm (₹)</th>
-                <th>Bonus (₹)</th>
-                <th>Time</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="transferTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Manual create (admin by hand) -->
-      <div class="mt-3">
-        <h4 style="font-size:14px;margin-bottom:4px;">Admin Manual Transfer (optional)</h4>
-        <div class="flex" style="gap:6px;flex-wrap:wrap;">
-          <input id="trFromId" placeholder="From User ID (main)" style="flex:1 1 140px;">
-          <input id="trToId"   placeholder="To User ID (main)"   style="flex:1 1 140px;">
-          <input id="trAmtComm" type="number" step="0.01" placeholder="Comm ₹" style="flex:1 1 80px;">
-          <input id="trAmtBonus" type="number" step="0.01" placeholder="Bonus ₹" style="flex:1 1 80px;">
-        </div>
-        <button class="btn btn-primary btn-sm mt-2" onclick="createManualTransfer()">Create Transfer Request</button>
-      </div>
-      <div id="transferMsg" class="small" style="margin-top:6px;"></div>
-    </div>
-
     <!-- CUSTOMER LIST -->
     <div class="panel">
       <div class="flex between">
@@ -231,6 +190,7 @@
               <th>Left / Right Members</th>
               <th>Pairs</th>
               <th>Binary Income<br/>(₹)</th>
+              <th>Payment</th>
               <th>Payout</th>
               <th>Tree</th>
               <th>Del</th>
@@ -264,7 +224,7 @@
 <!-- FIREBASE CDN -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
 
 <script>
   /************ Firebase config – RJVC PLAN ************/
@@ -284,7 +244,7 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
   const db       = firebase.firestore();
   const treeCol  = db.collection("TreeNodes");
   const usersCol = db.collection("Users");
-  const transferCol = db.collection("Transfers");
+  const paymentsCol = db.collection("Payments");   // NEW
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -317,12 +277,7 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
   let currentTreeRootId = null;
   let treeUnsub         = null;
 
-  // transfers
-  let transferUnsub     = null;
-  let pendingTransfers  = [];
-
   function startSubscriptions(){
-    // Tree
     if(treeUnsub) treeUnsub();
     treeUnsub = treeCol.orderBy("createdAt","asc").onSnapshot(snap=>{
       nodesById = {};
@@ -332,6 +287,7 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
+      // root = जिसकी parentId null है
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -339,19 +295,6 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
       recalcAll();
       renderTable();
       renderTree();
-    });
-
-    // Transfers
-    if(transferUnsub) transferUnsub();
-    transferUnsub = transferCol.orderBy("createdAt","desc").onSnapshot(snap=>{
-      pendingTransfers = [];
-      snap.forEach(doc=>{
-        const d = doc.data();
-        if(d.status === "pending"){
-          pendingTransfers.push(Object.assign({id:doc.id}, d));
-        }
-      });
-      renderTransfers();
     });
   }
 
@@ -376,12 +319,13 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
         parentId: null,
         leftId: null,
         rightId: null,
-        mainAccountId: null,
+        mainAccountId: null,   // बाद में खुद को assign करेंगे
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
       await newDoc.update({ mainAccountId: newDoc.id });
 
+      // Users collection में भी same ID पर login record
       await usersCol.doc(newDoc.id).set({
         name,
         password: pass,
@@ -455,6 +399,7 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
       remaining  -= usePairs;
     }
 
+    // अगर pairs 10 level से भी ज़्यादा हो जाएँ
     if(remaining > 0){
       const lastRate = LEVEL_RATES[LEVEL_RATES.length-1].rate;
       commission += remaining * lastRate;
@@ -509,17 +454,17 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
   /************ Users wallets update (commission + bonus 80%) ************/
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
-    const bonusMap = {};
+    const bonusMap = {}; // mainId -> total bonus
 
     list.forEach(n=>{
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
-      treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true });
+      treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
       if(mainId !== n.id){
         const subComm    = n.commission || 0;
-        const bonusShare = +(subComm * 0.80).toFixed(2);
+        const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को
         bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
       }
     });
@@ -531,7 +476,7 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
         name: n.name || "",
         password: n.password || "",
         commissionWallet: n.commission || 0,
-        bonusWallet: +((bonusMap[n.id] || 0).toFixed(2)),
+        bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
         mainAccountId: n.mainAccountId || n.id
       };
       batch.set(uRef, data, {merge:true});
@@ -548,200 +493,42 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
     await uRef.set({payoutBlocked: !cur},{merge:true});
   }
 
-  /************ TRANSFER RENDER ************/
-  function renderTransfers(){
-    const tbody = document.getElementById("transferTableBody");
-    if(!tbody) return;
-    tbody.innerHTML = "";
+  /************ NEW: Add Payment for main account (for customer Payment History) ************/
+  async function addPaymentForNode(id){
+    const node = nodesById[id];
+    if(!node){
+      alert("Node नहीं मिला");
+      return;
+    }
+    // इस node की main ID निकालो
+    const mainId = getMainAccountId(node);
 
-    if(!pendingTransfers.length){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="7" class="small">कोई pending request नहीं है।</td>`;
-      tbody.appendChild(tr);
+    // Admin से amount पूछो (default 120)
+    let ans = prompt("Customer से कितना amount मिला? (₹)", "120");
+    if(ans === null) return;
+    ans = Number(ans);
+    if(!ans || ans <= 0){
+      alert("Amount सही भरें");
       return;
     }
 
-    pendingTransfers.forEach((t,idx)=>{
-      const created = t.createdAt && t.createdAt.toDate
-        ? t.createdAt.toDate().toLocaleString()
-        : "-";
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${idx+1}</td>
-        <td>${t.fromUserId}<br/><span class="small">${t.fromName||""}</span></td>
-        <td>${t.toUserId}<br/><span class="small">${t.toName||""}</span></td>
-        <td>₹${t.amountCommission||0}</td>
-        <td>₹${t.amountBonus||0}</td>
-        <td style="font-size:11px;">${created}</td>
-        <td>
-          <button class="btn btn-sm btn-primary" onclick="approveTransfer('${t.id}')">Approve</button>
-          <button class="btn btn-sm btn-danger mt-1" onclick="rejectTransfer('${t.id}')">Reject</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  /************ CREATE MANUAL TRANSFER ************/
-  async function createManualTransfer(){
-    const fromId = document.getElementById("trFromId").value.trim();
-    const toId   = document.getElementById("trToId").value.trim();
-    const cAmt   = parseFloat(document.getElementById("trAmtComm").value || "0");
-    const bAmt   = parseFloat(document.getElementById("trAmtBonus").value || "0");
-    const msg    = document.getElementById("transferMsg");
-
-    msg.textContent = "";
-    msg.className   = "small";
-
-    if(!fromId || !toId){
-      msg.textContent = "From ID और To ID दोनों जरूरी हैं।";
-      msg.className   = "error";
-      return;
-    }
-    if(fromId === toId){
-      msg.textContent = "From और To ID अलग-अलग होने चाहिए।";
-      msg.className   = "error";
-      return;
-    }
-    if(cAmt < 0 || bAmt < 0){
-      msg.textContent = "Amount negative नहीं होना चाहिए।";
-      msg.className   = "error";
-      return;
-    }
+    const note = prompt("Remark / Note (optional)", "Joining / Monthly payment");
 
     try{
-      const fromSnap = await usersCol.doc(fromId).get();
-      const toSnap   = await usersCol.doc(toId).get();
-      if(!fromSnap.exists || !toSnap.exists){
-        msg.textContent = "Users collection में ID नहीं मिली, ID check करें।";
-        msg.className   = "error";
-        return;
-      }
-      const from = fromSnap.data();
-      const to   = toSnap.data();
-
-      await transferCol.add({
-        fromUserId: fromId,
-        toUserId:   toId,
-        fromName:   from.name || "",
-        toName:     to.name || "",
-        amountCommission: cAmt,
-        amountBonus:      bAmt,
-        status: "pending",
+      await paymentsCol.add({
+        mainAccountId: mainId,
+        amount: ans,
+        sourceNodeId: id,
+        note: note || "",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-
-      msg.textContent = "Transfer request create हो गई (pending).";
-      msg.className   = "ok";
-
-      document.getElementById("trFromId").value = "";
-      document.getElementById("trToId").value   = "";
-      document.getElementById("trAmtComm").value  = "";
-      document.getElementById("trAmtBonus").value = "";
+      alert("Payment record save हो गया। Customer login में Payment History में दिखेगा।");
     }catch(err){
-      msg.textContent = "Error: " + err.message;
-      msg.className   = "error";
+      alert("Payment save error: " + err.message);
     }
   }
 
-  /************ APPROVE / REJECT TRANSFER ************/
-  async function approveTransfer(trId){
-    const msg = document.getElementById("transferMsg");
-    msg.textContent = "";
-    msg.className   = "small";
-
-    try{
-      const trRef  = transferCol.doc(trId);
-      const trSnap = await trRef.get();
-      if(!trSnap.exists){
-        msg.textContent = "Transfer नहीं मिला।";
-        msg.className   = "error";
-        return;
-      }
-      const tr = trSnap.data();
-      if(tr.status !== "pending"){
-        msg.textContent = "यह request already process हो चुकी है।";
-        msg.className   = "error";
-        return;
-      }
-
-      const fromRef = usersCol.doc(tr.fromUserId);
-      const toRef   = usersCol.doc(tr.toUserId);
-
-      await db.runTransaction(async (tx)=>{
-        const fromSnap = await tx.get(fromRef);
-        const toSnap   = await tx.get(toRef);
-        if(!fromSnap.exists || !toSnap.exists){
-          throw new Error("Users collection में IDs नहीं मिली");
-        }
-        const from = fromSnap.data();
-        const to   = toSnap.data();
-
-        const cAmt = tr.amountCommission || 0;
-        const bAmt = tr.amountBonus      || 0;
-
-        const fromComm = (from.commissionWallet || 0) - cAmt;
-        const fromBonus= (from.bonusWallet      || 0) - bAmt;
-        if(fromComm < 0 || fromBonus < 0){
-          throw new Error("From user के wallet में balance कम है");
-        }
-
-        tx.update(fromRef,{
-          commissionWallet: fromComm,
-          bonusWallet:      fromBonus
-        });
-        tx.update(toRef,{
-          commissionWallet: (to.commissionWallet || 0) + cAmt,
-          bonusWallet:      (to.bonusWallet      || 0) + bAmt
-        });
-        tx.update(trRef,{
-          status:"approved",
-          processedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      });
-
-      msg.textContent = "Transfer approve हो गया।";
-      msg.className   = "ok";
-    }catch(err){
-      msg.textContent = "Approve error: " + err.message;
-      msg.className   = "error";
-    }
-  }
-
-  async function rejectTransfer(trId){
-    const msg = document.getElementById("transferMsg");
-    msg.textContent = "";
-    msg.className   = "small";
-
-    try{
-      const trRef  = transferCol.doc(trId);
-      const trSnap = await trRef.get();
-      if(!trSnap.exists){
-        msg.textContent = "Transfer नहीं मिला।";
-        msg.className   = "error";
-        return;
-      }
-      const tr = trSnap.data();
-      if(tr.status !== "pending"){
-        msg.textContent = "यह request already process हो चुकी है।";
-        msg.className   = "error";
-        return;
-      }
-
-      await trRef.update({
-        status:"rejected",
-        processedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      msg.textContent = "Transfer reject कर दिया गया।";
-      msg.className   = "ok";
-    }catch(err){
-      msg.textContent = "Reject error: " + err.message;
-      msg.className   = "error";
-    }
-  }
-
-  /************ CUSTOMER TABLE ************/
+  /************ Table render ************/
   function renderTable(){
     const tbody = document.getElementById("customerTableBody");
     tbody.innerHTML = "";
@@ -767,6 +554,11 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
         <td>${n.pairs || 0}</td>
         <td>₹${n.commission || 0}</td>
         <td>
+          <button class="btn btn-sm btn-secondary" onclick="addPaymentForNode('${n.id}')">
+            +Payment
+          </button>
+        </td>
+        <td>
           <button class="btn btn-sm btn-secondary" onclick="togglePayout('${n.id}')">
             Toggle
           </button>
@@ -778,7 +570,7 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
     });
   }
 
-  /************ TREE VIEW ************/
+  /************ Tree view ************/
   function viewTreeFrom(id){
     currentTreeRootId = id;
     renderTree();
@@ -852,6 +644,8 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
   }
 
   /************ Add / Edit / Delete ************/
+
+  // +Member: बीच में भी add कर सकते हैं
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if(!sideAns) return;
@@ -872,7 +666,7 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
     addMember(parentId, sideField, name, pass);
   }
 
-  // बीच में member जोड़ने पर subtree rearrange (आपका rule)
+  // बीच में insert + subtree rearrange
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -886,6 +680,7 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
 
       const mainForChild = parent.mainAccountId || parentId;
 
+      // पहले नया node बनाओ
       const newRef = await treeCol.add({
         name,
         password: pass,
@@ -897,6 +692,7 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
       });
       const newId = newRef.id;
 
+      // Users collection
       await usersCol.doc(newId).set({
         name,
         password: pass,
@@ -906,97 +702,78 @@ script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></s
         payoutBlocked: false
       }, {merge:true});
 
+      // अगर side पहले खाली था तो simple attach
       if(!existingChildId){
-        const upd = {};
-        upd[sideField] = newId;
-        await parentRef.update(upd);
+        const update = {};
+        update[sideField] = newId;
+        await parentRef.update(update);
         return;
       }
 
-      const existingRef  = treeCol.doc(existingChildId);
-      const existingSnap = await existingRef.get();
-      const existingData = existingSnap.data() || {};
+      // ---- "बीच में insert + subtree rearrange" ----
 
-      const leftChild  = existingData.leftId  || null;
-      const rightChild = existingData.rightId || null;
-
-      const siblingRootId =
-        sideField === "leftId"
-          ? (parent.rightId || null)
-          : (parent.leftId  || null);
-
-      let promotedChildId = null;
-      let leftoverChildId = null;
-
-      if(leftChild && rightChild){
-        promotedChildId = leftChild;
-        leftoverChildId = rightChild;
-      }else if(leftChild || rightChild){
-        promotedChildId = leftChild || rightChild;
-        leftoverChildId = null;
+      // 1) existing child subtree के सारे nodes collect करो (BFS)
+      const subtreeIds = [];
+      const queue = [existingChildId];
+      while(queue.length){
+        const nid = queue.shift();
+        if(!nodesById[nid]) continue;
+        subtreeIds.push(nid);
+        const nd = nodesById[nid];
+        if(nd.leftId)  queue.push(nd.leftId);
+        if(nd.rightId) queue.push(nd.rightId);
       }
 
-      const batch = db.batch();
-
+      // 2) parent पर newId set कर दो
       const parentUpdate = {};
       parentUpdate[sideField] = newId;
-      batch.update(parentRef, parentUpdate);
+      await parentRef.update(parentUpdate);
+
+      // 3) नया subtree layout calculate करो:
+      // newId root रहेगा, subtreeIds उसके नीचे 2–2 seats के हिसाब से लगेंगे
+      const linkMap = {}; // nodeId -> {parentId,leftId,rightId}
+      subtreeIds.forEach(id=>{
+        linkMap[id] = {parentId:null,leftId:null,rightId:null};
+      });
+
+      const parentsQueue = [newId];
+      let idx = 0;
+      const newNodeLinks = {leftId:null,rightId:null};
+
+      while(idx < subtreeIds.length && parentsQueue.length){
+        const pId = parentsQueue.shift();
+        for(let k=0;k<2 && idx<subtreeIds.length;k++){
+          const childId = subtreeIds[idx++];
+          if(pId === newId){
+            if(!newNodeLinks.leftId) newNodeLinks.leftId = childId;
+            else newNodeLinks.rightId = childId;
+          }else{
+            const pLink = linkMap[pId];
+            if(!pLink.leftId) pLink.leftId = childId;
+            else pLink.rightId = childId;
+          }
+          linkMap[childId].parentId = (pId === newId ? newId : pId);
+          parentsQueue.push(childId);
+        }
+      }
+
+      // 4) Firestore batch update
+      const batch = db.batch();
 
       batch.update(newRef, {
-        parentId: parentId,
-        leftId: existingChildId,
-        rightId: promotedChildId || null
+        leftId:  newNodeLinks.leftId  || null,
+        rightId: newNodeLinks.rightId || null
       });
 
-      batch.update(existingRef, {
-        parentId: newId,
-        leftId: null,
-        rightId: null
+      subtreeIds.forEach(id=>{
+        const l = linkMap[id];
+        const ref = treeCol.doc(id);
+        batch.update(ref, {
+          parentId: l.parentId || null,
+          leftId:   l.leftId   || null,
+          rightId:  l.rightId  || null
+        });
       });
-
-      if(promotedChildId){
-        const promotedRef = treeCol.doc(promotedChildId);
-        batch.update(promotedRef, { parentId: newId });
-      }
-
-      if(leftoverChildId && siblingRootId){
-        let attachParentId = null;
-        let attachField    = null;
-
-        const q = [siblingRootId];
-        while(q.length && !attachParentId){
-          const nid = q.shift();
-          const node = nodesById[nid];
-          if(!node) continue;
-
-          if(!node.leftId){
-            attachParentId = nid;
-            attachField    = "leftId";
-            break;
-          }else if(!node.rightId){
-            attachParentId = nid;
-            attachField    = "rightId";
-            break;
-          }
-
-          if(node.leftId)  q.push(node.leftId);
-          if(node.rightId) q.push(node.rightId);
-        }
-
-        if(attachParentId){
-          const attachRef = treeCol.doc(attachParentId);
-          const upd2 = {};
-          upd2[attachField] = leftoverChildId;
-          batch.update(attachRef, upd2);
-
-          const leftoverRef = treeCol.doc(leftoverChildId);
-          batch.update(leftoverRef, { parentId: attachParentId });
-        }else{
-          batch.update(existingRef, { leftId: leftoverChildId });
-          const leftoverRef = treeCol.doc(leftoverChildId);
-          batch.update(leftoverRef, { parentId: existingChildId });
-        }
-      }
 
       await batch.commit();
 
