@@ -98,10 +98,10 @@
       <div>
         <h2>Binary Tree Admin (Firebase)</h2>
         <div class="small">
-          हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
+          हर ID से <b>20₹ joining income</b> मानी गई है (Packages से आने वाला पैसा Payments में दिखेगा)।<br/>
           Binary pairs commission (per pair):  
           1–4 level: ₹10, 5: ₹8, 6: ₹7, 7: ₹6, 8: ₹5, 9: ₹4, 10+ : ₹3।<br/>
-          जिन IDs के नाम में <b>“sub”</b> आता है, उनकी commission का <b>80%</b> उनकी main ID के <b>Bonus Wallet</b> में जाता है  
+          हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
           (20% company के पास – customer को नहीं दिखता)।
         </div>
       </div>
@@ -135,14 +135,14 @@
     <div class="panel">
       <h3>Company Business Report (Auto)</h3>
       <p class="small">
-        पूरा tree से calculation: <b>IDs × 20₹ = Business Income</b>,  
+        सभी Packages से आया कुल पैसा = <b>Total Business Income (Payments से)</b>,  
         minus total binary payout (सभी commission wallets) = <b>Company Profit</b>।
       </p>
 
       <div class="profit-panel">
         <div class="profit-boxes">
           <div class="profit-box">
-            <div class="profit-label">Total Business Income (सभी IDs × 20₹)</div>
+            <div class="profit-label">Total Business Income (सभी Packages)</div>
             <div class="profit-value" id="bizTotalIncome">₹0</div>
           </div>
           <div class="profit-box">
@@ -184,11 +184,12 @@
             <tr>
               <th>#</th>
               <th>Name / Login</th>
+              <th>Level</th>
               <th>Members<br/>(Total)</th>
               <th>Left / Right Members</th>
               <th>Pairs</th>
-              <th>Level</th>
               <th>Binary Income<br/>(₹)</th>
+              <th>Package<br/>(₹120)</th>
               <th>Payout</th>
               <th>Tree</th>
               <th>Del</th>
@@ -200,7 +201,9 @@
       <p class="small" style="margin-top:6px;">
         Binary logic: हर 2 member = 1 pair.  
         Commission level-wise slab से निकलेगा।  
-        सिर्फ जिन IDs के नाम में “sub” आता है, उनकी commission से 80% उनकी main ID के Bonus Wallet में जाता है।
+        Sub IDs की commission में से 80% उनकी main ID के Bonus Wallet में जाता है।  
+        Package बटन से 1 main + 5 sub मिलाकर 120₹ का payment record Payments में जाता है
+        (आप चाहो तो एक main को multiple बार package दे सकते हो)।
       </p>
     </div>
 
@@ -239,9 +242,10 @@
   firebase.initializeApp(firebaseConfig);
   try { firebase.analytics(); } catch(e) {}
 
-  const db       = firebase.firestore();
-  const treeCol  = db.collection("TreeNodes");
-  const usersCol = db.collection("Users");
+  const db        = firebase.firestore();
+  const treeCol   = db.collection("TreeNodes");
+  const usersCol  = db.collection("Users");
+  const paymentsCol = db.collection("Payments");
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -274,7 +278,12 @@
   let currentTreeRootId = null;
   let treeUnsub         = null;
 
+  // Payments
+  let paymentsUnsub       = null;
+  let globalBusinessIncome = 0; // sum of Payments.amount
+
   function startSubscriptions(){
+    // Tree listener
     if(treeUnsub) treeUnsub();
     treeUnsub = treeCol.orderBy("createdAt","asc").onSnapshot(snap=>{
       nodesById = {};
@@ -292,6 +301,18 @@
       recalcAll();
       renderTable();
       renderTree();
+    });
+
+    // Payments listener (Company Income)
+    if(paymentsUnsub) paymentsUnsub();
+    paymentsUnsub = paymentsCol.onSnapshot(snap=>{
+      let sum = 0;
+      snap.forEach(doc=>{
+        const d = doc.data();
+        sum += d.amount || 0;
+      });
+      globalBusinessIncome = sum;
+      recalcAll();  // income बदलते ही company report update
     });
   }
 
@@ -328,7 +349,8 @@
         commissionWallet: 0,
         bonusWallet: 0,
         mainAccountId: newDoc.id,
-        payoutBlocked: false
+        payoutBlocked: false,
+        totalPaid: 0
       }, {merge:true});
 
       document.getElementById("rootName").value = "";
@@ -394,11 +416,27 @@
       commission += usePairs * slab.rate;
       remaining  -= usePairs;
     }
+
     if(remaining > 0){
       const lastRate = LEVEL_RATES[LEVEL_RATES.length-1].rate;
       commission += remaining * lastRate;
     }
     return commission;
+  }
+
+  // Node किस level तक पहुँचा है (pairs से)
+  function computeLevelForPairs(totalPairs){
+    let remaining = totalPairs;
+    let level = 0;
+    for(let i=0;i<LEVEL_RATES.length;i++){
+      const slab = LEVEL_RATES[i];
+      if(remaining <= 0) break;
+      remaining -= slab.pairs;
+      level = slab.level;
+      if(remaining <= 0) break;
+    }
+    if(totalPairs === 0) return 0;
+    return level;
   }
 
   let globalTotalPairs       = 0;
@@ -419,18 +457,21 @@
       const rightCount = countSideMembers(n.id,"rightId");
       const pairs      = Math.floor(members/2);
       const comm       = computeCommissionForPairs(pairs);
+      const level      = computeLevelForPairs(pairs);
 
       n.members    = members;
       n.leftCount  = leftCount;
       n.rightCount = rightCount;
       n.pairs      = pairs;
       n.commission = comm;
+      n.level      = level;
 
       globalTotalPairs      += pairs;
       globalTotalCommission += comm;
     });
 
-    globalTotalBusinessInc = globalTotalCustomers * 20;
+    // अब Business Income = Payments का total
+    globalTotalBusinessInc = globalBusinessIncome;
     const companyProfit = globalTotalBusinessInc - globalTotalCommission;
 
     document.getElementById("totalPairs").textContent      = globalTotalPairs;
@@ -448,7 +489,7 @@
   /************ Users wallets update (commission + bonus 80%) ************/
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
-    const bonusMap = {}; // mainId -> total bonus
+    const bonusMap = {};
 
     list.forEach(n=>{
       const mainId = getMainAccountId(n);
@@ -456,13 +497,7 @@
 
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
-      // ------------ IMPORTANT ------------
-      // Bonus केवल उन IDs से निकलेगा जिनके नाम में "sub" है
-      // (जैसे: "Rajesh parmar sub1", "sub2" आदि)
-      const name = (n.name || "").toLowerCase();
-      const isSubIdByName = name.includes("sub");
-
-      if(isSubIdByName && mainId !== n.id){
+      if(mainId !== n.id){
         const subComm    = n.commission || 0;
         const bonusShare = +(subComm * 0.80).toFixed(2);
         bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
@@ -493,6 +528,38 @@
     await uRef.set({payoutBlocked: !cur},{merge:true});
   }
 
+  /************ Package Add (₹120 per click – main account पर record) ************/
+  async function addPackage(id){
+    try{
+      const node = nodesById[id];
+      if(!node){
+        alert("Node नहीं मिला");
+        return;
+      }
+      const mainId = node.mainAccountId || id;
+
+      const ok = confirm(`"${node.name}" की main ID पर ₹120 का package add करें?`);
+      if(!ok) return;
+
+      // Payments collection में record
+      await paymentsCol.add({
+        mainAccountId: mainId,
+        triggerNodeId: id,
+        amount: 120,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Users में main account पर totalPaid += 120
+      await usersCol.doc(mainId).set({
+        totalPaid: firebase.firestore.FieldValue.increment(120)
+      }, {merge:true});
+
+      alert("Package ₹120 add हो गया (Payments में save)।");
+    }catch(err){
+      alert("Error: " + err.message);
+    }
+  }
+
   /************ Table render ************/
   function renderTable(){
     const tbody = document.getElementById("customerTableBody");
@@ -506,21 +573,10 @@
     list.forEach((n,idx)=>{
       const leftC  = n.leftCount  || 0;
       const rightC = n.rightCount || 0;
+      const level  = n.level || 0;
+      const levelText = level ? ("L" + level) : "-";
 
-      // level दिखाने के लिए: कितने pairs किस slab में गये
-      const pairs = n.pairs || 0;
-      let levelLabel = "-";
-      if(pairs>0){
-        let remaining = pairs;
-        for(let i=0;i<LEVEL_RATES.length;i++){
-          const slab = LEVEL_RATES[i];
-          if(remaining <= slab.pairs){
-            levelLabel = "Level " + slab.level;
-            break;
-          }
-          remaining -= slab.pairs;
-        }
-      }
+      const isMain = !n.parentId || (n.mainAccountId === n.id);
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -529,11 +585,18 @@
           ${n.name}<br/>
           <span class="small">Login: ${n.name} / ${n.password || ""}</span>
         </td>
+        <td>${levelText}</td>
         <td>${n.members || 0}</td>
         <td>L:${leftC} · R:${rightC}</td>
         <td>${n.pairs || 0}</td>
-        <td>${levelLabel}</td>
         <td>₹${n.commission || 0}</td>
+        <td>
+          <button class="btn btn-sm btn-secondary"
+                  onclick="addPackage('${n.id}')"
+                  ${isMain ? "" : "disabled"}>
+            +₹120
+          </button>
+        </td>
         <td>
           <button class="btn btn-sm btn-secondary" onclick="togglePayout('${n.id}')">
             Toggle
@@ -588,12 +651,13 @@
         const isMainTreeRoot = (id === rootId);
         const leftC  = n.leftCount  || 0;
         const rightC = n.rightCount || 0;
+        const level  = n.level || 0;
         html += `
           <div class="tree-node-wrap">
             <div class="tree-node ${isMainTreeRoot ? "tree-node-main":""}">
               <div class="tree-node-name">${n.name}</div>
               <div class="tree-node-meta">
-                L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}
+                L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · Lv:${level || 0} · ₹${n.commission||0}
               </div>
               <div class="tree-node-actions">
                 <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
@@ -619,7 +683,7 @@
     area.innerHTML = html;
   }
 
-  /************ Add / Edit / Delete ************/
+  /************ Add / Edit / Delete (Tree) ************/
 
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
@@ -641,7 +705,7 @@
     addMember(parentId, sideField, name, pass);
   }
 
-  // बीच में member जोड़ने पर पुराना subtree नीचे shift हो कर 2–2 seats में redistribute
+  // बीच में insert + subtree redistribute जैसा पहले था
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -650,7 +714,7 @@
         alert("Parent नहीं मिला");
         return;
       }
-      const parent = parentSnap.data();
+      const parent          = parentSnap.data();
       const existingChildId = parent[sideField] || null;
 
       const mainForChild = parent.mainAccountId || parentId;
@@ -672,7 +736,8 @@
         commissionWallet: 0,
         bonusWallet: 0,
         mainAccountId: mainForChild,
-        payoutBlocked: false
+        payoutBlocked: false,
+        totalPaid: 0
       }, {merge:true});
 
       if(!existingChildId){
@@ -682,6 +747,7 @@
         return;
       }
 
+      // Subtree rearrange
       const subtreeIds = [];
       const queue = [existingChildId];
       while(queue.length){
