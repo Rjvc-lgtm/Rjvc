@@ -284,7 +284,6 @@
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
-      // root = जिसकी parentId null है
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -324,7 +323,9 @@
 
       await usersCol.doc(newDoc.id).set({
         name,
+        loginName: name,
         password: pass,
+        loginPassword: pass,
         commissionWallet: 0,
         bonusWallet: 0,
         mainAccountId: newDoc.id,
@@ -448,7 +449,7 @@
   /************ Users wallets update (commission + bonus 80%) ************/
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
-    const bonusMap = {}; // mainId -> total bonus
+    const bonusMap = {};
 
     list.forEach(n=>{
       const mainId = getMainAccountId(n);
@@ -456,11 +457,8 @@
 
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
-      // ------------ IMPORTANT ------------
-      // Bonus केवल उन IDs से निकलेगा जिनके नाम में "sub" है
-      // (जैसे: "Rajesh parmar sub1", "sub2" आदि)
-      const name = (n.name || "").toLowerCase();
-      const isSubIdByName = name.includes("sub");
+      const nameLower = (n.name || "").toLowerCase();
+      const isSubIdByName = nameLower.includes("sub");
 
       if(isSubIdByName && mainId !== n.id){
         const subComm    = n.commission || 0;
@@ -471,10 +469,14 @@
 
     const batch = db.batch();
     list.forEach(n=>{
-      const uRef = usersCol.doc(n.id);
+      const name  = n.name || "";
+      const pass  = n.password || "";
+      const uRef  = usersCol.doc(n.id);
       const data = {
-        name: n.name || "",
-        password: n.password || "",
+        name: name,
+        loginName: name,         // <-- customer-login compatibility
+        password: pass,
+        loginPassword: pass,     // <-- customer-login compatibility
         commissionWallet: n.commission || 0,
         bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
         mainAccountId: n.mainAccountId || n.id
@@ -507,7 +509,6 @@
       const leftC  = n.leftCount  || 0;
       const rightC = n.rightCount || 0;
 
-      // level दिखाने के लिए: कितने pairs किस slab में गये
       const pairs = n.pairs || 0;
       let levelLabel = "-";
       if(pairs>0){
@@ -620,7 +621,6 @@
   }
 
   /************ Add / Edit / Delete ************/
-
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if(!sideAns) return;
@@ -641,7 +641,6 @@
     addMember(parentId, sideField, name, pass);
   }
 
-  // बीच में member जोड़ने पर पुराना subtree नीचे shift हो कर 2–2 seats में redistribute
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -668,7 +667,9 @@
 
       await usersCol.doc(newId).set({
         name,
+        loginName: name,
         password: pass,
+        loginPassword: pass,
         commissionWallet: 0,
         bonusWallet: 0,
         mainAccountId: mainForChild,
@@ -753,8 +754,11 @@
     const newName = prompt("नया नाम?", node.name);
     if(!newName) return;
     const newPass = prompt("नया password? (खाली छोड़ो तो पुराना ही रहेगा)", node.password || "");
-    const update = { name:newName };
-    if(newPass && newPass.trim()) update.password = newPass.trim();
+    const update = { name:newName, loginName:newName };
+    if(newPass && newPass.trim()){
+      update.password      = newPass.trim();
+      update.loginPassword = newPass.trim();
+    }
 
     try{
       await treeCol.doc(id).update(update);
