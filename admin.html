@@ -101,10 +101,8 @@
           हर ID से <b>20₹ joining income</b> मानी गई है।<br/>
           Binary pairs commission (per pair):  
           1–4 level: ₹10, 5: ₹8, 6: ₹7, 7: ₹6, 8: ₹5, 9: ₹4, 10+ : ₹3।<br/>
-          हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
-          (20% company के पास – customer को नहीं दिखता)।<br/>
-          जब भी customer से पैसा आता है, आप किसी भी ID पर <b>+Payment</b> दबाकर उसकी main ID के लिए
-          amount (जैसे 120₹) save कर सकते हैं – customer login में Payment history में दिखेगा।
+          जिन IDs के नाम में <b>“sub”</b> आता है, उनकी commission का <b>80%</b> उनकी main ID के <b>Bonus Wallet</b> में जाता है  
+          (20% company के पास – customer को नहीं दिखता)।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -191,7 +189,6 @@
               <th>Pairs</th>
               <th>Level</th>
               <th>Binary Income<br/>(₹)</th>
-              <th>Payment</th>
               <th>Payout</th>
               <th>Tree</th>
               <th>Del</th>
@@ -202,8 +199,8 @@
       </div>
       <p class="small" style="margin-top:6px;">
         Binary logic: हर 2 member = 1 pair.  
-        Commission level-wise slab से निकलेगा (level 1–10).  
-        Sub IDs की commission में से 80% उनकी main ID के Bonus Wallet में जाता है।
+        Commission level-wise slab से निकलेगा।  
+        सिर्फ जिन IDs के नाम में “sub” आता है, उनकी commission से 80% उनकी main ID के Bonus Wallet में जाता है।
       </p>
     </div>
 
@@ -242,10 +239,9 @@
   firebase.initializeApp(firebaseConfig);
   try { firebase.analytics(); } catch(e) {}
 
-  const db          = firebase.firestore();
-  const treeCol     = db.collection("TreeNodes");
-  const usersCol    = db.collection("Users");
-  const paymentsCol = db.collection("Payments");   // payment history
+  const db       = firebase.firestore();
+  const treeCol  = db.collection("TreeNodes");
+  const usersCol = db.collection("Users");
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -320,13 +316,12 @@
         parentId: null,
         leftId: null,
         rightId: null,
-        mainAccountId: null,   // बाद में खुद को assign करेंगे
+        mainAccountId: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
       await newDoc.update({ mainAccountId: newDoc.id });
 
-      // Users collection में भी same ID पर login record
       await usersCol.doc(newDoc.id).set({
         name,
         password: pass,
@@ -389,22 +384,6 @@
     { level:10,pairs:512, rate:3  }
   ];
 
-  // कितने pairs पर कौन सा level complete हुआ?
-  function getLevelForPairs(totalPairs){
-    let remaining = totalPairs;
-    let level = 0;
-    for(let i=0;i<LEVEL_RATES.length;i++){
-      const slab = LEVEL_RATES[i];
-      if(remaining >= slab.pairs){
-        remaining -= slab.pairs;
-        level = slab.level;          // ये level पूरा हो गया
-      }else{
-        break;                       // अगला level पूरा नहीं हुआ
-      }
-    }
-    return level; // 0 = अभी कोई level complete नहीं
-  }
-
   function computeCommissionForPairs(totalPairs){
     let remaining   = totalPairs;
     let commission  = 0;
@@ -415,8 +394,6 @@
       commission += usePairs * slab.rate;
       remaining  -= usePairs;
     }
-
-    // अगर pairs 10 level से भी ज़्यादा हो जाएँ
     if(remaining > 0){
       const lastRate = LEVEL_RATES[LEVEL_RATES.length-1].rate;
       commission += remaining * lastRate;
@@ -442,14 +419,12 @@
       const rightCount = countSideMembers(n.id,"rightId");
       const pairs      = Math.floor(members/2);
       const comm       = computeCommissionForPairs(pairs);
-      const level      = getLevelForPairs(pairs);   // नया level calculation
 
       n.members    = members;
       n.leftCount  = leftCount;
       n.rightCount = rightCount;
       n.pairs      = pairs;
       n.commission = comm;
-      n.level      = level;
 
       globalTotalPairs      += pairs;
       globalTotalCommission += comm;
@@ -481,9 +456,15 @@
 
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
-      if(mainId !== n.id){
+      // ------------ IMPORTANT ------------
+      // Bonus केवल उन IDs से निकलेगा जिनके नाम में "sub" है
+      // (जैसे: "Rajesh parmar sub1", "sub2" आदि)
+      const name = (n.name || "").toLowerCase();
+      const isSubIdByName = name.includes("sub");
+
+      if(isSubIdByName && mainId !== n.id){
         const subComm    = n.commission || 0;
-        const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को
+        const bonusShare = +(subComm * 0.80).toFixed(2);
         bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
       }
     });
@@ -496,8 +477,7 @@
         password: n.password || "",
         commissionWallet: n.commission || 0,
         bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
-        mainAccountId: n.mainAccountId || n.id,
-        level: n.level || 0
+        mainAccountId: n.mainAccountId || n.id
       };
       batch.set(uRef, data, {merge:true});
     });
@@ -513,39 +493,6 @@
     await uRef.set({payoutBlocked: !cur},{merge:true});
   }
 
-  /************ NEW: Add Payment for main account (for customer Payment History) ************/
-  async function addPaymentForNode(id){
-    const node = nodesById[id];
-    if(!node){
-      alert("Node नहीं मिला");
-      return;
-    }
-    const mainId = getMainAccountId(node);
-
-    let ans = prompt("Customer से कितना amount मिला? (₹)", "120");
-    if(ans === null) return;
-    ans = Number(ans);
-    if(!ans || ans <= 0){
-      alert("Amount सही भरें");
-      return;
-    }
-
-    const note = prompt("Remark / Note (optional)", "Joining / Monthly payment");
-
-    try{
-      await paymentsCol.add({
-        mainAccountId: mainId,
-        amount: ans,
-        sourceNodeId: id,
-        note: note || "",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      alert("Payment record save हो गया। Customer login में Payment History में दिखेगा।");
-    }catch(err){
-      alert("Payment save error: " + err.message);
-    }
-  }
-
   /************ Table render ************/
   function renderTable(){
     const tbody = document.getElementById("customerTableBody");
@@ -559,7 +506,21 @@
     list.forEach((n,idx)=>{
       const leftC  = n.leftCount  || 0;
       const rightC = n.rightCount || 0;
-      const level  = n.level || 0;
+
+      // level दिखाने के लिए: कितने pairs किस slab में गये
+      const pairs = n.pairs || 0;
+      let levelLabel = "-";
+      if(pairs>0){
+        let remaining = pairs;
+        for(let i=0;i<LEVEL_RATES.length;i++){
+          const slab = LEVEL_RATES[i];
+          if(remaining <= slab.pairs){
+            levelLabel = "Level " + slab.level;
+            break;
+          }
+          remaining -= slab.pairs;
+        }
+      }
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -571,13 +532,8 @@
         <td>${n.members || 0}</td>
         <td>L:${leftC} · R:${rightC}</td>
         <td>${n.pairs || 0}</td>
-        <td>${level ? "Level " + level : "-"}</td>
+        <td>${levelLabel}</td>
         <td>₹${n.commission || 0}</td>
-        <td>
-          <button class="btn btn-sm btn-secondary" onclick="addPaymentForNode('${n.id}')">
-            +Payment
-          </button>
-        </td>
         <td>
           <button class="btn btn-sm btn-secondary" onclick="togglePayout('${n.id}')">
             Toggle
@@ -619,7 +575,7 @@
     }
 
     info.innerHTML = `अभी tree <b>${startNode.name}</b> से शुरू हो रहा है
-      (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Level: ${startNode.level||0}, Binary Income: ₹${startNode.commission||0})`;
+      (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Binary Income: ₹${startNode.commission||0})`;
 
     let html = "";
 
@@ -632,13 +588,12 @@
         const isMainTreeRoot = (id === rootId);
         const leftC  = n.leftCount  || 0;
         const rightC = n.rightCount || 0;
-        const lvl    = n.level || 0;
         html += `
           <div class="tree-node-wrap">
             <div class="tree-node ${isMainTreeRoot ? "tree-node-main":""}">
               <div class="tree-node-name">${n.name}</div>
               <div class="tree-node-meta">
-                L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · Lvl:${lvl} · ₹${n.commission||0}
+                L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}
               </div>
               <div class="tree-node-actions">
                 <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
@@ -666,7 +621,6 @@
 
   /************ Add / Edit / Delete ************/
 
-  // +Member: बीच में भी add कर सकते हैं
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if(!sideAns) return;
@@ -687,7 +641,7 @@
     addMember(parentId, sideField, name, pass);
   }
 
-  // बीच में insert + subtree rearrange
+  // बीच में member जोड़ने पर पुराना subtree नीचे shift हो कर 2–2 seats में redistribute
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -701,7 +655,6 @@
 
       const mainForChild = parent.mainAccountId || parentId;
 
-      // पहले नया node बनाओ
       const newRef = await treeCol.add({
         name,
         password: pass,
@@ -713,7 +666,6 @@
       });
       const newId = newRef.id;
 
-      // Users collection
       await usersCol.doc(newId).set({
         name,
         password: pass,
@@ -723,7 +675,6 @@
         payoutBlocked: false
       }, {merge:true});
 
-      // अगर side पहले खाली था तो simple attach
       if(!existingChildId){
         const update = {};
         update[sideField] = newId;
@@ -731,9 +682,6 @@
         return;
       }
 
-      // ---- "बीच में insert + subtree rearrange" ----
-
-      // 1) existing child subtree के सारे nodes collect करो (BFS)
       const subtreeIds = [];
       const queue = [existingChildId];
       while(queue.length){
@@ -745,14 +693,11 @@
         if(nd.rightId) queue.push(nd.rightId);
       }
 
-      // 2) parent पर newId set कर दो
       const parentUpdate = {};
       parentUpdate[sideField] = newId;
       await parentRef.update(parentUpdate);
 
-      // 3) नया subtree layout calculate करो:
-      // newId root रहेगा, subtreeIds उसके नीचे 2–2 seats के हिसाब से लगेंगे
-      const linkMap = {}; // nodeId -> {parentId,leftId,rightId}
+      const linkMap = {};
       subtreeIds.forEach(id=>{
         linkMap[id] = {parentId:null,leftId:null,rightId:null};
       });
@@ -778,7 +723,6 @@
         }
       }
 
-      // 4) Firestore batch update
       const batch = db.batch();
 
       batch.update(newRef, {
