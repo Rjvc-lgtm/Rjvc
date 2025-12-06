@@ -202,7 +202,7 @@
         Binary logic: हर 2 member = 1 pair.  
         Commission level-wise slab से निकलेगा।  
         Sub IDs की commission में से 80% उनकी main ID के Bonus Wallet में जाता है।  
-        Package बटन से 1 main + 5 sub मिलाकर 120₹ का payment record Payments में जाता है
+        Package बटन से 1 main + बाकी sub के पैसों का हिसाब Payments में जाता है
         (आप चाहो तो एक main को multiple बार package दे सकते हो)।
       </p>
     </div>
@@ -242,9 +242,9 @@
   firebase.initializeApp(firebaseConfig);
   try { firebase.analytics(); } catch(e) {}
 
-  const db        = firebase.firestore();
-  const treeCol   = db.collection("TreeNodes");
-  const usersCol  = db.collection("Users");
+  const db          = firebase.firestore();
+  const treeCol     = db.collection("TreeNodes");
+  const usersCol    = db.collection("Users");
   const paymentsCol = db.collection("Payments");
 
   /************ Simple Admin Login ************/
@@ -279,8 +279,8 @@
   let treeUnsub         = null;
 
   // Payments
-  let paymentsUnsub       = null;
-  let globalBusinessIncome = 0; // sum of Payments.amount
+  let paymentsUnsub         = null;
+  let globalBusinessIncome  = 0; // sum of Payments.amount
 
   function startSubscriptions(){
     // Tree listener
@@ -303,7 +303,7 @@
       renderTree();
     });
 
-    // Payments listener (Company Income)
+    // Payments listener
     if(paymentsUnsub) paymentsUnsub();
     paymentsUnsub = paymentsCol.onSnapshot(snap=>{
       let sum = 0;
@@ -312,7 +312,7 @@
         sum += d.amount || 0;
       });
       globalBusinessIncome = sum;
-      recalcAll();  // income बदलते ही company report update
+      recalcAll();
     });
   }
 
@@ -424,7 +424,6 @@
     return commission;
   }
 
-  // Node किस level तक पहुँचा है (pairs से)
   function computeLevelForPairs(totalPairs){
     let remaining = totalPairs;
     let level = 0;
@@ -470,7 +469,6 @@
       globalTotalCommission += comm;
     });
 
-    // अब Business Income = Payments का total
     globalTotalBusinessInc = globalBusinessIncome;
     const companyProfit = globalTotalBusinessInc - globalTotalCommission;
 
@@ -495,7 +493,7 @@
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
-      treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
+      treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true });
 
       if(mainId !== n.id){
         const subComm    = n.commission || 0;
@@ -541,7 +539,6 @@
       const ok = confirm(`"${node.name}" की main ID पर ₹120 का package add करें?`);
       if(!ok) return;
 
-      // Payments collection में record
       await paymentsCol.add({
         mainAccountId: mainId,
         triggerNodeId: id,
@@ -549,7 +546,6 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      // Users में main account पर totalPaid += 120
       await usersCol.doc(mainId).set({
         totalPaid: firebase.firestore.FieldValue.increment(120)
       }, {merge:true});
@@ -705,7 +701,7 @@
     addMember(parentId, sideField, name, pass);
   }
 
-  // बीच में insert + subtree redistribute जैसा पहले था
+  // 🔴 यहीं से पुराना/simple binary tree insert logic 🔴
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -719,6 +715,7 @@
 
       const mainForChild = parent.mainAccountId || parentId;
 
+      // नया node create
       const newRef = await treeCol.add({
         name,
         password: pass,
@@ -730,6 +727,7 @@
       });
       const newId = newRef.id;
 
+      // Users collection
       await usersCol.doc(newId).set({
         name,
         password: pass,
@@ -741,72 +739,23 @@
       }, {merge:true});
 
       if(!existingChildId){
+        // side खाली था → सीधा attach
         const update = {};
         update[sideField] = newId;
         await parentRef.update(update);
-        return;
+      }else{
+        // 🔁 पुराना logic:
+        // parent की उसी side पर newId लगेगा
+        // पुराना child new node के LEFT child में चला जाएगा
+        const updateParent = {};
+        updateParent[sideField] = newId;
+
+        await Promise.all([
+          parentRef.update(updateParent),
+          newRef.update({ leftId: existingChildId }),
+          treeCol.doc(existingChildId).update({ parentId: newId })
+        ]);
       }
-
-      // Subtree rearrange
-      const subtreeIds = [];
-      const queue = [existingChildId];
-      while(queue.length){
-        const nid = queue.shift();
-        if(!nodesById[nid]) continue;
-        subtreeIds.push(nid);
-        const nd = nodesById[nid];
-        if(nd.leftId)  queue.push(nd.leftId);
-        if(nd.rightId) queue.push(nd.rightId);
-      }
-
-      const parentUpdate = {};
-      parentUpdate[sideField] = newId;
-      await parentRef.update(parentUpdate);
-
-      const linkMap = {};
-      subtreeIds.forEach(id=>{
-        linkMap[id] = {parentId:null,leftId:null,rightId:null};
-      });
-
-      const parentsQueue = [newId];
-      let idx = 0;
-      const newNodeLinks = {leftId:null,rightId:null};
-
-      while(idx < subtreeIds.length && parentsQueue.length){
-        const pId = parentsQueue.shift();
-        for(let k=0;k<2 && idx<subtreeIds.length;k++){
-          const childId = subtreeIds[idx++];
-          if(pId === newId){
-            if(!newNodeLinks.leftId) newNodeLinks.leftId = childId;
-            else newNodeLinks.rightId = childId;
-          }else{
-            const pLink = linkMap[pId];
-            if(!pLink.leftId) pLink.leftId = childId;
-            else pLink.rightId = childId;
-          }
-          linkMap[childId].parentId = (pId === newId ? newId : pId);
-          parentsQueue.push(childId);
-        }
-      }
-
-      const batch = db.batch();
-
-      batch.update(newRef, {
-        leftId:  newNodeLinks.leftId  || null,
-        rightId: newNodeLinks.rightId || null
-      });
-
-      subtreeIds.forEach(id=>{
-        const l = linkMap[id];
-        const ref = treeCol.doc(id);
-        batch.update(ref, {
-          parentId: l.parentId || null,
-          leftId:   l.leftId   || null,
-          rightId:  l.rightId  || null
-        });
-      });
-
-      await batch.commit();
 
     }catch(err){
       alert("Error: " + err.message);
