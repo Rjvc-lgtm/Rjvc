@@ -104,7 +104,7 @@
           हर sub ID की commission का <b>80%</b> उसकी main ID के <b>Bonus Wallet</b> में जाता है  
           (20% company के पास – customer को नहीं दिखता)।<br/>
           जब भी customer से पैसा आता है, आप किसी भी ID पर <b>+Payment</b> दबाकर उसकी main ID के लिए
-          पूरा amount (जैसे 120₹) save कर सकते हैं – customer login में वही total दिखेगा।
+          amount (जैसे 120₹) save कर सकते हैं – customer login में Payment history में दिखेगा।
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
@@ -189,6 +189,7 @@
               <th>Members<br/>(Total)</th>
               <th>Left / Right Members</th>
               <th>Pairs</th>
+              <th>Level</th>
               <th>Binary Income<br/>(₹)</th>
               <th>Payment</th>
               <th>Payout</th>
@@ -201,7 +202,7 @@
       </div>
       <p class="small" style="margin-top:6px;">
         Binary logic: हर 2 member = 1 pair.  
-        Commission level-wise slab से निकलेगा।  
+        Commission level-wise slab से निकलेगा (level 1–10).  
         Sub IDs की commission में से 80% उनकी main ID के Bonus Wallet में जाता है।
       </p>
     </div>
@@ -241,10 +242,10 @@
   firebase.initializeApp(firebaseConfig);
   try { firebase.analytics(); } catch(e) {}
 
-  const db       = firebase.firestore();
-  const treeCol  = db.collection("TreeNodes");
-  const usersCol = db.collection("Users");
-  const paymentsCol = db.collection("Payments");   // NEW
+  const db          = firebase.firestore();
+  const treeCol     = db.collection("TreeNodes");
+  const usersCol    = db.collection("Users");
+  const paymentsCol = db.collection("Payments");   // payment history
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -388,6 +389,22 @@
     { level:10,pairs:512, rate:3  }
   ];
 
+  // कितने pairs पर कौन सा level complete हुआ?
+  function getLevelForPairs(totalPairs){
+    let remaining = totalPairs;
+    let level = 0;
+    for(let i=0;i<LEVEL_RATES.length;i++){
+      const slab = LEVEL_RATES[i];
+      if(remaining >= slab.pairs){
+        remaining -= slab.pairs;
+        level = slab.level;          // ये level पूरा हो गया
+      }else{
+        break;                       // अगला level पूरा नहीं हुआ
+      }
+    }
+    return level; // 0 = अभी कोई level complete नहीं
+  }
+
   function computeCommissionForPairs(totalPairs){
     let remaining   = totalPairs;
     let commission  = 0;
@@ -425,12 +442,14 @@
       const rightCount = countSideMembers(n.id,"rightId");
       const pairs      = Math.floor(members/2);
       const comm       = computeCommissionForPairs(pairs);
+      const level      = getLevelForPairs(pairs);   // नया level calculation
 
       n.members    = members;
       n.leftCount  = leftCount;
       n.rightCount = rightCount;
       n.pairs      = pairs;
       n.commission = comm;
+      n.level      = level;
 
       globalTotalPairs      += pairs;
       globalTotalCommission += comm;
@@ -477,7 +496,8 @@
         password: n.password || "",
         commissionWallet: n.commission || 0,
         bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
-        mainAccountId: n.mainAccountId || n.id
+        mainAccountId: n.mainAccountId || n.id,
+        level: n.level || 0
       };
       batch.set(uRef, data, {merge:true});
     });
@@ -500,10 +520,8 @@
       alert("Node नहीं मिला");
       return;
     }
-    // इस node की main ID निकालो
     const mainId = getMainAccountId(node);
 
-    // Admin से amount पूछो (default 120)
     let ans = prompt("Customer से कितना amount मिला? (₹)", "120");
     if(ans === null) return;
     ans = Number(ans);
@@ -541,6 +559,7 @@
     list.forEach((n,idx)=>{
       const leftC  = n.leftCount  || 0;
       const rightC = n.rightCount || 0;
+      const level  = n.level || 0;
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -552,6 +571,7 @@
         <td>${n.members || 0}</td>
         <td>L:${leftC} · R:${rightC}</td>
         <td>${n.pairs || 0}</td>
+        <td>${level ? "Level " + level : "-"}</td>
         <td>₹${n.commission || 0}</td>
         <td>
           <button class="btn btn-sm btn-secondary" onclick="addPaymentForNode('${n.id}')">
@@ -599,7 +619,7 @@
     }
 
     info.innerHTML = `अभी tree <b>${startNode.name}</b> से शुरू हो रहा है
-      (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Binary Income: ₹${startNode.commission||0})`;
+      (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Level: ${startNode.level||0}, Binary Income: ₹${startNode.commission||0})`;
 
     let html = "";
 
@@ -612,12 +632,13 @@
         const isMainTreeRoot = (id === rootId);
         const leftC  = n.leftCount  || 0;
         const rightC = n.rightCount || 0;
+        const lvl    = n.level || 0;
         html += `
           <div class="tree-node-wrap">
             <div class="tree-node ${isMainTreeRoot ? "tree-node-main":""}">
               <div class="tree-node-name">${n.name}</div>
               <div class="tree-node-meta">
-                L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0}
+                L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · Lvl:${lvl} · ₹${n.commission||0}
               </div>
               <div class="tree-node-actions">
                 <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
