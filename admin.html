@@ -162,6 +162,30 @@
       </div>
     </div>
 
+    <!-- NEW MASS PAYMENT PANEL -->
+    <div class="panel">
+      <h3>सभी Customers के लिए Payment Add करो</h3>
+      <p class="small">
+        जब भी किसी main account के लिए सभी IDs (main + sub IDs) ने company को 20-20₹ दिए हों,
+        आप यहाँ से एक क्लिक में हर ID के लिए payment entry बना सकते हैं।
+        Customer login में main ID पर <b>Total Paid</b> = (IDs × amount) दिखेगा
+        (जैसे 6 IDs हैं तो 6 × 20 = 120₹)।
+      </p>
+      <div class="flex" style="gap:10px;flex-wrap:wrap;margin-top:8px;">
+        <div style="flex:1 1 200px;">
+          <label>Amount per ID (₹)</label>
+          <input id="massPayAmount" type="number" value="20" />
+        </div>
+      </div>
+      <button class="btn btn-primary mt-3" onclick="addPaymentForAllCustomers()">
+        अभी खुले पूरे tree के सभी IDs में payment add करो
+      </button>
+      <p class="small" style="margin-top:6px;">
+        ध्यान रहे: यह action पूरे TreeNodes collection पर लगेगा – जितनी भी IDs हैं, हर एक पर
+        1 payment entry बनेगी। Payment history customer side में पहले जैसा दिखता रहेगा।
+      </p>
+    </div>
+
     <!-- CUSTOMER LIST -->
     <div class="panel">
       <div class="flex between">
@@ -239,9 +263,10 @@
   firebase.initializeApp(firebaseConfig);
   try { firebase.analytics(); } catch(e) {}
 
-  const db       = firebase.firestore();
-  const treeCol  = db.collection("TreeNodes");
-  const usersCol = db.collection("Users");
+  const db          = firebase.firestore();
+  const treeCol     = db.collection("TreeNodes");
+  const usersCol    = db.collection("Users");
+  const paymentsCol = db.collection("Payments");  // <--- नया
 
   /************ Simple Admin Login ************/
   const ADMIN_ID       = "admin";
@@ -284,6 +309,7 @@
         nodesById[doc.id] = Object.assign({id:doc.id}, d);
       });
 
+      // root = जिसकी parentId null है
       Object.values(nodesById).forEach(n=>{
         if(!n.parentId) rootId = n.id;
       });
@@ -323,9 +349,7 @@
 
       await usersCol.doc(newDoc.id).set({
         name,
-        loginName: name,
         password: pass,
-        loginPassword: pass,
         commissionWallet: 0,
         bonusWallet: 0,
         mainAccountId: newDoc.id,
@@ -449,7 +473,7 @@
   /************ Users wallets update (commission + bonus 80%) ************/
   async function updateUsersWallets(){
     const list = Object.values(nodesById);
-    const bonusMap = {};
+    const bonusMap = {}; // mainId -> total bonus
 
     list.forEach(n=>{
       const mainId = getMainAccountId(n);
@@ -457,8 +481,8 @@
 
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
-      const nameLower = (n.name || "").toLowerCase();
-      const isSubIdByName = nameLower.includes("sub");
+      const name = (n.name || "").toLowerCase();
+      const isSubIdByName = name.includes("sub");
 
       if(isSubIdByName && mainId !== n.id){
         const subComm    = n.commission || 0;
@@ -469,14 +493,16 @@
 
     const batch = db.batch();
     list.forEach(n=>{
-      const name  = n.name || "";
-      const pass  = n.password || "";
+      const rawName   = n.name || "";
+      const cleanName = rawName.trim();
+      const pass      = (n.password || "").trim();
+
       const uRef  = usersCol.doc(n.id);
       const data = {
-        name: name,
-        loginName: name,         // <-- customer-login compatibility
+        name: cleanName,
+        loginName: cleanName,
         password: pass,
-        loginPassword: pass,     // <-- customer-login compatibility
+        loginPassword: pass,
         commissionWallet: n.commission || 0,
         bonusWallet: +( (bonusMap[n.id] || 0).toFixed(2) ),
         mainAccountId: n.mainAccountId || n.id
@@ -485,6 +511,56 @@
     });
 
     await batch.commit();
+  }
+
+  /************ MASS PAYMENT FUNCTION ************/
+  async function addPaymentForAllCustomers(){
+    const amtInput = document.getElementById("massPayAmount");
+    const amt = parseFloat((amtInput.value || "0").trim());
+    if(!amt || amt <= 0){
+      alert("Amount सही डालें (₹>0)");
+      return;
+    }
+
+    const list = Object.values(nodesById);
+    if(!list.length){
+      alert("कोई customer नहीं है।");
+      return;
+    }
+
+    if(!confirm(`कन्फर्म करें: सभी ${list.length} IDs के लिए ₹${amt} payment add की जायेगी?`)){
+      return;
+    }
+
+    try{
+      const batch = db.batch();
+      list.forEach(n=>{
+        const mainId = n.mainAccountId || getMainAccountId(n);
+
+        // Payments collection में entry
+        const payRef = paymentsCol.doc();
+        batch.set(payRef,{
+          userId: n.id,
+          mainAccountId: mainId,
+          amount: amt,
+          remark: "Admin recharge",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Users में lastPaidAmount increment
+        const uRef = usersCol.doc(n.id);
+        batch.set(uRef,{
+          lastPaidAmount: firebase.firestore.FieldValue.increment(amt)
+        },{merge:true});
+      });
+
+      await batch.commit();
+      alert("सभी IDs के लिए payment entries बना दी गयीं।");
+
+    }catch(err){
+      console.error(err);
+      alert("Payment add करते समय error: " + err.message);
+    }
   }
 
   /************ Payout toggle ************/
@@ -621,6 +697,7 @@
   }
 
   /************ Add / Edit / Delete ************/
+
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if(!sideAns) return;
@@ -641,6 +718,7 @@
     addMember(parentId, sideField, name, pass);
   }
 
+  // बीच में member जोड़ने पर पुराना subtree नीचे shift हो कर 2–2 seats में redistribute
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef  = treeCol.doc(parentId);
@@ -667,9 +745,7 @@
 
       await usersCol.doc(newId).set({
         name,
-        loginName: name,
         password: pass,
-        loginPassword: pass,
         commissionWallet: 0,
         bonusWallet: 0,
         mainAccountId: mainForChild,
@@ -754,11 +830,8 @@
     const newName = prompt("नया नाम?", node.name);
     if(!newName) return;
     const newPass = prompt("नया password? (खाली छोड़ो तो पुराना ही रहेगा)", node.password || "");
-    const update = { name:newName, loginName:newName };
-    if(newPass && newPass.trim()){
-      update.password      = newPass.trim();
-      update.loginPassword = newPass.trim();
-    }
+    const update = { name:newName };
+    if(newPass && newPass.trim()) update.password = newPass.trim();
 
     try{
       await treeCol.doc(id).update(update);
