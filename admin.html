@@ -249,7 +249,7 @@
 
   function handleAdminLogin(){
     const id   = document.getElementById("adminId").value.trim();
-    const pass = document.getElementById("adminPass").value.trim();
+       const pass = document.getElementById("adminPass").value.trim();
     const err  = document.getElementById("loginError");
 
     if(id === ADMIN_ID && pass === ADMIN_PASSWORD){
@@ -322,7 +322,7 @@
 
       await newDoc.update({ mainAccountId: newDoc.id });
 
-      // IMPORTANT: Users में loginName/loginPassword भी रखें
+      // Users में loginName/loginPassword भी रखें
       await usersCol.doc(newDoc.id).set({
         name,
         password: pass,
@@ -364,12 +364,12 @@
     return 1 + countDescendants(childId);
   }
 
-  /************ helper: sub-name check (NEW) ************/
+  /************ helper: sub-name check ************/
   function isSubName(name){
     return (name || "").toLowerCase().includes("sub");
   }
 
-  /************ Main account decide (UPDATED) ************/
+  /************ Main account decide ************/
   function getMainAccountId(node){
     if(!node) return null;
 
@@ -474,21 +474,27 @@
     const bonusMap = {}; // mainId -> total bonus
 
     list.forEach(n=>{
-      const mainId = getMainAccountId(n);  // UPDATED rule
+      // 1) हर node के लिए mainAccountId – सबसे नज़दीकी non-sub ancestor
+      const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
+      // TreeNodes में mainAccountId save
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
-      const name = (n.name || "").toLowerCase();
-      const isSubIdByName = name.includes("sub");
-
-      if(isSubIdByName && mainId !== n.id){
+      // 2) सिर्फ "sub" IDs से hi bonus निकालना
+      const isSub = isSubName(n.name);
+      if(isSub && mainId && mainId !== n.id){
         const subComm    = n.commission || 0;
-        const bonusShare = +(subComm * 0.80).toFixed(2); // 80% main को
-        bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
+        const bonusShare = +(subComm * 0.80).toFixed(2); // 80%
+
+        if(bonusShare > 0){
+          // bonus sirf उसी mainId को जाएगा
+          bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
+        }
       }
     });
 
+    // 3) Users collection में commissionWallet + bonusWallet update
     const batch = db.batch();
     list.forEach(n=>{
       const uRef = usersCol.doc(n.id);
@@ -674,7 +680,6 @@
       const parent = parentSnap.data();
       const existingChildId = parent[sideField] || null;
 
-      // ---------- NEW LOGIC FOR mainAccountId ----------
       const isSubChild  = isSubName(name);
       const parentName  = (parent.name || "").toLowerCase();
       const parentIsSub = parentName.includes("sub");
@@ -682,19 +687,14 @@
       // child के लिए tentative mainId
       let mainForChild;
       if(isSubChild){
-        // sub child → अगर parent भी sub है तो उसकी mainAccountId use करो,
-        // वरना parent खुद main माना जाएगा
         if(parentIsSub && parent.mainAccountId){
           mainForChild = parent.mainAccountId;
         }else{
           mainForChild = parentRef.id;
         }
       }else{
-        // नाम में "sub" नहीं → यह खुद main ID रहेगा
-        // अभी null रखेंगे, नीचे add के बाद खुद का id set करेंगे
-        mainForChild = null;
+        mainForChild = null; // खुद main होगा
       }
-      // --------------------------------------------------
 
       const newRef = await treeCol.add({
         name,
@@ -707,12 +707,10 @@
       });
       const newId = newRef.id;
 
-      // अगर child खुद main है (नाम में "sub" नहीं) → उसका mainAccountId = खुद का id
       if(!isSubChild){
         await newRef.update({ mainAccountId: newId });
       }
 
-      // Users: name/password के साथ loginName/loginPassword भी
       const mainIdForUser = !isSubChild
         ? newId
         : (mainForChild || parent.mainAccountId || parentId);
