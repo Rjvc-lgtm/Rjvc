@@ -249,7 +249,7 @@
 
   function handleAdminLogin(){
     const id   = document.getElementById("adminId").value.trim();
-       const pass = document.getElementById("adminPass").value.trim();
+    const pass = document.getElementById("adminPass").value.trim();
     const err  = document.getElementById("loginError");
 
     if(id === ADMIN_ID && pass === ADMIN_PASSWORD){
@@ -364,21 +364,49 @@
     return 1 + countDescendants(childId);
   }
 
-  /************ helper: sub-name check ************/
-  function isSubName(name){
-    return (name || "").toLowerCase().includes("sub");
+  /************ helper: sub-name check + base main name ************/
+  function getBaseMainName(name){
+    if(!name) return null;
+    const lower = name.toLowerCase();
+    const idx = lower.indexOf("sub");
+    if(idx === -1) return null;        // sub नहीं है
+    return lower.slice(0, idx).trim(); // "rajesh sub1" → "rajesh"
   }
 
-  /************ Main account decide ************/
+  function isSubName(name){
+    return getBaseMainName(name) !== null;
+  }
+
+  // नाम से main ID खोजो: "rajesh" → jis node ka name "rajesh" ho
+  function findMainByName(baseName){
+    if(!baseName) return null;
+    const target = baseName.trim();
+    let foundId = null;
+    Object.values(nodesById).forEach(n=>{
+      if(n.name && n.name.toLowerCase().trim() === target){
+        foundId = n.id;
+      }
+    });
+    return foundId;
+  }
+
+  /************ Main account decide (NAME BASED) ************/
   function getMainAccountId(node){
     if(!node) return null;
 
-    // अगर खुद "sub" नहीं है → खुद ही main ID
+    // खुद sub नहीं है → खुद ही main
     if(!isSubName(node.name)){
       return node.id;
     }
 
-    // sub ID के लिए: सबसे नज़दीकी ancestor जिसका नाम में "sub" नहीं है
+    // sub ID के लिए: नाम से main ढूँढो
+    const base = getBaseMainName(node.name); // "rajesh sub1" → "rajesh"
+    const byName = findMainByName(base);
+    if(byName){
+      return byName;  // असली main ID
+    }
+
+    // fallback: ancestor non-sub
     let current = node;
     while(current.parentId && nodesById[current.parentId]){
       const parent = nodesById[current.parentId];
@@ -389,7 +417,6 @@
       current = parent;
     }
 
-    // safety fallback
     return node.id;
   }
 
@@ -474,27 +501,25 @@
     const bonusMap = {}; // mainId -> total bonus
 
     list.forEach(n=>{
-      // 1) हर node के लिए mainAccountId – सबसे नज़दीकी non-sub ancestor
+      // हर node के लिए mainAccountId – नाम वाले rule से
       const mainId = getMainAccountId(n);
       n.mainAccountId = mainId;
 
       // TreeNodes में mainAccountId save
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
 
-      // 2) सिर्फ "sub" IDs से hi bonus निकालना
+      // सिर्फ sub IDs से bonus
       const isSub = isSubName(n.name);
       if(isSub && mainId && mainId !== n.id){
         const subComm    = n.commission || 0;
         const bonusShare = +(subComm * 0.80).toFixed(2); // 80%
 
         if(bonusShare > 0){
-          // bonus sirf उसी mainId को जाएगा
           bonusMap[mainId] = (bonusMap[mainId] || 0) + bonusShare;
         }
       }
     });
 
-    // 3) Users collection में commissionWallet + bonusWallet update
     const batch = db.batch();
     list.forEach(n=>{
       const uRef = usersCol.doc(n.id);
@@ -680,20 +705,17 @@
       const parent = parentSnap.data();
       const existingChildId = parent[sideField] || null;
 
-      const isSubChild  = isSubName(name);
-      const parentName  = (parent.name || "").toLowerCase();
-      const parentIsSub = parentName.includes("sub");
+      const isSubChild = isSubName(name);
+      const base       = getBaseMainName(name);
+      const mainByName = base ? findMainByName(base) : null;
 
-      // child के लिए tentative mainId
       let mainForChild;
       if(isSubChild){
-        if(parentIsSub && parent.mainAccountId){
-          mainForChild = parent.mainAccountId;
-        }else{
-          mainForChild = parentRef.id;
-        }
+        // sub id → base name se main ढूँढो, नहीं मिला तो parent/mainAccountId
+        mainForChild = mainByName || parent.mainAccountId || parentId;
       }else{
-        mainForChild = null; // खुद main होगा
+        // खुद main
+        mainForChild = null; // बाद में newId से set करेंगे
       }
 
       const newRef = await treeCol.add({
