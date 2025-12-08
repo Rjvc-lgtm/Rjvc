@@ -364,13 +364,33 @@
     return 1 + countDescendants(childId);
   }
 
+  /************ helper: sub-name check (NEW) ************/
+  function isSubName(name){
+    return (name || "").toLowerCase().includes("sub");
+  }
+
+  /************ Main account decide (UPDATED) ************/
   function getMainAccountId(node){
-    if(node.mainAccountId) return node.mainAccountId;
+    if(!node) return null;
+
+    // अगर खुद "sub" नहीं है → खुद ही main ID
+    if(!isSubName(node.name)){
+      return node.id;
+    }
+
+    // sub ID के लिए: सबसे नज़दीकी ancestor जिसका नाम में "sub" नहीं है
     let current = node;
     while(current.parentId && nodesById[current.parentId]){
-      current = nodesById[current.parentId];
+      const parent = nodesById[current.parentId];
+      if(!parent) break;
+      if(!isSubName(parent.name)){
+        return parent.id;
+      }
+      current = parent;
     }
-    return current.id;
+
+    // safety fallback
+    return node.id;
   }
 
   /************ Commission Slabs (per pair) ************/
@@ -454,7 +474,7 @@
     const bonusMap = {}; // mainId -> total bonus
 
     list.forEach(n=>{
-      const mainId = getMainAccountId(n);
+      const mainId = getMainAccountId(n);  // UPDATED rule
       n.mainAccountId = mainId;
 
       treeCol.doc(n.id).set({ mainAccountId: mainId }, {merge:true});
@@ -654,7 +674,27 @@
       const parent = parentSnap.data();
       const existingChildId = parent[sideField] || null;
 
-      const mainForChild = parent.mainAccountId || parentId;
+      // ---------- NEW LOGIC FOR mainAccountId ----------
+      const isSubChild  = isSubName(name);
+      const parentName  = (parent.name || "").toLowerCase();
+      const parentIsSub = parentName.includes("sub");
+
+      // child के लिए tentative mainId
+      let mainForChild;
+      if(isSubChild){
+        // sub child → अगर parent भी sub है तो उसकी mainAccountId use करो,
+        // वरना parent खुद main माना जाएगा
+        if(parentIsSub && parent.mainAccountId){
+          mainForChild = parent.mainAccountId;
+        }else{
+          mainForChild = parentRef.id;
+        }
+      }else{
+        // नाम में "sub" नहीं → यह खुद main ID रहेगा
+        // अभी null रखेंगे, नीचे add के बाद खुद का id set करेंगे
+        mainForChild = null;
+      }
+      // --------------------------------------------------
 
       const newRef = await treeCol.add({
         name,
@@ -662,12 +702,21 @@
         parentId: parentId,
         leftId: null,
         rightId: null,
-        mainAccountId: mainForChild,
+        mainAccountId: mainForChild || (parent.mainAccountId || parentId),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       const newId = newRef.id;
 
+      // अगर child खुद main है (नाम में "sub" नहीं) → उसका mainAccountId = खुद का id
+      if(!isSubChild){
+        await newRef.update({ mainAccountId: newId });
+      }
+
       // Users: name/password के साथ loginName/loginPassword भी
+      const mainIdForUser = !isSubChild
+        ? newId
+        : (mainForChild || parent.mainAccountId || parentId);
+
       await usersCol.doc(newId).set({
         name,
         password: pass,
@@ -675,7 +724,7 @@
         loginPassword: pass,
         commissionWallet: 0,
         bonusWallet: 0,
-        mainAccountId: mainForChild,
+        mainAccountId: mainIdForUser,
         payoutBlocked: false
       }, {merge:true});
 
