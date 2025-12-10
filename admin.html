@@ -216,7 +216,7 @@
       </div>
       <div id="treeViewArea" style="margin-top:10px;font-size:12px;">अभी tree खाली है।</div>
 
-      <!-- नया canvas: पूरा binary tree diagram -->
+      <!-- नीचे canvas: पूरा binary tree diagram + click actions -->
       <div style="margin-top:10px;">
         <canvas id="treeCanvas" width="900" height="420" style="max-width:100%;"></canvas>
       </div>
@@ -262,6 +262,7 @@
       err.style.display = "none";
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("adminPage").style.display = "block";
+      setupTreeCanvasClick();
       startSubscriptions();
     }else{
       err.style.display = "block";
@@ -279,6 +280,10 @@
   let rootId            = null;
   let currentTreeRootId = null;
   let treeUnsub         = null;
+
+  // canvas hit-map: id -> {x,y,w,h}
+  let treeNodeHitMap = {};
+  let canvasClickSetupDone = false;
 
   function startSubscriptions(){
     if(treeUnsub) treeUnsub();
@@ -323,7 +328,7 @@
         leftId: null,
         rightId: null,
         mainAccountId: null,
-        monthsPaid: 1, // joining पर पहली 20₹ cycle मानी
+        monthsPaid: 1,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
@@ -941,7 +946,7 @@
     }
   }
 
-  /************ Binary tree diagram on canvas ************/
+  /************ Binary tree diagram on canvas + click actions ************/
   function drawTreeDiagram(startId){
     const canvas = document.getElementById("treeCanvas");
     if(!canvas){
@@ -952,6 +957,7 @@
     const H = canvas.height;
 
     ctx.clearRect(0,0,W,H);
+    treeNodeHitMap = {};
 
     if(!startId || !nodesById[startId]){
       return;
@@ -1034,6 +1040,9 @@
       ctx.fillStyle = "#e5e7eb";
       const label = n.name || "";
       ctx.fillText(label, x, y);
+
+      // hit-map me store
+      treeNodeHitMap[n.id] = {x, y, w, h};
     });
   }
 
@@ -1048,6 +1057,53 @@
     ctx.lineTo(x, y+r);
     ctx.quadraticCurveTo(x, y, x+r, y);
     ctx.closePath();
+  }
+
+  /************ Canvas click -> +Member / Edit / Del ************/
+  function setupTreeCanvasClick(){
+    if(canvasClickSetupDone) return;
+    const canvas = document.getElementById("treeCanvas");
+    if(!canvas) return;
+
+    canvas.addEventListener("click", function(e){
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+
+      // find which node
+      let targetId = null;
+      Object.keys(treeNodeHitMap).forEach(id=>{
+        const hit = treeNodeHitMap[id];
+        if(!hit || targetId) return;
+        const left = hit.x - hit.w/2;
+        const right = hit.x + hit.w/2;
+        const top = hit.y - hit.h/2;
+        const bottom = hit.y + hit.h/2;
+        if(cx >= left && cx <= right && cy >= top && cy <= bottom){
+          targetId = id;
+        }
+      });
+
+      if(!targetId) return;
+      const node = nodesById[targetId];
+      if(!node) return;
+
+      const choice = prompt(`"${node.name}" पर क्या करना है?\n1 = +Member\n2 = Edit\n3 = Delete`);
+      if(!choice) return;
+      const c = choice.trim();
+
+      if(c === "1"){
+        treeAddMember(targetId);
+      }else if(c === "2"){
+        editCustomer(targetId);
+      }else if(c === "3"){
+        deleteCustomer(targetId);
+      }else{
+        alert("1, 2 या 3 ही चुनें।");
+      }
+    });
+
+    canvasClickSetupDone = true;
   }
 </script>
 
