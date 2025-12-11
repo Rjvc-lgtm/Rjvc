@@ -59,7 +59,7 @@
     .profit-value{font-size:18px;font-weight:700;}
 
     canvas{max-width:100%;display:block;background:transparent;}
-    .canvas-wrapper{padding:12px 0;}
+    .canvas-wrapper{padding:12px 0; overflow:auto;}
 
     @media(max-width:720px){
       .panel{padding:14px;}
@@ -215,11 +215,13 @@
         </div>
         <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">सिर्फ Root दिखाओ</button>
       </div>
+
+      <!-- existing card-list tree (unchanged) -->
       <div id="treeViewArea" style="margin-top:10px;font-size:12px;">अभी tree खाली है।</div>
 
-      <!-- canvas wrapper -->
-      <div class="canvas-wrapper">
-        <canvas id="treeCanvas" style="width:100%;height:600px;"></canvas>
+      <!-- canvas wrapper (card-style diagram) -->
+      <div class="canvas-wrapper" style="margin-top:12px;">
+        <canvas id="treeCanvas" style="width:100%; height:600px;"></canvas>
       </div>
     </div>
 
@@ -299,6 +301,13 @@
       recalcAll();
       renderTable();
       renderTree();
+
+      // force a redraw after UI painted (helps mobile)
+      setTimeout(()=>{
+        try{ drawTreeDiagram(currentTreeRootId || rootId); }catch(e){console.error(e);}
+      }, 120);
+    }, err=>{
+      console.error("snapshot err", err);
     });
   }
 
@@ -703,7 +712,7 @@
     buildLevel([startId]);
     area.innerHTML = html;
 
-    // अब upgraded canvas card-style diagram call करो
+    // call canvas draw
     drawTreeDiagram(startId);
   }
 
@@ -941,74 +950,78 @@
     }
   }
 
-  /************ UPGRADED: drawTreeDiagram (card-style nodes on canvas) ************/
+  /************ Canvas: card-style tree diagram ************/
   function drawTreeDiagram(startId) {
     const canvas = document.getElementById("treeCanvas");
     if(!canvas) return;
-
     const ctx = canvas.getContext("2d");
-    // make canvas pixel-ratio aware
+
+    // reset transform and size for DPR
+    ctx.setTransform(1,0,0,1,0,0);
     const ratio = window.devicePixelRatio || 1;
-    const widthCSS = canvas.clientWidth;
+    const widthCSS = canvas.clientWidth || canvas.offsetWidth || 900;
     const heightCSS = 600;
     canvas.width = Math.floor(widthCSS * ratio);
     canvas.height = Math.floor(heightCSS * ratio);
-    canvas.style.height = heightCSS + "px";
     canvas.style.width = widthCSS + "px";
+    canvas.style.height = heightCSS + "px";
     ctx.scale(ratio, ratio);
 
     ctx.clearRect(0, 0, widthCSS, heightCSS);
-    if(!startId || !nodesById[startId]) return;
+
+    if(!startId || !nodesById || !Object.keys(nodesById).length) return;
+    if(!nodesById[startId]) return;
 
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
+    ctx.imageSmoothingEnabled = true;
 
-    // build levels (BFS) limited depth to avoid overflow
+    // build levels (BFS) - limit depth so it fits
+    const MAX_LEVELS = 6;
     const levels = [];
     let queue = [startId];
-    const MAX_LEVELS = 6;
-    while(queue.length && levels.length < MAX_LEVELS){
+    while (queue.length && levels.length < MAX_LEVELS) {
       levels.push(queue.slice());
       const next = [];
-      queue.forEach(id=>{
+      queue.forEach(id => {
         const n = nodesById[id];
-        if(!n) return;
-        if(n.leftId) next.push(n.leftId);
-        if(n.rightId) next.push(n.rightId);
+        if (!n) return;
+        if (n.leftId) next.push(n.leftId);
+        if (n.rightId) next.push(n.rightId);
       });
       queue = next;
     }
 
     const W = widthCSS;
     const H = heightCSS;
-    const levelGap = 110;
     const topMargin = 20;
+    const levelGap = Math.max(90, (H - topMargin - 40) / Math.max(1, levels.length));
 
-    // positions map
+    // positions
     const pos = {};
-    levels.forEach((lvl, li)=>{
+    levels.forEach((lvl, li) => {
       const y = topMargin + li * levelGap;
       const step = W / (lvl.length + 1);
-      lvl.forEach((id, idx)=>{
+      lvl.forEach((id, idx) => {
         const x = step * (idx + 1);
-        pos[id] = {x,y};
+        pos[id] = { x, y };
       });
     });
 
-    // draw lines (parent -> child)
+    // draw connector lines
     ctx.strokeStyle = "#64748b";
     ctx.lineWidth = 1;
-    Object.values(nodesById).forEach(n=>{
-      if(!n || !pos[n.id]) return;
+    Object.values(nodesById).forEach(n => {
+      if (!n || !pos[n.id]) return;
       const p = pos[n.id];
-      if(n.leftId && pos[n.leftId]){
+      if (n.leftId && pos[n.leftId]) {
         const c = pos[n.leftId];
         ctx.beginPath();
         ctx.moveTo(p.x, p.y + 60);
         ctx.lineTo(c.x, c.y);
         ctx.stroke();
       }
-      if(n.rightId && pos[n.rightId]){
+      if (n.rightId && pos[n.rightId]) {
         const c = pos[n.rightId];
         ctx.beginPath();
         ctx.moveTo(p.x, p.y + 60);
@@ -1017,22 +1030,22 @@
       }
     });
 
-    // helper to draw rounded rect
-    function roundedRectPath(ctx,x,y,w,h,r){
+    // helper rounded rect
+    function roundedRectPath(ctx, x, y, w, h, r) {
       ctx.beginPath();
-      ctx.moveTo(x+r, y);
-      ctx.lineTo(x+w-r, y);
-      ctx.quadraticCurveTo(x+w, y, x+w, y+r);
-      ctx.lineTo(x+w, y+h-r);
-      ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-      ctx.lineTo(x+r, y+h);
-      ctx.quadraticCurveTo(x, y+h, x, y+h-r);
-      ctx.lineTo(x, y+r);
-      ctx.quadraticCurveTo(x, y, x+r, y);
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
       ctx.closePath();
     }
 
-    // draw nodes as full cards
+    // draw cards
     Object.values(nodesById).forEach(n=>{
       if(!pos[n.id]) return;
       const p = pos[n.id];
@@ -1043,7 +1056,7 @@
 
       const isRoot = n.id === startId;
 
-      // background
+      // bg
       ctx.fillStyle = isRoot ? "#2563eb" : "#0f1724";
       roundedRectPath(ctx, x, y, cardW, cardH, 10);
       ctx.fill();
@@ -1058,7 +1071,7 @@
       ctx.font = "bold 13px system-ui";
       ctx.fillText(n.name || "", x + 10, y + 6);
 
-      // meta line
+      // meta
       ctx.font = "11px system-ui";
       ctx.fillStyle = "#cbd5e1";
       const leftC = n.leftCount || 0;
@@ -1068,44 +1081,35 @@
       const comm = n.commission || 0;
       ctx.fillText(`L:${leftC} · R:${rightC} · M:${members} · P:${pairs} · ₹${comm}`, x + 10, y + 28);
 
-      // cycles small text (if exists)
+      // cycles text
       const cycles = n.monthsPaid || 1;
       ctx.fillStyle = "#94a3b8";
       ctx.font = "11px system-ui";
       ctx.fillText(`${cycles}x20`, x + cardW - 42, y + 8);
 
       // buttons (visual)
-      // +Member
       roundedRectPath(ctx, x + 10, y + 46, 50, 18, 6);
-      ctx.fillStyle = "#e2e8f0";
-      ctx.fill();
-      ctx.strokeStyle = "#94a3b8";
-      ctx.stroke();
-      ctx.fillStyle = "#000";
-      ctx.font = "11px system-ui";
-      ctx.fillText("+Member", x + 14, y + 48);
+      ctx.fillStyle = "#e2e8f0"; ctx.fill();
+      ctx.strokeStyle = "#94a3b8"; ctx.stroke();
+      ctx.fillStyle = "#000"; ctx.font = "11px system-ui"; ctx.fillText("+Member", x + 14, y + 48);
 
-      // Edit
       roundedRectPath(ctx, x + 70, y + 46, 40, 18, 6);
-      ctx.fillStyle = "#e2e8f0";
-      ctx.fill();
-      ctx.strokeStyle = "#94a3b8";
-      ctx.stroke();
-      ctx.fillStyle = "#000";
-      ctx.fillText("Edit", x + 78, y + 48);
+      ctx.fillStyle = "#e2e8f0"; ctx.fill();
+      ctx.strokeStyle = "#94a3b8"; ctx.stroke();
+      ctx.fillStyle = "#000"; ctx.fillText("Edit", x + 78, y + 48);
 
-      // Del
       roundedRectPath(ctx, x + 120, y + 46, 40, 18, 6);
-      ctx.fillStyle = "#ef4444";
-      ctx.fill();
-      ctx.strokeStyle = "#b91c1c";
-      ctx.stroke();
-      ctx.fillStyle = "#fff";
-      ctx.fillText("Del", x + 128, y + 48);
+      ctx.fillStyle = "#ef4444"; ctx.fill();
+      ctx.strokeStyle = "#b91c1c"; ctx.stroke();
+      ctx.fillStyle = "#fff"; ctx.fillText("Del", x + 128, y + 48);
     });
   }
 
-  // end drawTreeDiagram
+  // responsive: redraw on resize
+  window.addEventListener('resize', ()=>{
+    const sid = currentTreeRootId || rootId;
+    try{ drawTreeDiagram(sid); }catch(e){}
+  });
 
   // initial nothing
   drawTreeDiagram(null);
