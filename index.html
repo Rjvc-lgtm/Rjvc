@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>RJVC Binary Tree Admin — Diagram Only</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
     body{margin:0;background:#020617;color:#e5e7eb;}
@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <!-- Controls: create root & small info -->
+    <!-- Controls: create root -->
     <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
       <input id="rootName" placeholder="Root Name (e.g. Rajesh)" style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef8;"/>
       <input id="rootPass" placeholder="Password" style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef8;"/>
@@ -79,7 +79,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
-  // Firebase config (same as before)
+  // Firebase config (use your existing)
   const firebaseConfig = {
     apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
     authDomain: "rjvc-plan.firebaseapp.com",
@@ -255,7 +255,7 @@
     }catch(err){ alert("Error: " + err.message); }
   }
 
-  // Add/Edit/Delete (same behavior)
+  // Add/Edit/Delete
   async function addMember(parentId, sideField, name, pass){
     try{
       const parentRef = treeCol.doc(parentId);
@@ -279,9 +279,7 @@
         name, password: pass, loginName: name, loginPassword: pass,
         commissionWallet: 0, bonusWallet: 0, mainAccountId: mainIdForUser, monthsPaid: 1, payoutBlocked: false
       }, {merge:true});
-      if(!existingChildId){
-        const upd = {}; upd[sideField] = newId; await parentRef.update(upd); return;
-      }
+      if(!existingChildId){ const upd = {}; upd[sideField] = newId; await parentRef.update(upd); return; }
       // redistribute subtree
       const subtreeIds = []; const queue = [existingChildId];
       while(queue.length){ const nid = queue.shift(); if(!nodesById[nid]) continue; subtreeIds.push(nid); const nd = nodesById[nid]; if(nd.leftId) queue.push(nd.leftId); if(nd.rightId) queue.push(nd.rightId); }
@@ -470,10 +468,7 @@
     ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
   }
 
-  // redraw on resize
   window.addEventListener("resize", ()=>{ if(Object.keys(nodesById).length) drawTreeDiagram(currentTreeRootId || rootId); });
-
-  // initial: no auto-start; login triggers everything
 </script>
 </body>
 </html>
