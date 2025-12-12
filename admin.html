@@ -41,7 +41,8 @@
     .error{color:#dc2626;font-size:13px;margin-top:6px;}
     .ok{color:#166534;font-size:13px;margin-top:6px;}
 
-    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;overflow:hidden;}
+    /* Tree panel: make relative & visible so connectors overlay can draw */
+    .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;position:relative;overflow:visible;}
     .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
     .tree-level{text-align:center;margin:8px 0;}
     .tree-node-wrap{display:inline-block;margin:6px;}
@@ -58,8 +59,8 @@
     .profit-label{font-size:12px;color:#9ca3af;}
     .profit-value{font-size:18px;font-weight:700;}
 
-    canvas{max-width:100%;display:block;background:transparent;}
-    .canvas-wrapper{padding:12px 0; overflow:auto;}
+    /* overlay container for SVG */
+    .overlay-wrap{position:relative; width:100%;}
 
     @media(max-width:720px){
       .panel{padding:14px;}
@@ -219,9 +220,9 @@
       <!-- existing card-list tree (unchanged) -->
       <div id="treeViewArea" style="margin-top:10px;font-size:12px;">अभी tree खाली है।</div>
 
-      <!-- canvas wrapper (card-style diagram) -->
-      <div class="canvas-wrapper" style="margin-top:12px;">
-        <canvas id="treeCanvas" style="width:100%; height:600px;"></canvas>
+      <!-- SVG overlay for connectors -->
+      <div id="treeOverlayWrap" class="overlay-wrap" style="margin-top:12px;">
+        <svg id="treeSvg" style="position:absolute; left:0; top:0; width:100%; height:0; pointer-events:none; overflow:visible;"></svg>
       </div>
     </div>
 
@@ -302,9 +303,9 @@
       renderTable();
       renderTree();
 
-      // force a redraw after UI painted (helps mobile)
+      // draw connections after paint
       setTimeout(()=>{
-        try{ drawTreeDiagram(currentTreeRootId || rootId); }catch(e){console.error(e);}
+        try{ drawConnections(currentTreeRootId || rootId); }catch(e){console.error(e);}
       }, 120);
     }, err=>{
       console.error("snapshot err", err);
@@ -637,7 +638,7 @@
     });
   }
 
-  /************ Tree view ************/
+  /************ Tree view (render DOM cards) ************/
   function viewTreeFrom(id){
     currentTreeRootId = id;
     renderTree();
@@ -654,7 +655,7 @@
     if(!Object.keys(nodesById).length){
       info.textContent = "Tree खाली है। पहले कोई customer जोड़ें।";
       area.textContent = "";
-      drawTreeDiagram(null);
+      drawConnections(null);
       return;
     }
 
@@ -663,7 +664,7 @@
     if(!startNode){
       info.textContent = "Tree root नहीं मिला।";
       area.textContent = "";
-      drawTreeDiagram(null);
+      drawConnections(null);
       return;
     }
 
@@ -684,7 +685,7 @@
         const cycles = n.monthsPaid || 1;
         html += `
           <div class="tree-node-wrap">
-            <div class="tree-node ${isMainTreeRoot ? "tree-node-main":""}">
+            <div class="tree-node ${isMainTreeRoot ? "tree-node-main":""}" data-node-id="${n.id}">
               <div class="tree-node-name">${n.name}</div>
               <div class="tree-node-meta">
                 L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0} · ${cycles}x20
@@ -712,8 +713,8 @@
     buildLevel([startId]);
     area.innerHTML = html;
 
-    // call canvas draw
-    drawTreeDiagram(startId);
+    // draw connectors after DOM layout
+    setTimeout(()=>{ drawConnections(startId); }, 60);
   }
 
   /************ Add / Edit / Delete ************/
@@ -950,169 +951,96 @@
     }
   }
 
-  /************ Canvas: card-style tree diagram ************/
-  function drawTreeDiagram(startId) {
-    const canvas = document.getElementById("treeCanvas");
-    if(!canvas) return;
-    const ctx = canvas.getContext("2d");
+  /************ SVG connectors between DOM card nodes ---------*/
+  function drawConnections(startId) {
+    const svg = document.getElementById('treeSvg');
+    const wrap = document.getElementById('treeOverlayWrap');
+    const viewArea = document.getElementById('treeViewArea');
+    if (!svg || !wrap || !viewArea) return;
 
-    // reset transform and size for DPR
-    ctx.setTransform(1,0,0,1,0,0);
-    const ratio = window.devicePixelRatio || 1;
-    const widthCSS = canvas.clientWidth || canvas.offsetWidth || 900;
-    const heightCSS = 600;
-    canvas.width = Math.floor(widthCSS * ratio);
-    canvas.height = Math.floor(heightCSS * ratio);
-    canvas.style.width = widthCSS + "px";
-    canvas.style.height = heightCSS + "px";
-    ctx.scale(ratio, ratio);
-
-    ctx.clearRect(0, 0, widthCSS, heightCSS);
-
-    if(!startId || !nodesById || !Object.keys(nodesById).length) return;
-    if(!nodesById[startId]) return;
-
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.imageSmoothingEnabled = true;
-
-    // build levels (BFS) - limit depth so it fits
-    const MAX_LEVELS = 6;
-    const levels = [];
-    let queue = [startId];
-    while (queue.length && levels.length < MAX_LEVELS) {
-      levels.push(queue.slice());
-      const next = [];
-      queue.forEach(id => {
-        const n = nodesById[id];
-        if (!n) return;
-        if (n.leftId) next.push(n.leftId);
-        if (n.rightId) next.push(n.rightId);
-      });
-      queue = next;
+    // select visible node-wrap elements inside treeViewArea
+    const nodeWraps = Array.from(viewArea.querySelectorAll('.tree-node-wrap'));
+    if (nodeWraps.length === 0) {
+      svg.innerHTML = '';
+      svg.style.height = '0px';
+      return;
     }
 
-    const W = widthCSS;
-    const H = heightCSS;
-    const topMargin = 20;
-    const levelGap = Math.max(90, (H - topMargin - 40) / Math.max(1, levels.length));
+    // get wrap rect for coordinate translation
+    const wrapRect = wrap.getBoundingClientRect();
 
-    // positions
-    const pos = {};
-    levels.forEach((lvl, li) => {
-      const y = topMargin + li * levelGap;
-      const step = W / (lvl.length + 1);
-      lvl.forEach((id, idx) => {
-        const x = step * (idx + 1);
-        pos[id] = { x, y };
-      });
+    // build mapping id -> box info (center top/bottom, left/right)
+    const boxes = {};
+    nodeWraps.forEach(wrapEl=>{
+      const nodeEl = wrapEl.querySelector('.tree-node');
+      if(!nodeEl) return;
+      const id = nodeEl.getAttribute('data-node-id');
+      if(!id) return;
+      const r = nodeEl.getBoundingClientRect();
+      boxes[id] = {
+        el: nodeEl,
+        left: r.left - wrapRect.left,
+        right: r.right - wrapRect.left,
+        top: r.top - wrapRect.top,
+        bottom: r.bottom - wrapRect.top,
+        cx: (r.left + r.right)/2 - wrapRect.left,
+        cyTop: r.top - wrapRect.top,
+        cyBottom: r.bottom - wrapRect.top,
+        width: r.width,
+        height: r.height
+      };
     });
 
-    // draw connector lines
-    ctx.strokeStyle = "#64748b";
-    ctx.lineWidth = 1;
-    Object.values(nodesById).forEach(n => {
-      if (!n || !pos[n.id]) return;
-      const p = pos[n.id];
-      if (n.leftId && pos[n.leftId]) {
-        const c = pos[n.leftId];
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y + 60);
-        ctx.lineTo(c.x, c.y);
-        ctx.stroke();
-      }
-      if (n.rightId && pos[n.rightId]) {
-        const c = pos[n.rightId];
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y + 60);
-        ctx.lineTo(c.x, c.y);
-        ctx.stroke();
-      }
-    });
+    // compute svg height (enough to cover all boxes)
+    const bottoms = Object.values(boxes).map(b=>b.bottom);
+    const maxBottom = bottoms.length ? Math.max(...bottoms) : 0;
+    const svgHeight = Math.max(maxBottom + 20, 120);
+    svg.style.height = svgHeight + 'px';
+    svg.setAttribute('width', wrap.clientWidth);
+    svg.setAttribute('height', svgHeight);
 
-    // helper rounded rect
-    function roundedRectPath(ctx, x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-    }
+    // clear existing
+    svg.innerHTML = '';
 
-    // draw cards
+    // draw connectors using nodesById parent->left/right
     Object.values(nodesById).forEach(n=>{
-      if(!pos[n.id]) return;
-      const p = pos[n.id];
-      const cardW = 180;
-      const cardH = 70;
-      const x = p.x - cardW/2;
-      const y = p.y;
+      if(!n) return;
+      const parentBox = boxes[n.id];
+      if(!parentBox) return;
+      ['leftId','rightId'].forEach(side=>{
+        const childId = n[side];
+        if(!childId) return;
+        const childBox = boxes[childId];
+        if(!childBox) return;
+        const x1 = parentBox.cx;
+        const y1 = parentBox.cyBottom;
+        const x2 = childBox.cx;
+        const y2 = childBox.cyTop;
 
-      const isRoot = n.id === startId;
-
-      // bg
-      ctx.fillStyle = isRoot ? "#2563eb" : "#0f1724";
-      roundedRectPath(ctx, x, y, cardW, cardH, 10);
-      ctx.fill();
-
-      // border
-      ctx.strokeStyle = isRoot ? "#93c5fd" : "#475569";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // name
-      ctx.fillStyle = "#e5e7eb";
-      ctx.font = "bold 13px system-ui";
-      ctx.fillText(n.name || "", x + 10, y + 6);
-
-      // meta
-      ctx.font = "11px system-ui";
-      ctx.fillStyle = "#cbd5e1";
-      const leftC = n.leftCount || 0;
-      const rightC = n.rightCount || 0;
-      const members = n.members || 0;
-      const pairs = n.pairs || 0;
-      const comm = n.commission || 0;
-      ctx.fillText(`L:${leftC} · R:${rightC} · M:${members} · P:${pairs} · ₹${comm}`, x + 10, y + 28);
-
-      // cycles text
-      const cycles = n.monthsPaid || 1;
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "11px system-ui";
-      ctx.fillText(`${cycles}x20`, x + cardW - 42, y + 8);
-
-      // buttons (visual)
-      roundedRectPath(ctx, x + 10, y + 46, 50, 18, 6);
-      ctx.fillStyle = "#e2e8f0"; ctx.fill();
-      ctx.strokeStyle = "#94a3b8"; ctx.stroke();
-      ctx.fillStyle = "#000"; ctx.font = "11px system-ui"; ctx.fillText("+Member", x + 14, y + 48);
-
-      roundedRectPath(ctx, x + 70, y + 46, 40, 18, 6);
-      ctx.fillStyle = "#e2e8f0"; ctx.fill();
-      ctx.strokeStyle = "#94a3b8"; ctx.stroke();
-      ctx.fillStyle = "#000"; ctx.fillText("Edit", x + 78, y + 48);
-
-      roundedRectPath(ctx, x + 120, y + 46, 40, 18, 6);
-      ctx.fillStyle = "#ef4444"; ctx.fill();
-      ctx.strokeStyle = "#b91c1c"; ctx.stroke();
-      ctx.fillStyle = "#fff"; ctx.fillText("Del", x + 128, y + 48);
+        // create path with nice curve
+        const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+        const dx = (x2 - x1) * 0.45;
+        const cx = x1 + dx;
+        const cy = y1 + Math.max(20, (y2 - y1) * 0.35);
+        const d = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+        path.setAttribute('d', d);
+        path.setAttribute('stroke', '#94a3b8');
+        path.setAttribute('stroke-width', '1');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(path);
+      });
     });
   }
 
-  // responsive: redraw on resize
+  // redraw on resize
   window.addEventListener('resize', ()=>{
     const sid = currentTreeRootId || rootId;
-    try{ drawTreeDiagram(sid); }catch(e){}
+    try{ drawConnections(sid); }catch(e){}
   });
 
   // initial nothing
-  drawTreeDiagram(null);
+  drawConnections(null);
 </script>
 
 </body>
