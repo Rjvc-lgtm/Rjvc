@@ -45,31 +45,38 @@
     .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;position:relative;overflow:visible;}
     .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
 
-    /* NEW: display each tree level as horizontal row so children sit side-by-side
-       (we also support absolute positioning layout for the diagram) */
+    /* Compact node styling and layout */
     .tree-level{
       display:flex;
       justify-content:center;
       align-items:flex-start;
       flex-wrap:wrap;
-      gap:18px;
+      gap:12px;
       text-align:center;
-      margin:12px 0;
+      margin:10px 0;
     }
 
     .tree-node-wrap{
       display:flex;
       justify-content:center;
       width:auto;
-      min-width:160px;
+      min-width:120px;
     }
 
-    .tree-node{padding:10px 14px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:13px;min-width:160px;box-shadow:0 8px 18px rgba(2,6,23,0.4);}
-    .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
-    .tree-node-name{font-weight:700;color:#e6eefc;font-size:15px;text-align:center;}
-    .tree-node-meta{font-size:11px;color:#cbd5e1;margin-top:6px;text-align:center;}
-    .tree-node-actions{margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
-    .tree-node-actions .btn-sm{padding:6px 10px;font-size:12px;border-radius:8px;}
+    .tree-node{
+      padding:8px 10px;
+      border-radius:10px;
+      background:#111827;
+      border:1px solid #3f4752;
+      font-size:12px;
+      min-width:120px;
+      box-shadow:0 6px 12px rgba(2,6,23,0.35);
+    }
+    .tree-node-main{background:#1d4ed8;border-color:#7fb4ff;}
+    .tree-node-name{font-weight:700;color:#e6eefc;font-size:13px;text-align:center;}
+    .tree-node-meta{font-size:10px;color:#cbd5e1;margin-top:6px;text-align:center;}
+    .tree-node-actions{margin-top:6px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+    .tree-node-actions .btn-sm{padding:5px 8px;font-size:11px;border-radius:8px;}
 
     .profit-panel{background:#0f172a;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:10px;}
     .profit-boxes{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
@@ -83,9 +90,9 @@
     @media(max-width:720px){
       .panel{padding:14px;}
       table{font-size:12px;}
-      .tree-node{min-width:140px;padding:8px 12px;}
-      .tree-node-name{font-size:14px;}
-      .tree-node-meta{font-size:10px;}
+      .tree-node{min-width:110px;padding:6px 8px;}
+      .tree-node-name{font-size:12px;}
+      .tree-node-meta{font-size:9px;}
     }
   </style>
 </head>
@@ -238,12 +245,13 @@
         <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">सिर्फ Root दिखाओ</button>
       </div>
 
-      <!-- existing card-list tree (will be replaced by absolute positioned nodes for diagram) -->
-      <div id="treeViewArea" style="margin-top:10px;font-size:12px; min-height:120px;"></div>
+      <!-- Combined diagram wrapper: svg overlay + nodes in the same parent (fixes coords) -->
+      <div class="tree-diagram-wrap" style="position:relative; margin-top:10px; min-height:120px;">
+        <!-- node container (absolutely positioned nodes will be appended here) -->
+        <div id="treeViewArea" style="position:relative; font-size:12px; min-height:120px; padding-bottom:20px;"></div>
 
-      <!-- SVG overlay for connectors -->
-      <div id="treeOverlayWrap" class="overlay-wrap" style="margin-top:12px;">
-        <svg id="treeSvg" style="position:absolute; left:0; top:0; width:100%; height:0; pointer-events:none; overflow:visible;"></svg>
+        <!-- single svg overlay positioned on top of the same wrapper -->
+        <svg id="treeSvg" style="position:absolute; left:0; top:0; width:100%; height:0; pointer-events:none; overflow:visible; z-index:1;"></svg>
       </div>
     </div>
 
@@ -322,7 +330,6 @@
 
       recalcAll();
       renderTable();
-      // use the new renderTree which places absolutely positioned nodes and draws connectors
       renderTree();
 
       // small extra redraw after snapshot to ensure lines correct
@@ -658,12 +665,12 @@
     });
   }
 
-  /************ New layout: inorder position + absolute nodes + connectors ************/
-  // spacing constants — adjust if needed for mobile
-  const H_GAP = 180;
-  const V_GAP = 120;
-  const NODE_WIDTH = 160;
-  const NODE_HEIGHT = 70;
+  /************ Compact layout: inorder positions + absolute nodes + connectors ************/
+  // COMPACT spacing constants
+  const H_GAP = 100;    // horizontal gap — compact
+  const V_GAP = 80;     // vertical gap — compact
+  const NODE_WIDTH = 120;
+  const NODE_HEIGHT = 60;
 
   function computeInorderPositions(startId){
     const positions = {};
@@ -691,13 +698,19 @@
   function renderTree(){
     const area = document.getElementById("treeViewArea");
     const info = document.getElementById("treeRootInfo");
-    const overlay = document.getElementById("treeOverlayWrap");
+    const diagramWrap = document.querySelector('.tree-diagram-wrap');
     const svg = document.getElementById("treeSvg");
+
+    if(!area || !diagramWrap || !svg){
+      console.error("Missing tree DOM elements");
+      return;
+    }
 
     if(!Object.keys(nodesById).length){
       info.textContent = "Tree खाली है। पहले कोई customer जोड़ें।";
       area.innerHTML = "";
-      if(svg){ svg.innerHTML=''; svg.style.height='0px'; }
+      svg.innerHTML = '';
+      svg.style.height = '0px';
       return;
     }
 
@@ -706,7 +719,8 @@
     if(!startNode){
       info.textContent = "Tree root नहीं मिला।";
       area.innerHTML = "";
-      if(svg){ svg.innerHTML=''; svg.style.height='0px'; }
+      svg.innerHTML = '';
+      svg.style.height = '0px';
       return;
     }
 
@@ -717,23 +731,25 @@
     const ids = Object.keys(pos);
     if(ids.length === 0){
       area.innerHTML = "";
-      if(svg) svg.innerHTML = '';
+      svg.innerHTML = '';
+      svg.style.height = '0px';
       return;
     }
 
     const maxXIndex = Math.max(...ids.map(id=>pos[id].xIndex));
     const maxDepth  = Math.max(...ids.map(id=>pos[id].depth));
-    const canvasWidth = Math.max((maxXIndex+1) * H_GAP, overlay.clientWidth);
+    const canvasWidth = Math.max((maxXIndex+1) * H_GAP + NODE_WIDTH, diagramWrap.clientWidth);
     const canvasHeight = (maxDepth + 2) * V_GAP + NODE_HEIGHT;
 
     area.innerHTML = '';
+    area.style.position = 'relative';
+    area.style.minHeight = canvasHeight + 'px';
+
     svg.setAttribute('width', canvasWidth);
     svg.setAttribute('height', canvasHeight);
     svg.style.height = canvasHeight + 'px';
+    svg.style.zIndex = 1;
     svg.innerHTML = '';
-
-    area.style.position = 'relative';
-    area.style.minHeight = canvasHeight + 'px';
 
     Object.keys(pos).forEach(id=>{
       const n = nodesById[id];
@@ -773,7 +789,8 @@
       area.appendChild(wrap);
     });
 
-    // connectors
+    // draw connectors using coords relative to diagramWrap
+    const overlayRect = diagramWrap.getBoundingClientRect();
     Object.keys(pos).forEach(pid=>{
       const parent = nodesById[pid];
       if(!parent) return;
@@ -786,20 +803,20 @@
         if(!cWrap) return;
         const pRect = pWrap.getBoundingClientRect();
         const cRect = cWrap.getBoundingClientRect();
-        const overlayRect = overlay.getBoundingClientRect();
-        const x1 = pRect.left + pRect.width/2 - overlayRect.left;
-        const y1 = pRect.top + pRect.height - overlayRect.top;
-        const x2 = cRect.left + cRect.width/2 - overlayRect.left;
-        const y2 = cRect.top - overlayRect.top;
+
+        const x1 = (pRect.left + pRect.width/2) - overlayRect.left;
+        const y1 = (pRect.top + pRect.height) - overlayRect.top;
+        const x2 = (cRect.left + cRect.width/2) - overlayRect.left;
+        const y2 = (cRect.top) - overlayRect.top;
 
         const path = document.createElementNS("http://www.w3.org/2000/svg","path");
         const dx = (x2 - x1) * 0.45;
         const cx = x1 + dx;
-        const cy = y1 + Math.max(18, (y2 - y1) * 0.35);
+        const cy = y1 + Math.max(12, (y2 - y1) * 0.35);
         const d = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
         path.setAttribute('d', d);
         path.setAttribute('stroke', '#94a3b8');
-        path.setAttribute('stroke-width', '1.2');
+        path.setAttribute('stroke-width', '1');
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke-linecap', 'round');
         svg.appendChild(path);
@@ -807,9 +824,9 @@
     });
   }
 
-  // compatibility drawConnections -> re-render tree (connectors drawn in renderTree)
+  // compatibility function — re-render
   function drawConnections(){
-    try{ renderTree(); }catch(e){}
+    try{ renderTree(); }catch(e){ console.error(e); }
   }
 
   /************ Add / Edit / Delete ************/
@@ -1051,7 +1068,7 @@
     try{ drawConnections(); }catch(e){}
   });
 
-  // initial draw (no data yet)
+  // initial nothing
   drawConnections();
 </script>
 
