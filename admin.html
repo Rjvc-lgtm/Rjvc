@@ -41,36 +41,16 @@
     .error{color:#dc2626;font-size:13px;margin-top:6px;}
     .ok{color:#166534;font-size:13px;margin-top:6px;}
 
-    /* Tree panel: make relative & visible so connectors overlay can draw */
+    /* Tree panel */
     .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;position:relative;overflow:visible;}
     .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
 
-    /* Compact node styling and layout */
-    .tree-level{
-      display:flex;
-      justify-content:center;
-      align-items:flex-start;
-      flex-wrap:wrap;
-      gap:12px;
-      text-align:center;
-      margin:10px 0;
-    }
-
-    .tree-node-wrap{
-      display:flex;
-      justify-content:center;
-      width:auto;
-      min-width:120px;
-    }
-
+    /* Compact node styling */
+    .tree-diagram-wrap{position:relative; width:100%; overflow:hidden; border-radius:12px;}
+    .tree-inner{position:relative; transform-origin:0 0;}
+    .tree-node-wrap{position:absolute; display:flex; justify-content:center; width:auto; min-width:110px;}
     .tree-node{
-      padding:8px 10px;
-      border-radius:10px;
-      background:#111827;
-      border:1px solid #3f4752;
-      font-size:12px;
-      min-width:120px;
-      box-shadow:0 6px 12px rgba(2,6,23,0.35);
+      padding:6px 8px;border-radius:10px;background:#111827;border:1px solid #3f4752;font-size:12px;min-width:110px;box-shadow:0 6px 12px rgba(2,6,23,0.35);
     }
     .tree-node-main{background:#1d4ed8;border-color:#7fb4ff;}
     .tree-node-name{font-weight:700;color:#e6eefc;font-size:13px;text-align:center;}
@@ -84,13 +64,12 @@
     .profit-label{font-size:12px;color:#9ca3af;}
     .profit-value{font-size:18px;font-weight:700;}
 
-    /* overlay container for SVG */
-    .overlay-wrap{position:relative; width:100%;}
+    svg{position:absolute; left:0; top:0; pointer-events:none; overflow:visible;}
 
     @media(max-width:720px){
       .panel{padding:14px;}
       table{font-size:12px;}
-      .tree-node{min-width:110px;padding:6px 8px;}
+      .tree-node{min-width:96px;padding:6px 6px;}
       .tree-node-name{font-size:12px;}
       .tree-node-meta{font-size:9px;}
     }
@@ -245,13 +224,9 @@
         <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">सिर्फ Root दिखाओ</button>
       </div>
 
-      <!-- Combined diagram wrapper: svg overlay + nodes in the same parent (fixes coords) -->
-      <div class="tree-diagram-wrap" style="position:relative; margin-top:10px; min-height:120px;">
-        <!-- node container (absolutely positioned nodes will be appended here) -->
-        <div id="treeViewArea" style="position:relative; font-size:12px; min-height:120px; padding-bottom:20px;"></div>
-
-        <!-- single svg overlay positioned on top of the same wrapper -->
-        <svg id="treeSvg" style="position:absolute; left:0; top:0; width:100%; height:0; pointer-events:none; overflow:visible; z-index:1;"></svg>
+      <div class="tree-diagram-wrap" style="margin-top:12px; min-height:120px;">
+        <div id="treeViewArea" class="tree-inner" style="min-height:120px;"></div>
+        <svg id="treeSvg"></svg>
       </div>
     </div>
 
@@ -361,7 +336,7 @@
         leftId: null,
         rightId: null,
         mainAccountId: null,
-        monthsPaid: 1, // joining पर पहली 20₹ cycle मानी
+        monthsPaid: 1,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
@@ -665,12 +640,12 @@
     });
   }
 
-  /************ Compact layout: inorder positions + absolute nodes + connectors ************/
-  // COMPACT spacing constants
-  const H_GAP = 100;    // horizontal gap — compact
-  const V_GAP = 80;     // vertical gap — compact
-  const NODE_WIDTH = 120;
-  const NODE_HEIGHT = 60;
+  /************ Compact layout with automatic scaling ************/
+  const BASE_H_GAP = 120;    // base horizontal gap
+  const BASE_V_GAP = 80;
+  const BASE_NODE_W = 120;
+  const BASE_NODE_H = 60;
+  const MIN_SCALE = 0.45;    // minimum scale allowed
 
   function computeInorderPositions(startId){
     const positions = {};
@@ -736,35 +711,67 @@
       return;
     }
 
+    // compute raw canvas size (based on base gaps)
     const maxXIndex = Math.max(...ids.map(id=>pos[id].xIndex));
     const maxDepth  = Math.max(...ids.map(id=>pos[id].depth));
-    const canvasWidth = Math.max((maxXIndex+1) * H_GAP + NODE_WIDTH, diagramWrap.clientWidth);
-    const canvasHeight = (maxDepth + 2) * V_GAP + NODE_HEIGHT;
+    const rawWidth  = (maxXIndex+1) * BASE_H_GAP + BASE_NODE_W;
+    const rawHeight = (maxDepth + 2) * BASE_V_GAP + BASE_NODE_H;
 
+    // available width inside diagramWrap
+    const availableWidth = Math.max(160, diagramWrap.clientWidth - 8); // padding safety
+
+    // compute scale to fit horizontally (prefer horizontal fit)
+    let scale = 1;
+    if(rawWidth > availableWidth){
+      scale = availableWidth / rawWidth;
+      if(scale < MIN_SCALE) scale = MIN_SCALE;
+    }
+
+    // also if too tall for viewport, we can shrink a bit more (optional)
+    const maxAllowedHeight = Math.max(200, window.innerHeight * 0.6);
+    if(rawHeight * scale > maxAllowedHeight){
+      scale = Math.max(MIN_SCALE, maxAllowedHeight / rawHeight);
+    }
+
+    // prepare inner container (clear previous)
     area.innerHTML = '';
+    area.style.minHeight = (rawHeight * scale) + 'px';
     area.style.position = 'relative';
-    area.style.minHeight = canvasHeight + 'px';
 
-    svg.setAttribute('width', canvasWidth);
-    svg.setAttribute('height', canvasHeight);
-    svg.style.height = canvasHeight + 'px';
-    svg.style.zIndex = 1;
+    // set svg size to raw and then scale svg as well (so paths scale with nodes)
+    svg.setAttribute('width', rawWidth);
+    svg.setAttribute('height', rawHeight);
+    svg.style.width = rawWidth + 'px';
+    svg.style.height = rawHeight + 'px';
+    svg.style.transformOrigin = '0 0';
     svg.innerHTML = '';
 
+    // create an inner div which will be scaled
+    const inner = document.createElement('div');
+    inner.className = 'tree-inner';
+    inner.style.width = rawWidth + 'px';
+    inner.style.height = rawHeight + 'px';
+    inner.style.position = 'absolute';
+    inner.style.left = '0px';
+    inner.style.top = '0px';
+    inner.style.transformOrigin = '0 0';
+    inner.style.transform = `scale(${scale})`;
+    inner.style.zIndex = 2;
+
+    // append nodes to inner
     Object.keys(pos).forEach(id=>{
       const n = nodesById[id];
       if(!n) return;
       const p = pos[id];
-      const x = p.xIndex * H_GAP + NODE_WIDTH/2;
-      const y = p.depth * V_GAP;
+      const x = p.xIndex * BASE_H_GAP + BASE_NODE_W/2;
+      const y = p.depth * BASE_V_GAP;
 
       const wrap = document.createElement('div');
       wrap.className = 'tree-node-wrap';
-      wrap.style.position = 'absolute';
       wrap.style.left = x + 'px';
       wrap.style.top  = y + 'px';
       wrap.style.transform = 'translate(-50%, 0)';
-      wrap.style.zIndex = 2;
+      wrap.style.zIndex = 3;
 
       const isMainTreeRoot = (id === rootId);
       const cycles = n.monthsPaid || 1;
@@ -774,6 +781,7 @@
       const nodeDiv = document.createElement('div');
       nodeDiv.className = 'tree-node' + (isMainTreeRoot ? ' tree-node-main' : '');
       nodeDiv.setAttribute('data-node-id', n.id);
+      nodeDiv.style.cursor = 'default';
       nodeDiv.innerHTML = `
         <div class="tree-node-name">${n.name}</div>
         <div class="tree-node-meta">
@@ -786,33 +794,29 @@
         </div>
       `;
       wrap.appendChild(nodeDiv);
-      area.appendChild(wrap);
+      inner.appendChild(wrap);
     });
 
-    // draw connectors using coords relative to diagramWrap
-    const overlayRect = diagramWrap.getBoundingClientRect();
+    area.appendChild(inner);
+
+    // build paths in SVG using raw coords, then scale svg to match inner scale
     Object.keys(pos).forEach(pid=>{
       const parent = nodesById[pid];
       if(!parent) return;
-      const pWrap = area.querySelector(`[data-node-id="${pid}"]`)?.parentElement;
-      if(!pWrap) return;
       ['leftId','rightId'].forEach(side=>{
         const cid = parent[side];
         if(!cid) return;
-        const cWrap = area.querySelector(`[data-node-id="${cid}"]`)?.parentElement;
-        if(!cWrap) return;
-        const pRect = pWrap.getBoundingClientRect();
-        const cRect = cWrap.getBoundingClientRect();
-
-        const x1 = (pRect.left + pRect.width/2) - overlayRect.left;
-        const y1 = (pRect.top + pRect.height) - overlayRect.top;
-        const x2 = (cRect.left + cRect.width/2) - overlayRect.left;
-        const y2 = (cRect.top) - overlayRect.top;
-
-        const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+        const p = pos[pid];
+        const c = pos[cid];
+        if(!p || !c) return;
+        const x1 = p.xIndex * BASE_H_GAP + BASE_NODE_W/2;
+        const y1 = p.depth * BASE_V_GAP + BASE_NODE_H;
+        const x2 = c.xIndex * BASE_H_GAP + BASE_NODE_W/2;
+        const y2 = c.depth * BASE_V_GAP;
         const dx = (x2 - x1) * 0.45;
         const cx = x1 + dx;
         const cy = y1 + Math.max(12, (y2 - y1) * 0.35);
+        const path = document.createElementNS("http://www.w3.org/2000/svg","path");
         const d = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
         path.setAttribute('d', d);
         path.setAttribute('stroke', '#94a3b8');
@@ -822,14 +826,27 @@
         svg.appendChild(path);
       });
     });
+
+    // scale svg to same scale so connectors align
+    svg.style.transform = `scale(${scale})`;
+    svg.style.transformOrigin = '0 0';
+
+    // center the scaled inner within diagramWrap horizontally (by adding left padding)
+    const totalScaledWidth = rawWidth * scale;
+    const wrapWidth = diagramWrap.clientWidth;
+    const leftOffset = Math.max(0, (wrapWidth - totalScaledWidth) / 2);
+    area.style.paddingLeft = leftOffset + 'px';
+    area.style.paddingRight = leftOffset + 'px';
+
+    // adjust diagramWrap height to visible scaled height
+    diagramWrap.style.minHeight = Math.max(120, rawHeight * scale) + 'px';
   }
 
-  // compatibility function — re-render
   function drawConnections(){
     try{ renderTree(); }catch(e){ console.error(e); }
   }
 
-  /************ Add / Edit / Delete ************/
+  /************ Add / Edit / Delete (same as before) ************/
   function treeAddMember(parentId){
     const sideAns = prompt("किस side जोड़ना है? Left = L या 1, Right = R या 2");
     if(!sideAns) return;
@@ -1068,7 +1085,7 @@
     try{ drawConnections(); }catch(e){}
   });
 
-  // initial nothing
+  // initial
   drawConnections();
 </script>
 
