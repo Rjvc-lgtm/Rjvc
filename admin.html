@@ -44,14 +44,31 @@
     /* Tree panel: make relative & visible so connectors overlay can draw */
     .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;position:relative;overflow:visible;}
     .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
-    .tree-level{text-align:center;margin:8px 0;}
-    .tree-node-wrap{display:inline-block;margin:6px;}
-    .tree-node{padding:6px 10px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:12px;min-width:140px;}
+
+    /* NEW: display each tree level as horizontal row so children sit side-by-side */
+    .tree-level{
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      gap:18px;
+      text-align:center;
+      margin:12px 0;
+    }
+
+    .tree-node-wrap{
+      display:flex;
+      justify-content:center;
+      width:auto;
+      min-width:160px;
+    }
+
+    .tree-node{padding:10px 14px;border-radius:12px;background:#111827;border:1px solid #4b5563;font-size:13px;min-width:160px;box-shadow:0 8px 18px rgba(2,6,23,0.4);}
     .tree-node-main{background:#1d4ed8;border-color:#93c5fd;}
-    .tree-node-name{font-weight:600;}
-    .tree-node-meta{font-size:10px;color:#9ca3af;margin-top:2px;}
-    .tree-node-actions{margin-top:6px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
-    .tree-node-actions .btn-sm{padding:3px 6px;font-size:10px;}
+    .tree-node-name{font-weight:700;color:#e6eefc;font-size:15px;text-align:center;}
+    .tree-node-meta{font-size:11px;color:#cbd5e1;margin-top:6px;text-align:center;}
+    .tree-node-actions{margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+    .tree-node-actions .btn-sm{padding:6px 10px;font-size:12px;border-radius:8px;}
 
     .profit-panel{background:#0f172a;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:10px;}
     .profit-boxes{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
@@ -65,6 +82,9 @@
     @media(max-width:720px){
       .panel{padding:14px;}
       table{font-size:12px;}
+      .tree-node{min-width:140px;padding:8px 12px;}
+      .tree-node-name{font-size:14px;}
+      .tree-node-meta{font-size:10px;}
     }
   </style>
 </head>
@@ -306,7 +326,7 @@
       // draw connections after paint
       setTimeout(()=>{
         try{ drawConnections(currentTreeRootId || rootId); }catch(e){console.error(e);}
-      }, 120);
+      }, 160);
     }, err=>{
       console.error("snapshot err", err);
     });
@@ -714,7 +734,7 @@
     area.innerHTML = html;
 
     // draw connectors after DOM layout
-    setTimeout(()=>{ drawConnections(startId); }, 60);
+    setTimeout(()=>{ drawConnections(startId); }, 120);
   }
 
   /************ Add / Edit / Delete ************/
@@ -1021,7 +1041,7 @@
         const path = document.createElementNS("http://www.w3.org/2000/svg","path");
         const dx = (x2 - x1) * 0.45;
         const cx = x1 + dx;
-        const cy = y1 + Math.max(20, (y2 - y1) * 0.35);
+        const cy = y1 + Math.max(18, (y2 - y1) * 0.35);
         const d = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
         path.setAttribute('d', d);
         path.setAttribute('stroke', '#94a3b8');
