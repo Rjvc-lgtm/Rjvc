@@ -45,7 +45,8 @@
     .tree-panel{background:#020617;color:#e5e7eb;border-radius:18px;padding:16px;margin-top:8px;position:relative;overflow:visible;}
     .tree-root-label{font-size:13px;color:#a5b4fc;margin-bottom:4px;}
 
-    /* NEW: display each tree level as horizontal row so children sit side-by-side */
+    /* NEW: display each tree level as horizontal row so children sit side-by-side
+       (we also support absolute positioning layout for the diagram) */
     .tree-level{
       display:flex;
       justify-content:center;
@@ -237,8 +238,8 @@
         <button class="btn btn-secondary btn-sm" onclick="showFullRootTree()">सिर्फ Root दिखाओ</button>
       </div>
 
-      <!-- existing card-list tree (unchanged) -->
-      <div id="treeViewArea" style="margin-top:10px;font-size:12px;">अभी tree खाली है।</div>
+      <!-- existing card-list tree (will be replaced by absolute positioned nodes for diagram) -->
+      <div id="treeViewArea" style="margin-top:10px;font-size:12px; min-height:120px;"></div>
 
       <!-- SVG overlay for connectors -->
       <div id="treeOverlayWrap" class="overlay-wrap" style="margin-top:12px;">
@@ -321,12 +322,11 @@
 
       recalcAll();
       renderTable();
+      // use the new renderTree which places absolutely positioned nodes and draws connectors
       renderTree();
 
-      // draw connections after paint
-      setTimeout(()=>{
-        try{ drawConnections(currentTreeRootId || rootId); }catch(e){console.error(e);}
-      }, 160);
+      // small extra redraw after snapshot to ensure lines correct
+      setTimeout(()=>{ try{ drawConnections(); }catch(e){} }, 160);
     }, err=>{
       console.error("snapshot err", err);
     });
@@ -658,7 +658,27 @@
     });
   }
 
-  /************ Tree view (render DOM cards) ************/
+  /************ New layout: inorder position + absolute nodes + connectors ************/
+  // spacing constants — adjust if needed for mobile
+  const H_GAP = 180;
+  const V_GAP = 120;
+  const NODE_WIDTH = 160;
+  const NODE_HEIGHT = 70;
+
+  function computeInorderPositions(startId){
+    const positions = {};
+    let xIndex = 0;
+    function dfs(id, depth){
+      if(!id || !nodesById[id]) return;
+      const node = nodesById[id];
+      if(node.leftId) dfs(node.leftId, depth+1);
+      positions[id] = { xIndex: xIndex++, depth };
+      if(node.rightId) dfs(node.rightId, depth+1);
+    }
+    dfs(startId, 0);
+    return positions;
+  }
+
   function viewTreeFrom(id){
     currentTreeRootId = id;
     renderTree();
@@ -671,70 +691,125 @@
   function renderTree(){
     const area = document.getElementById("treeViewArea");
     const info = document.getElementById("treeRootInfo");
+    const overlay = document.getElementById("treeOverlayWrap");
+    const svg = document.getElementById("treeSvg");
 
     if(!Object.keys(nodesById).length){
       info.textContent = "Tree खाली है। पहले कोई customer जोड़ें।";
-      area.textContent = "";
-      drawConnections(null);
+      area.innerHTML = "";
+      if(svg){ svg.innerHTML=''; svg.style.height='0px'; }
       return;
     }
 
-    const startId   = currentTreeRootId || rootId;
+    const startId = currentTreeRootId || rootId;
     const startNode = nodesById[startId];
     if(!startNode){
       info.textContent = "Tree root नहीं मिला।";
-      area.textContent = "";
-      drawConnections(null);
+      area.innerHTML = "";
+      if(svg){ svg.innerHTML=''; svg.style.height='0px'; }
       return;
     }
 
     info.innerHTML = `अभी tree <b>${startNode.name}</b> से शुरू हो रहा है
       (Members: ${startNode.members||0}, Pairs: ${startNode.pairs||0}, Binary Income: ₹${startNode.commission||0})`;
 
-    let html = "";
-
-    function buildLevel(ids){
-      if(!ids.length) return;
-      html += `<div class="tree-level">`;
-      ids.forEach(id=>{
-        const n = nodesById[id];
-        if(!n) return;
-        const isMainTreeRoot = (id === rootId);
-        const leftC  = n.leftCount  || 0;
-        const rightC = n.rightCount || 0;
-        const cycles = n.monthsPaid || 1;
-        html += `
-          <div class="tree-node-wrap">
-            <div class="tree-node ${isMainTreeRoot ? "tree-node-main":""}" data-node-id="${n.id}">
-              <div class="tree-node-name">${n.name}</div>
-              <div class="tree-node-meta">
-                L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0} · ${cycles}x20
-              </div>
-              <div class="tree-node-actions">
-                <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
-                <button class="btn btn-secondary btn-sm" onclick="editCustomer('${n.id}')">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button>
-              </div>
-            </div>
-          </div>`;
-      });
-      html += `</div>`;
-
-      const next = [];
-      ids.forEach(id=>{
-        const n = nodesById[id];
-        if(!n) return;
-        if(n.leftId)  next.push(n.leftId);
-        if(n.rightId) next.push(n.rightId);
-      });
-      if(next.length) buildLevel(next);
+    const pos = computeInorderPositions(startId);
+    const ids = Object.keys(pos);
+    if(ids.length === 0){
+      area.innerHTML = "";
+      if(svg) svg.innerHTML = '';
+      return;
     }
 
-    buildLevel([startId]);
-    area.innerHTML = html;
+    const maxXIndex = Math.max(...ids.map(id=>pos[id].xIndex));
+    const maxDepth  = Math.max(...ids.map(id=>pos[id].depth));
+    const canvasWidth = Math.max((maxXIndex+1) * H_GAP, overlay.clientWidth);
+    const canvasHeight = (maxDepth + 2) * V_GAP + NODE_HEIGHT;
 
-    // draw connectors after DOM layout
-    setTimeout(()=>{ drawConnections(startId); }, 120);
+    area.innerHTML = '';
+    svg.setAttribute('width', canvasWidth);
+    svg.setAttribute('height', canvasHeight);
+    svg.style.height = canvasHeight + 'px';
+    svg.innerHTML = '';
+
+    area.style.position = 'relative';
+    area.style.minHeight = canvasHeight + 'px';
+
+    Object.keys(pos).forEach(id=>{
+      const n = nodesById[id];
+      if(!n) return;
+      const p = pos[id];
+      const x = p.xIndex * H_GAP + NODE_WIDTH/2;
+      const y = p.depth * V_GAP;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'tree-node-wrap';
+      wrap.style.position = 'absolute';
+      wrap.style.left = x + 'px';
+      wrap.style.top  = y + 'px';
+      wrap.style.transform = 'translate(-50%, 0)';
+      wrap.style.zIndex = 2;
+
+      const isMainTreeRoot = (id === rootId);
+      const cycles = n.monthsPaid || 1;
+      const leftC  = n.leftCount  || 0;
+      const rightC = n.rightCount || 0;
+
+      const nodeDiv = document.createElement('div');
+      nodeDiv.className = 'tree-node' + (isMainTreeRoot ? ' tree-node-main' : '');
+      nodeDiv.setAttribute('data-node-id', n.id);
+      nodeDiv.innerHTML = `
+        <div class="tree-node-name">${n.name}</div>
+        <div class="tree-node-meta">
+          L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0} · ${cycles}x20
+        </div>
+        <div class="tree-node-actions">
+          <button class="btn btn-secondary btn-sm" onclick="treeAddMember('${n.id}')">+Member</button>
+          <button class="btn btn-secondary btn-sm" onclick="editCustomer('${n.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${n.id}')">Del</button>
+        </div>
+      `;
+      wrap.appendChild(nodeDiv);
+      area.appendChild(wrap);
+    });
+
+    // connectors
+    Object.keys(pos).forEach(pid=>{
+      const parent = nodesById[pid];
+      if(!parent) return;
+      const pWrap = area.querySelector(`[data-node-id="${pid}"]`)?.parentElement;
+      if(!pWrap) return;
+      ['leftId','rightId'].forEach(side=>{
+        const cid = parent[side];
+        if(!cid) return;
+        const cWrap = area.querySelector(`[data-node-id="${cid}"]`)?.parentElement;
+        if(!cWrap) return;
+        const pRect = pWrap.getBoundingClientRect();
+        const cRect = cWrap.getBoundingClientRect();
+        const overlayRect = overlay.getBoundingClientRect();
+        const x1 = pRect.left + pRect.width/2 - overlayRect.left;
+        const y1 = pRect.top + pRect.height - overlayRect.top;
+        const x2 = cRect.left + cRect.width/2 - overlayRect.left;
+        const y2 = cRect.top - overlayRect.top;
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+        const dx = (x2 - x1) * 0.45;
+        const cx = x1 + dx;
+        const cy = y1 + Math.max(18, (y2 - y1) * 0.35);
+        const d = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+        path.setAttribute('d', d);
+        path.setAttribute('stroke', '#94a3b8');
+        path.setAttribute('stroke-width', '1.2');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(path);
+      });
+    });
+  }
+
+  // compatibility drawConnections -> re-render tree (connectors drawn in renderTree)
+  function drawConnections(){
+    try{ renderTree(); }catch(e){}
   }
 
   /************ Add / Edit / Delete ************/
@@ -971,96 +1046,13 @@
     }
   }
 
-  /************ SVG connectors between DOM card nodes ---------*/
-  function drawConnections(startId) {
-    const svg = document.getElementById('treeSvg');
-    const wrap = document.getElementById('treeOverlayWrap');
-    const viewArea = document.getElementById('treeViewArea');
-    if (!svg || !wrap || !viewArea) return;
-
-    // select visible node-wrap elements inside treeViewArea
-    const nodeWraps = Array.from(viewArea.querySelectorAll('.tree-node-wrap'));
-    if (nodeWraps.length === 0) {
-      svg.innerHTML = '';
-      svg.style.height = '0px';
-      return;
-    }
-
-    // get wrap rect for coordinate translation
-    const wrapRect = wrap.getBoundingClientRect();
-
-    // build mapping id -> box info (center top/bottom, left/right)
-    const boxes = {};
-    nodeWraps.forEach(wrapEl=>{
-      const nodeEl = wrapEl.querySelector('.tree-node');
-      if(!nodeEl) return;
-      const id = nodeEl.getAttribute('data-node-id');
-      if(!id) return;
-      const r = nodeEl.getBoundingClientRect();
-      boxes[id] = {
-        el: nodeEl,
-        left: r.left - wrapRect.left,
-        right: r.right - wrapRect.left,
-        top: r.top - wrapRect.top,
-        bottom: r.bottom - wrapRect.top,
-        cx: (r.left + r.right)/2 - wrapRect.left,
-        cyTop: r.top - wrapRect.top,
-        cyBottom: r.bottom - wrapRect.top,
-        width: r.width,
-        height: r.height
-      };
-    });
-
-    // compute svg height (enough to cover all boxes)
-    const bottoms = Object.values(boxes).map(b=>b.bottom);
-    const maxBottom = bottoms.length ? Math.max(...bottoms) : 0;
-    const svgHeight = Math.max(maxBottom + 20, 120);
-    svg.style.height = svgHeight + 'px';
-    svg.setAttribute('width', wrap.clientWidth);
-    svg.setAttribute('height', svgHeight);
-
-    // clear existing
-    svg.innerHTML = '';
-
-    // draw connectors using nodesById parent->left/right
-    Object.values(nodesById).forEach(n=>{
-      if(!n) return;
-      const parentBox = boxes[n.id];
-      if(!parentBox) return;
-      ['leftId','rightId'].forEach(side=>{
-        const childId = n[side];
-        if(!childId) return;
-        const childBox = boxes[childId];
-        if(!childBox) return;
-        const x1 = parentBox.cx;
-        const y1 = parentBox.cyBottom;
-        const x2 = childBox.cx;
-        const y2 = childBox.cyTop;
-
-        // create path with nice curve
-        const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-        const dx = (x2 - x1) * 0.45;
-        const cx = x1 + dx;
-        const cy = y1 + Math.max(18, (y2 - y1) * 0.35);
-        const d = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
-        path.setAttribute('d', d);
-        path.setAttribute('stroke', '#94a3b8');
-        path.setAttribute('stroke-width', '1');
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(path);
-      });
-    });
-  }
-
   // redraw on resize
   window.addEventListener('resize', ()=>{
-    const sid = currentTreeRootId || rootId;
-    try{ drawConnections(sid); }catch(e){}
+    try{ drawConnections(); }catch(e){}
   });
 
-  // initial nothing
-  drawConnections(null);
+  // initial draw (no data yet)
+  drawConnections();
 </script>
 
 </body>
