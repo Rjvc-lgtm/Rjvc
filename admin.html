@@ -5,7 +5,6 @@
 <title>RJVC Binary Tree Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- ===== CSS ===== -->
 <style>
 *{box-sizing:border-box;font-family:system-ui}
 body{margin:0;background:#020617;color:#e5e7eb}
@@ -57,24 +56,39 @@ canvas{max-width:100%}
 
 <div class="wrap">
   <h2>Binary Tree Admin (Firebase)</h2>
-
-  <!-- ===== ADD PART-1 : INFO + TREE BUTTON ===== -->
-  <div class="card" style="margin-bottom:12px;">
-    👉 Customer list, ₹20 cycle, calculation सब पहले जैसा है  
-    <br><br>
-    👉 Heavy Binary Tree अब अलग page में खुलेगा
-    <br><br>
-    <button class="btn btn-primary" onclick="window.location.href='tree.html'">
-      Tree Full Screen
-    </button>
-  </div>
-  <!-- ===== ADD PART-1 END ===== -->
-
   <div class="small">
     हर ID जब ₹20 देती है → 1 cycle <br>
     Binary payout levels auto calculate होते हैं
   </div>
-  <button class="btn btn-secondary" onclick="logout()">Logout</button>
+
+  <!-- 🔹 ADDED BUTTON -->
+  <div style="margin-top:10px">
+    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    <button class="btn btn-primary" onclick="toggleAdminTree()" style="margin-left:8px">
+      View Tree
+    </button>
+  </div>
+</div>
+
+<!-- 🔹 ADDED TREE VIEW (HIDDEN BY DEFAULT) -->
+<div class="wrap" id="adminTreeBox" style="display:none">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">Binary Tree View</h3>
+      <button class="btn btn-secondary" onclick="toggleAdminTree()">Close</button>
+    </div>
+
+    <iframe 
+      src="tree.html"
+      style="
+        width:100%;
+        height:75vh;
+        border:none;
+        margin-top:12px;
+        border-radius:12px;
+      ">
+    </iframe>
+  </div>
 </div>
 
 <!-- ===== CREATE ROOT ===== -->
@@ -109,49 +123,6 @@ canvas{max-width:100%}
   <canvas id="businessChart" height="160" style="margin-top:20px"></canvas>
 </div>
 
-<!-- ===== ADD PART-2 : WITHDRAWAL APPROVAL ===== -->
-<div class="wrap">
-  <div class="card">
-    <h2>Withdrawal Approval (Admin)</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Amount</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="withdrawList">
-        <tr><td colspan="4">No Requests</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-<!-- ===== PART-2 END ===== -->
-
-<!-- ===== ADD PART-3 : TRANSFER APPROVAL ===== -->
-<div class="wrap">
-  <div class="card">
-    <h2>Name to Name Transfer (Admin Approval)</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>From</th>
-          <th>To</th>
-          <th>Amount</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="transferList">
-        <tr><td colspan="5">No Requests</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-<!-- ===== PART-3 END ===== -->
-
 <!-- ===== CUSTOMER LIST ===== -->
 <div class="wrap">
   <h2>Customer List</h2>
@@ -178,7 +149,6 @@ canvas{max-width:100%}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -188,25 +158,25 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
 
-/* ===== ADD PART-2 & PART-3 FIRESTORE ===== */
-const withdrawCol = db.collection("WithdrawRequests");
-const transferCol = db.collection("TransferRequests");
-
-/* ================= LOGIN ================= */
+/* LOGIN */
 function login(){
   if(adminId.value==="admin" && adminPass.value==="1234"){
     loginPage.style.display="none";
     adminPage.style.display="block";
     loadData();
-    loadWithdrawals();
-    loadTransfers();
   }else{
     loginError.style.display="block";
   }
 }
 function logout(){ location.reload(); }
 
-/* ================= DATA ================= */
+/* 🔹 ADDED FUNCTION */
+function toggleAdminTree(){
+  const box = document.getElementById("adminTreeBox");
+  box.style.display = (box.style.display==="none") ? "block" : "none";
+}
+
+/* DATA */
 let nodes={};
 
 function loadData(){
@@ -217,49 +187,73 @@ function loadData(){
   });
 }
 
-/* ================= WITHDRAWAL (PART-2) ================= */
-function loadWithdrawals(){
-  withdrawCol.where("status","==","pending").onSnapshot(snap=>{
-    withdrawList.innerHTML="";
-    snap.forEach(doc=>{
-      let d=doc.data();
-      withdrawList.innerHTML+=`
-      <tr>
-        <td>${d.userName}</td>
-        <td>₹${d.amount}</td>
-        <td>${d.status}</td>
-        <td>
-          <button onclick="withdrawCol.doc('${doc.id}').update({status:'approved'})">Approve</button>
-          <button onclick="withdrawCol.doc('${doc.id}').update({status:'rejected'})">Reject</button>
-        </td>
-      </tr>`;
-    });
+/* CALCULATION */
+function calculate(){
+  let totalCycles=0;
+  let totalBinary=0;
+
+  Object.values(nodes).forEach(n=>{
+    totalCycles += (n.monthsPaid||1);
+    totalBinary += (n.commission||0);
+  });
+
+  let business = totalCycles*20;
+  let profit = business-totalBinary;
+
+  totalBusiness.innerText="₹"+business;
+  totalPayout.innerText="₹"+totalBinary;
+  companyProfit.innerText="₹"+profit;
+
+  drawChart(business,totalBinary,profit);
+  renderTable();
+}
+
+/* CHART */
+function drawChart(a,b,c){
+  if(window.chart) chart.destroy();
+  chart = new Chart(businessChart,{
+    type:"bar",
+    data:{
+      labels:["Income","Payout","Profit"],
+      datasets:[{
+        data:[a,b,c],
+        backgroundColor:["#3b82f6","#f97316","#22c55e"]
+      }]
+    }
   });
 }
 
-/* ================= TRANSFER (PART-3) ================= */
-function loadTransfers(){
-  transferCol.where("status","==","pending").onSnapshot(snap=>{
-    transferList.innerHTML="";
-    snap.forEach(doc=>{
-      let t=doc.data();
-      transferList.innerHTML+=`
-      <tr>
-        <td>${t.fromName}</td>
-        <td>${t.toName}</td>
-        <td>₹${t.amount}</td>
-        <td>${t.status}</td>
-        <td>
-          <button onclick="transferCol.doc('${doc.id}').update({status:'approved'})">Approve</button>
-          <button onclick="transferCol.doc('${doc.id}').update({status:'rejected'})">Reject</button>
-        </td>
-      </tr>`;
-    });
+/* TABLE */
+function renderTable(){
+  customerTable.innerHTML="";
+  let i=1;
+  Object.values(nodes).forEach(n=>{
+    let tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${i++}</td>
+      <td>${n.name||""}</td>
+      <td>${n.members||0}</td>
+      <td>L:${n.leftCount||0} R:${n.rightCount||0}</td>
+      <td>${n.pairs||0}</td>
+      <td>${Math.min(10,n.pairs||0)}</td>
+    `;
+    customerTable.appendChild(tr);
   });
 }
 
-/* ================= बाकी आपका पुराना code वैसा ही ================= */
+/* ROOT */
+function createRoot(){
+  if(!rootName.value || !rootPass.value) return alert("Fill both");
+  treeCol.add({
+    name:rootName.value,
+    password:rootPass.value,
+    monthsPaid:1,
+    commission:0
+  });
+  rootName.value="";
+  rootPass.value="";
+}
 </script>
 
 </body>
-</html>
+  </html>
