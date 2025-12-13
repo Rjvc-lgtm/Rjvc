@@ -1,85 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
 <title>RJVC Binary Tree</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
-html,body{
+body{
   margin:0;
-  padding:0;
-  height:100%;
   background:#020617;
   color:#e5e7eb;
-  overflow:hidden;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:system-ui;
 }
-#toolbar{
+.topbar{
   position:fixed;
-  top:10px;
-  left:50%;
-  transform:translateX(-50%);
+  top:0;
+  left:0;
+  right:0;
+  background:#0b1320;
+  padding:10px;
   display:flex;
   gap:8px;
+  justify-content:center;
   z-index:10;
 }
 .btn{
-  background:#2563eb;
+  padding:8px 12px;
+  border-radius:999px;
   border:none;
-  color:#fff;
-  padding:8px 14px;
-  border-radius:20px;
-  font-size:14px;
+  font-weight:700;
   cursor:pointer;
 }
-.btn.gray{background:#334155}
-#treeWrapper{
-  width:100%;
-  height:100%;
-  overflow:hidden;
+.btn-primary{background:#2563eb;color:#fff}
+.btn-secondary{background:#e5e7eb;color:#111827}
+
+.canvas-wrap{
+  margin-top:70px;
+  display:flex;
+  justify-content:center;
 }
-#tree{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%) scale(1);
-  transform-origin:center;
-}
-.node{
-  background:#0b1320;
-  border:1px solid #334155;
-  border-radius:10px;
-  padding:8px 12px;
-  min-width:140px;
-  text-align:center;
-  color:#e5e7eb;
-  position:absolute;
-  font-size:12px;
-}
-.node.root{
-  background:#2563eb;
-  border-color:#93c5fd;
-}
-.line{
-  position:absolute;
-  background:#64748b;
-  height:1px;
-  transform-origin:left center;
+canvas{
+  background:#020617;
 }
 </style>
 </head>
 
 <body>
 
-<div id="toolbar">
-  <button class="btn" onclick="zoomIn()">＋</button>
-  <button class="btn" onclick="zoomOut()">－</button>
-  <button class="btn gray" onclick="resetView()">Reset</button>
+<div class="topbar">
+  <button class="btn btn-primary" onclick="zoomIn()">＋</button>
+  <button class="btn btn-primary" onclick="zoomOut()">－</button>
+  <button class="btn btn-secondary" onclick="resetZoom()">Reset</button>
+  <button class="btn btn-secondary" onclick="history.back()">Back</button>
 </div>
 
-<div id="treeWrapper">
-  <div id="tree"></div>
+<div class="canvas-wrap">
+  <canvas id="treeCanvas" width="1400" height="900"></canvas>
 </div>
 
 <!-- Firebase -->
@@ -87,7 +63,6 @@ html,body{
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
-/* Firebase config (same as admin) */
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -96,100 +71,90 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
 
-const urlParams = new URLSearchParams(window.location.search);
-let ROOT_ID = urlParams.get("root");
+const canvas = document.getElementById("treeCanvas");
+const ctx = canvas.getContext("2d");
 
 let scale = 1;
-let posX = 0, posY = 0;
-let dragging = false, startX, startY;
+let nodes = {};
+let rootId = null;
 
-const tree = document.getElementById("tree");
+function zoomIn(){ scale += 0.1; draw(); }
+function zoomOut(){ scale = Math.max(0.5, scale-0.1); draw(); }
+function resetZoom(){ scale = 1; draw(); }
 
-/* Zoom */
-function zoomIn(){ scale+=0.1; applyTransform(); }
-function zoomOut(){ scale=Math.max(0.4,scale-0.1); applyTransform(); }
-function resetView(){ scale=1; posX=0; posY=0; applyTransform(); }
+/* ❌ DRAG & TOUCH DISABLED */
+canvas.onmousedown = null;
+canvas.ontouchstart = null;
 
-function applyTransform(){
-  tree.style.transform =
-    `translate(-50%,-50%) translate(${posX}px,${posY}px) scale(${scale})`;
-}
-
-/* Drag */
-document.addEventListener("mousedown",e=>{
-  dragging=true; startX=e.clientX-posX; startY=e.clientY-posY;
-});
-document.addEventListener("mousemove",e=>{
-  if(!dragging)return;
-  posX=e.clientX-startX;
-  posY=e.clientY-startY;
-  applyTransform();
-});
-document.addEventListener("mouseup",()=>dragging=false);
-
-/* Mobile drag */
-document.addEventListener("touchstart",e=>{
-  dragging=true;
-  startX=e.touches[0].clientX-posX;
-  startY=e.touches[0].clientY-posY;
-});
-document.addEventListener("touchmove",e=>{
-  if(!dragging)return;
-  posX=e.touches[0].clientX-startX;
-  posY=e.touches[0].clientY-startY;
-  applyTransform();
-});
-document.addEventListener("touchend",()=>dragging=false);
-
-/* Draw tree */
-let nodes={};
-
+/* LOAD TREE */
 treeCol.onSnapshot(snap=>{
   nodes={};
   snap.forEach(d=>nodes[d.id]={id:d.id,...d.data()});
-  if(!ROOT_ID){
-    Object.values(nodes).forEach(n=>{
-      if(!n.parentId) ROOT_ID=n.id;
-    });
-  }
-  renderTree(ROOT_ID);
+  Object.values(nodes).forEach(n=>{
+    if(!n.parentId) rootId=n.id;
+  });
+  draw();
 });
 
-function renderTree(rootId){
-  tree.innerHTML="";
-  if(!nodes[rootId])return;
+function draw(){
+  ctx.setTransform(scale,0,0,scale,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!rootId) return;
 
-  const levels=[[rootId]];
-  let i=0;
-  while(levels[i]){
+  let levels=[[rootId]];
+  while(true){
+    let last=levels[levels.length-1];
     let next=[];
-    levels[i].forEach(id=>{
-      const n=nodes[id];
-      if(n.leftId) next.push(n.leftId);
-      if(n.rightId) next.push(n.rightId);
+    last.forEach(id=>{
+      let n=nodes[id];
+      if(n?.leftId) next.push(n.leftId);
+      if(n?.rightId) next.push(n.rightId);
     });
-    if(next.length) levels.push(next);
-    i++;
+    if(!next.length) break;
+    levels.push(next);
   }
 
-  const gapX=180, gapY=120;
-
-  levels.forEach((lvl,li)=>{
-    lvl.forEach((id,ci)=>{
-      const n=nodes[id];
-      const div=document.createElement("div");
-      div.className="node"+(id===rootId?" root":"");
-      div.style.left=(ci-(lvl.length-1)/2)*gapX+"px";
-      div.style.top=li*gapY+"px";
-      div.innerHTML=`
-        <b>${n.name}</b><br>
-        L:${n.leftId?1:0} R:${n.rightId?1:0}<br>
-        ₹${n.commission||0}
-      `;
-      tree.appendChild(div);
+  let pos={};
+  levels.forEach((lvl,i)=>{
+    let y=80+i*120;
+    let step=canvas.width/(lvl.length+1);
+    lvl.forEach((id,j)=>{
+      pos[id]={x:step*(j+1),y};
     });
+  });
+
+  ctx.strokeStyle="#64748b";
+  Object.values(nodes).forEach(n=>{
+    if(n.leftId && pos[n.leftId]){
+      ctx.beginPath();
+      ctx.moveTo(pos[n.id].x,pos[n.id].y);
+      ctx.lineTo(pos[n.leftId].x,pos[n.leftId].y);
+      ctx.stroke();
+    }
+    if(n.rightId && pos[n.rightId]){
+      ctx.beginPath();
+      ctx.moveTo(pos[n.id].x,pos[n.id].y);
+      ctx.lineTo(pos[n.rightId].x,pos[n.rightId].y);
+      ctx.stroke();
+    }
+  });
+
+  Object.values(nodes).forEach(n=>{
+    let p=pos[n.id];
+    if(!p) return;
+    ctx.fillStyle="#0b1320";
+    ctx.strokeStyle="#2563eb";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.roundRect(p.x-70,p.y-20,140,40,10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle="#fff";
+    ctx.textAlign="center";
+    ctx.fillText(n.name||"",p.x,p.y+5);
   });
 }
 </script>
+
 </body>
 </html>
