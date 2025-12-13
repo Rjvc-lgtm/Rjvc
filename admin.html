@@ -1,125 +1,229 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8" />
-  <title>RJVC Binary Tree Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<title>RJVC Binary Tree Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
-    body{margin:0;background:#f3f4f6;color:#111827;}
-    h1,h2,h3{margin:0 0 8px;}
-    .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-    .card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.15);padding:22px;max-width:480px;width:100%;}
-    label{display:block;font-size:14px;margin-bottom:4px;}
-    input{width:100%;padding:10px 12px;border-radius:999px;border:1px solid #d1d5db;font-size:15px;}
-    .btn{border:none;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;}
-    .btn-primary{background:#2563eb;color:#fff;}
-    .btn-secondary{background:#e5e7eb;color:#111827;}
-    .btn-sm{font-size:12px;padding:6px 10px;}
-    .wrap{max-width:1100px;margin:20px auto;padding:0 10px;}
-    .panel{background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;
-      box-shadow:0 6px 18px rgba(0,0,0,.08);}
-    .flex{display:flex;}
-    .between{justify-content:space-between;align-items:center;}
-  </style>
+<!-- ===== CSS ===== -->
+<style>
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:#020617;color:#e5e7eb}
+.wrap{max-width:1200px;margin:auto;padding:14px}
+h2{margin-top:0}
+.small{font-size:13px;color:#94a3b8}
+
+.btn{padding:8px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-secondary{background:#e5e7eb;color:#111827}
+
+.card{
+  background:#0b1320;
+  border-radius:14px;
+  padding:16px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:12px;
+}
+th,td{
+  padding:8px;
+  border-bottom:1px solid #1f2937;
+  text-align:center;
+}
+th{background:#020617}
+
+canvas{max-width:100%}
+</style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginPage" class="page">
+<!-- ================= LOGIN ================= -->
+<div id="loginPage" class="wrap">
+  <div class="card" style="max-width:400px;margin:60px auto;">
+    <h2 class="center">Admin Login</h2>
+    <input id="adminId" placeholder="admin" style="width:100%;padding:10px;margin-top:8px">
+    <input id="adminPass" type="password" placeholder="1234" style="width:100%;padding:10px;margin-top:8px">
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="login()">Login</button>
+    <div id="loginError" class="small" style="color:#f87171;display:none">Wrong login</div>
+  </div>
+</div>
+
+<!-- ================= ADMIN ================= -->
+<div id="adminPage" style="display:none">
+
+<div class="wrap">
+  <h2>Binary Tree Admin (Firebase)</h2>
+  <div class="small">
+    हर ID जब ₹20 देती है → 1 cycle <br>
+    Binary payout levels auto calculate होते हैं
+  </div>
+  <button class="btn btn-secondary" onclick="logout()">Logout</button>
+</div>
+
+<!-- ===== CREATE ROOT ===== -->
+<div class="wrap">
   <div class="card">
-    <h2 style="text-align:center;">RJVC Admin Login</h2>
-    <label>Admin ID</label>
-    <input id="adminId" placeholder="admin">
-    <label>Password</label>
-    <input id="adminPass" type="password" placeholder="1234">
-    <button class="btn btn-primary" style="width:100%;margin-top:10px;"
-      onclick="handleAdminLogin()">Login</button>
-    <div id="loginError" style="display:none;color:red;font-size:13px;margin-top:8px;">
-      गलत ID या Password
-    </div>
+    <h3>नया Customer (Root)</h3>
+    <input id="rootName" placeholder="Name" style="width:100%;padding:8px">
+    <input id="rootPass" placeholder="Password" style="width:100%;padding:8px;margin-top:8px">
+    <button class="btn btn-primary" style="margin-top:10px" onclick="createRoot()">Add Root</button>
   </div>
 </div>
 
-<!-- ADMIN PAGE -->
-<div id="adminPage" style="display:none;">
-  <div class="wrap">
+<!-- ===== COMPANY REPORT ===== -->
+<div class="wrap">
+  <h2>Company Business Report</h2>
 
-    <!-- HEADER (UPDATED ✔️) -->
-    <div class="panel flex between">
-      <h2>Binary Tree Admin (Firebase)</h2>
-      <div style="display:flex;gap:8px;">
-        <!-- ✅ NEW BUTTON -->
-        <button class="btn btn-primary btn-sm" onclick="openTreePage()">
-          Tree Full Screen
-        </button>
-        <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
-      </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+    <div class="card">
+      <div class="small">Total Business Income</div>
+      <h2 id="totalBusiness">₹0</h2>
     </div>
-
-    <!-- बाकी आपका पूरा admin content जैसा था वैसा ही रहेगा -->
-    <div class="panel">
-      <p>
-        👉 यहाँ customer list, ₹20 cycle, edit, delete, सब पहले जैसा ही रहेगा।  
-        <br>👉 Heavy tree अब **अलग page (tree.html)** में खुलेगा।
-      </p>
+    <div class="card">
+      <div class="small">Total Binary Payout</div>
+      <h2 id="totalPayout">₹0</h2>
     </div>
-
+    <div class="card">
+      <div class="small">Company Profit</div>
+      <h2 id="companyProfit">₹0</h2>
+    </div>
   </div>
+
+  <canvas id="businessChart" height="160" style="margin-top:20px"></canvas>
 </div>
 
-<!-- Firebase -->
+<!-- ===== CUSTOMER LIST ===== -->
+<div class="wrap">
+  <h2>Customer List</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Total Members</th>
+        <th>L / R</th>
+        <th>Pairs</th>
+        <th>Level</th>
+      </tr>
+    </thead>
+    <tbody id="customerTable"></tbody>
+  </table>
+</div>
+
+</div>
+
+<!-- ===== LIBRARIES ===== -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-/* Firebase config */
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
   projectId: "rjvc-plan"
 });
+
 const db = firebase.firestore();
+const treeCol = db.collection("TreeNodes");
 
-/* Admin Login */
-const ADMIN_ID="admin", ADMIN_PASSWORD="1234";
-let rootId=null;
-
-function handleAdminLogin(){
-  if(adminId.value===ADMIN_ID && adminPass.value===ADMIN_PASSWORD){
+/* ================= LOGIN ================= */
+function login(){
+  if(adminId.value==="admin" && adminPass.value==="1234"){
     loginPage.style.display="none";
     adminPage.style.display="block";
-    loadRoot();
-  } else {
+    loadData();
+  }else{
     loginError.style.display="block";
   }
 }
 function logout(){
-  adminPage.style.display="none";
-  loginPage.style.display="flex";
+  location.reload();
 }
 
-/* Load Root ID */
-function loadRoot(){
-  db.collection("TreeNodes").where("parentId","==",null)
-    .limit(1).get().then(snap=>{
-      snap.forEach(d=> rootId=d.id);
-    });
+/* ================= DATA ================= */
+let nodes={};
+
+function loadData(){
+  treeCol.onSnapshot(snap=>{
+    nodes={};
+    snap.forEach(d=>nodes[d.id]=d.data());
+    calculate();
+  });
 }
 
-/* ===============================
-   ✅ NEW FUNCTION (ADDED ONLY)
-   =============================== */
-function openTreePage(){
-  if(!rootId){
-    alert("Root ID available nahi hai");
-    return;
-  }
-  window.open("tree.html?root=" + rootId, "_blank");
+/* ================= CALCULATION ================= */
+function calculate(){
+  let totalCycles=0;
+  let totalBinary=0;
+
+  Object.values(nodes).forEach(n=>{
+    totalCycles += (n.monthsPaid||1);
+    totalBinary += (n.commission||0);
+  });
+
+  let business = totalCycles*20;
+  let profit = business-totalBinary;
+
+  totalBusiness.innerText="₹"+business;
+  totalPayout.innerText="₹"+totalBinary;
+  companyProfit.innerText="₹"+profit;
+
+  drawChart(business,totalBinary,profit);
+  renderTable();
+}
+
+/* ================= CHART ================= */
+function drawChart(a,b,c){
+  if(window.chart) chart.destroy();
+  chart = new Chart(businessChart,{
+    type:"bar",
+    data:{
+      labels:["Income","Payout","Profit"],
+      datasets:[{
+        data:[a,b,c],
+        backgroundColor:["#3b82f6","#f97316","#22c55e"]
+      }]
+    }
+  });
+}
+
+/* ================= TABLE ================= */
+function renderTable(){
+  customerTable.innerHTML="";
+  let i=1;
+  Object.values(nodes).forEach(n=>{
+    let tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${i++}</td>
+      <td>${n.name||""}</td>
+      <td>${n.members||0}</td>
+      <td>L:${n.leftCount||0} R:${n.rightCount||0}</td>
+      <td>${n.pairs||0}</td>
+      <td>${Math.min(10,n.pairs||0)}</td>
+    `;
+    customerTable.appendChild(tr);
+  });
+}
+
+/* ================= ROOT ================= */
+function createRoot(){
+  if(!rootName.value || !rootPass.value) return alert("Fill both");
+  treeCol.add({
+    name:rootName.value,
+    password:rootPass.value,
+    monthsPaid:1,
+    commission:0
+  });
+  rootName.value="";
+  rootPass.value="";
 }
 </script>
 
 </body>
-</html>
+               </html>
