@@ -2,30 +2,23 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>RJVC Binary Tree</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RJVC Binary Tree – Full View</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  background:#020617;
-  color:#e5e7eb;
-  font-family:system-ui;
-}
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:#020617;color:#e5e7eb}
+
 .topbar{
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  background:#0b1320;
-  padding:10px;
   display:flex;
-  gap:8px;
-  justify-content:center;
-  z-index:10;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 14px;
+  background:#0b1320;
 }
+
 .btn{
-  padding:8px 12px;
+  padding:8px 14px;
   border-radius:999px;
   border:none;
   font-weight:700;
@@ -35,125 +28,179 @@ body{
 .btn-secondary{background:#e5e7eb;color:#111827}
 
 .canvas-wrap{
-  margin-top:70px;
-  display:flex;
-  justify-content:center;
+  width:100%;
+  overflow-x:auto;
+  padding:10px;
 }
+
 canvas{
-  background:#020617;
+  display:block;
+  margin:auto;
 }
+.small{font-size:13px;color:#94a3b8}
 </style>
 </head>
 
 <body>
 
+<!-- ===== TOP BAR ===== -->
 <div class="topbar">
-  <button class="btn btn-primary" onclick="zoomIn()">＋</button>
-  <button class="btn btn-primary" onclick="zoomOut()">－</button>
-  <button class="btn btn-secondary" onclick="resetZoom()">Reset</button>
-  <button class="btn btn-secondary" onclick="history.back()">Back</button>
+  <div>
+    <b>Binary Tree – Full Screen View</b><br>
+    <span class="small">Auto resize | Mobile friendly</span>
+  </div>
+  <button class="btn btn-secondary" onclick="goBack()">⬅ Back to Admin</button>
 </div>
 
+<!-- ===== TREE CANVAS ===== -->
 <div class="canvas-wrap">
-  <canvas id="treeCanvas" width="1400" height="900"></canvas>
+  <canvas id="treeCanvas"></canvas>
 </div>
 
-<!-- Firebase -->
+<!-- ===== FIREBASE ===== -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
   projectId: "rjvc-plan"
 });
+
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
 
-const canvas = document.getElementById("treeCanvas");
-const ctx = canvas.getContext("2d");
+/* ================= NAV ================= */
+function goBack(){
+  window.location.href = "admin.html";
+}
 
-let scale = 1;
+/* ================= TREE DATA ================= */
 let nodes = {};
 let rootId = null;
 
-function zoomIn(){ scale += 0.1; draw(); }
-function zoomOut(){ scale = Math.max(0.5, scale-0.1); draw(); }
-function resetZoom(){ scale = 1; draw(); }
-
-/* ❌ DRAG & TOUCH DISABLED */
-canvas.onmousedown = null;
-canvas.ontouchstart = null;
-
-/* LOAD TREE */
 treeCol.onSnapshot(snap=>{
-  nodes={};
-  snap.forEach(d=>nodes[d.id]={id:d.id,...d.data()});
-  Object.values(nodes).forEach(n=>{
-    if(!n.parentId) rootId=n.id;
+  nodes = {};
+  rootId = null;
+  snap.forEach(doc=>{
+    nodes[doc.id] = doc.data();
+    if(!doc.data().parentId) rootId = doc.id;
   });
-  draw();
+  drawTree();
 });
 
-function draw(){
-  ctx.setTransform(scale,0,0,scale,0,0);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(!rootId) return;
+/* ================= DRAW TREE ================= */
+function drawTree(){
+  const canvas = document.getElementById("treeCanvas");
+  const ctx = canvas.getContext("2d");
 
-  let levels=[[rootId]];
-  while(true){
-    let last=levels[levels.length-1];
-    let next=[];
-    last.forEach(id=>{
-      let n=nodes[id];
-      if(n?.leftId) next.push(n.leftId);
-      if(n?.rightId) next.push(n.rightId);
-    });
-    if(!next.length) break;
-    levels.push(next);
+  if(!rootId){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    return;
   }
 
-  let pos={};
-  levels.forEach((lvl,i)=>{
-    let y=80+i*120;
-    let step=canvas.width/(lvl.length+1);
-    lvl.forEach((id,j)=>{
-      pos[id]={x:step*(j+1),y};
+  // --- Build levels (BFS) ---
+  let levels = [];
+  let current = [rootId];
+
+  while(current.length){
+    levels.push(current);
+    let next=[];
+    current.forEach(id=>{
+      const n = nodes[id];
+      if(!n) return;
+      if(n.leftId) next.push(n.leftId);
+      if(n.rightId) next.push(n.rightId);
+    });
+    current = next;
+  }
+
+  // --- Auto scaling ---
+  const nodeW = Math.max(110, 220 - levels.length*10);
+  const nodeH = 42;
+  const vGap  = Math.max(40, 90 - levels.length*5);
+  const top   = 40;
+
+  const maxNodes = Math.max(...levels.map(l=>l.length));
+  const width  = Math.max(window.innerWidth, maxNodes * (nodeW + 40));
+  const height = top + levels.length * (nodeH + vGap);
+
+  canvas.width  = width;
+  canvas.height = height;
+
+  ctx.clearRect(0,0,width,height);
+
+  let pos = {};
+
+  levels.forEach((lvl,li)=>{
+    const y = top + li*(nodeH+vGap);
+    const gap = width/(lvl.length+1);
+    lvl.forEach((id,idx)=>{
+      pos[id] = {
+        x: gap*(idx+1),
+        y: y
+      };
     });
   });
 
+  // --- Lines ---
   ctx.strokeStyle="#64748b";
-  Object.values(nodes).forEach(n=>{
+  ctx.lineWidth=1;
+
+  Object.keys(pos).forEach(id=>{
+    const n = nodes[id];
+    if(!n) return;
+    const p = pos[id];
     if(n.leftId && pos[n.leftId]){
       ctx.beginPath();
-      ctx.moveTo(pos[n.id].x,pos[n.id].y);
-      ctx.lineTo(pos[n.leftId].x,pos[n.leftId].y);
+      ctx.moveTo(p.x, p.y+nodeH/2);
+      ctx.lineTo(pos[n.leftId].x, pos[n.leftId].y-nodeH/2);
       ctx.stroke();
     }
     if(n.rightId && pos[n.rightId]){
       ctx.beginPath();
-      ctx.moveTo(pos[n.id].x,pos[n.id].y);
-      ctx.lineTo(pos[n.rightId].x,pos[n.rightId].y);
+      ctx.moveTo(p.x, p.y+nodeH/2);
+      ctx.lineTo(pos[n.rightId].x, pos[n.rightId].y-nodeH/2);
       ctx.stroke();
     }
   });
 
-  Object.values(nodes).forEach(n=>{
-    let p=pos[n.id];
-    if(!p) return;
-    ctx.fillStyle="#0b1320";
-    ctx.strokeStyle="#2563eb";
-    ctx.lineWidth=2;
+  // --- Nodes ---
+  Object.keys(pos).forEach(id=>{
+    const n = nodes[id];
+    const {x,y} = pos[id];
+
     ctx.beginPath();
-    ctx.roundRect(p.x-70,p.y-20,140,40,10);
+    roundRect(ctx, x-nodeW/2, y-nodeH/2, nodeW, nodeH, 10);
+    ctx.fillStyle = (id===rootId) ? "#2563eb" : "#0b1320";
     ctx.fill();
+    ctx.strokeStyle="#1e293b";
     ctx.stroke();
-    ctx.fillStyle="#fff";
+
+    ctx.fillStyle="#e5e7eb";
+    ctx.font="12px system-ui";
     ctx.textAlign="center";
-    ctx.fillText(n.name||"",p.x,p.y+5);
+    ctx.fillText(n.name||"", x, y-4);
+
+    ctx.fillStyle="#94a3b8";
+    ctx.font="10px system-ui";
+    ctx.fillText(`₹${n.commission||0} | ${n.monthsPaid||1}x20`, x, y+10);
   });
 }
+
+/* ================= UTIL ================= */
+function roundRect(ctx,x,y,w,h,r){
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+window.addEventListener("resize", drawTree);
 </script>
 
 </body>
