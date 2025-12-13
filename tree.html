@@ -2,206 +2,117 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>RJVC Binary Tree – Full View</title>
+<title>Simple Binary Tree</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-*{box-sizing:border-box;font-family:system-ui}
-body{margin:0;background:#020617;color:#e5e7eb}
+body{
+  margin:0;
+  background:#020617;
+  color:#e5e7eb;
+  font-family:system-ui;
+}
 
-.topbar{
+.header{
+  padding:10px;
+  background:#020617;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:10px 14px;
-  background:#0b1320;
 }
 
-.btn{
-  padding:8px 14px;
-  border-radius:999px;
+.header button{
+  background:#2563eb;
+  color:white;
   border:none;
-  font-weight:700;
-  cursor:pointer;
+  border-radius:20px;
+  padding:6px 14px;
 }
-.btn-primary{background:#2563eb;color:#fff}
-.btn-secondary{background:#e5e7eb;color:#111827}
 
-.canvas-wrap{
-  width:100%;
-  overflow-x:auto;
+.tree{
+  display:flex;
+  justify-content:center;
   padding:10px;
 }
 
-canvas{
-  display:block;
-  margin:auto;
+ul{
+  padding-top:20px;
+  position:relative;
 }
-.small{font-size:13px;color:#94a3b8}
+
+ul::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:50%;
+  width:1px;
+  height:20px;
+  background:#475569;
+}
+
+li{
+  list-style:none;
+  text-align:center;
+  padding:10px 5px 0 5px;
+  position:relative;
+}
+
+li::before, li::after{
+  content:'';
+  position:absolute;
+  top:0;
+  width:50%;
+  height:1px;
+  background:#475569;
+}
+
+li::before{ right:50%; }
+li::after{ left:50%; }
+
+li:only-child::before,
+li:only-child::after{
+  display:none;
+}
+
+.node{
+  background:#0b1320;
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:12px;
+  min-width:90px;
+  display:inline-block;
+}
+
+.root{ background:#2563eb; }
 </style>
 </head>
 
 <body>
 
-<!-- ===== TOP BAR ===== -->
-<div class="topbar">
-  <div>
-    <b>Binary Tree – Full Screen View</b><br>
-    <span class="small">Auto resize | Mobile friendly</span>
-  </div>
-  <button class="btn btn-secondary" onclick="goBack()">⬅ Back to Admin</button>
+<div class="header">
+  <div>Simple Tree View</div>
+  <button onclick="history.back()">← Back</button>
 </div>
 
-<!-- ===== TREE CANVAS ===== -->
-<div class="canvas-wrap">
-  <canvas id="treeCanvas"></canvas>
+<div class="tree">
+  <ul>
+    <li>
+      <div class="node root">Rajesh<br>₹20</div>
+      <ul>
+        <li>
+          <div class="node">Rajesh sub1</div>
+          <ul>
+            <li><div class="node">Bhavna sub2</div></li>
+            <li><div class="node">Bhavna sub3</div></li>
+          </ul>
+        </li>
+        <li>
+          <div class="node">Rajesh sub2</div>
+        </li>
+      </ul>
+    </li>
+  </ul>
 </div>
-
-<!-- ===== FIREBASE ===== -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
-<script>
-/* ================= FIREBASE ================= */
-firebase.initializeApp({
-  apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
-  authDomain: "rjvc-plan.firebaseapp.com",
-  projectId: "rjvc-plan"
-});
-
-const db = firebase.firestore();
-const treeCol = db.collection("TreeNodes");
-
-/* ================= NAV ================= */
-function goBack(){
-  window.location.href = "admin.html";
-}
-
-/* ================= TREE DATA ================= */
-let nodes = {};
-let rootId = null;
-
-treeCol.onSnapshot(snap=>{
-  nodes = {};
-  rootId = null;
-  snap.forEach(doc=>{
-    nodes[doc.id] = doc.data();
-    if(!doc.data().parentId) rootId = doc.id;
-  });
-  drawTree();
-});
-
-/* ================= DRAW TREE ================= */
-function drawTree(){
-  const canvas = document.getElementById("treeCanvas");
-  const ctx = canvas.getContext("2d");
-
-  if(!rootId){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    return;
-  }
-
-  // --- Build levels (BFS) ---
-  let levels = [];
-  let current = [rootId];
-
-  while(current.length){
-    levels.push(current);
-    let next=[];
-    current.forEach(id=>{
-      const n = nodes[id];
-      if(!n) return;
-      if(n.leftId) next.push(n.leftId);
-      if(n.rightId) next.push(n.rightId);
-    });
-    current = next;
-  }
-
-  // --- Auto scaling ---
-  const nodeW = Math.max(110, 220 - levels.length*10);
-  const nodeH = 42;
-  const vGap  = Math.max(40, 90 - levels.length*5);
-  const top   = 40;
-
-  const maxNodes = Math.max(...levels.map(l=>l.length));
-  const width  = Math.max(window.innerWidth, maxNodes * (nodeW + 40));
-  const height = top + levels.length * (nodeH + vGap);
-
-  canvas.width  = width;
-  canvas.height = height;
-
-  ctx.clearRect(0,0,width,height);
-
-  let pos = {};
-
-  levels.forEach((lvl,li)=>{
-    const y = top + li*(nodeH+vGap);
-    const gap = width/(lvl.length+1);
-    lvl.forEach((id,idx)=>{
-      pos[id] = {
-        x: gap*(idx+1),
-        y: y
-      };
-    });
-  });
-
-  // --- Lines ---
-  ctx.strokeStyle="#64748b";
-  ctx.lineWidth=1;
-
-  Object.keys(pos).forEach(id=>{
-    const n = nodes[id];
-    if(!n) return;
-    const p = pos[id];
-    if(n.leftId && pos[n.leftId]){
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y+nodeH/2);
-      ctx.lineTo(pos[n.leftId].x, pos[n.leftId].y-nodeH/2);
-      ctx.stroke();
-    }
-    if(n.rightId && pos[n.rightId]){
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y+nodeH/2);
-      ctx.lineTo(pos[n.rightId].x, pos[n.rightId].y-nodeH/2);
-      ctx.stroke();
-    }
-  });
-
-  // --- Nodes ---
-  Object.keys(pos).forEach(id=>{
-    const n = nodes[id];
-    const {x,y} = pos[id];
-
-    ctx.beginPath();
-    roundRect(ctx, x-nodeW/2, y-nodeH/2, nodeW, nodeH, 10);
-    ctx.fillStyle = (id===rootId) ? "#2563eb" : "#0b1320";
-    ctx.fill();
-    ctx.strokeStyle="#1e293b";
-    ctx.stroke();
-
-    ctx.fillStyle="#e5e7eb";
-    ctx.font="12px system-ui";
-    ctx.textAlign="center";
-    ctx.fillText(n.name||"", x, y-4);
-
-    ctx.fillStyle="#94a3b8";
-    ctx.font="10px system-ui";
-    ctx.fillText(`₹${n.commission||0} | ${n.monthsPaid||1}x20`, x, y+10);
-  });
-}
-
-/* ================= UTIL ================= */
-function roundRect(ctx,x,y,w,h,r){
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-}
-
-window.addEventListener("resize", drawTree);
-</script>
 
 </body>
 </html>
