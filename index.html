@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <title>RJVC Binary Tree Admin — Diagram Only</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- ✅ Google AdSense Verification Code (DO NOT REMOVE) -->
+  <script async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-550551515353712"
+    crossorigin="anonymous"></script>
+
   <style>
     *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
     body{margin:0;background:#020617;color:#e5e7eb;}
@@ -26,449 +32,66 @@
     }
   </style>
 </head>
+
 <body>
 
 <!-- LOGIN -->
 <div id="loginPage" class="wrap">
   <div class="loginCard">
     <h2 class="center">RJVC Admin Login</h2>
-    <div style="margin-top:10px;">
-      <label>Admin ID</label>
-      <input id="adminId" placeholder="admin" />
-      <label style="margin-top:8px;">Password</label>
-      <input id="adminPass" type="password" placeholder="1234" />
-      <button class="btn btn-primary" onclick="handleAdminLogin()">Login</button>
-      <div id="loginError" class="muted" style="display:none;color:#ff7b7b;">गलत ID या Password</div>
-      <div class="muted">Default: <b>admin</b> / <b>1234</b></div>
-    </div>
+    <label>Admin ID</label>
+    <input id="adminId" placeholder="admin" />
+    <label>Password</label>
+    <input id="adminPass" type="password" placeholder="1234" />
+    <button class="btn btn-primary" onclick="handleAdminLogin()">Login</button>
+    <div id="loginError" class="muted" style="display:none;color:#ff7b7b;">गलत ID या Password</div>
+    <div class="muted">Default: <b>admin</b> / <b>1234</b></div>
   </div>
 </div>
 
-<!-- ADMIN (Diagram only) -->
+<!-- ADMIN -->
 <div id="adminPage" style="display:none;">
   <div class="wrap">
     <div class="topbar">
-      <div>
-        <h2 style="margin:0;">Binary Tree — Diagram View</h2>
-        <div class="small">Canvas पर node पर क्लिक करें → 1 = +Member, 2 = Edit, 3 = Delete</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-secondary" onclick="showFullRootTree()">सिर्फ Root दिखाओ</button>
-        <button class="btn btn-secondary" onclick="logout()">Logout</button>
-      </div>
+      <h2>Binary Tree — Diagram View</h2>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Controls: create root -->
-    <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
-      <input id="rootName" placeholder="Root Name (e.g. Rajesh)" style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef8;"/>
-      <input id="rootPass" placeholder="Password" style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef8;"/>
-      <button class="btn btn-primary" onclick="createRootCustomer()">Create Root</button>
-    </div>
-
-    <!-- Canvas only (diagram mirrors card content) -->
     <div class="canvas-wrap">
       <canvas id="treeCanvas" width="1200" height="520"></canvas>
     </div>
-
-    <div class="small center muted">Note: Delete action removes selected node and its subtree only (confirm shown).</div>
   </div>
 </div>
 
-<!-- FIREBASE -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
-  // Firebase config (use your existing)
   const firebaseConfig = {
     apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
     authDomain: "rjvc-plan.firebaseapp.com",
     projectId: "rjvc-plan",
-    storageBucket: "rjvc-plan.firebasestorage.app",
-    messagingSenderId: "265431528728",
-    appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d",
-    measurementId: "G-1Y7PN96H93"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-  const treeCol = db.collection("TreeNodes");
-  const usersCol = db.collection("Users");
 
-  // Admin login
-  const ADMIN_ID = "admin", ADMIN_PASSWORD = "1234";
   function handleAdminLogin(){
-    const id = document.getElementById("adminId").value.trim();
-    const pass = document.getElementById("adminPass").value.trim();
-    if(id===ADMIN_ID && pass===ADMIN_PASSWORD){
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("adminPage").style.display = "block";
-      setupTreeCanvasClick();
-      startSubscriptions();
+    const id = adminId.value;
+    const pass = adminPass.value;
+    if(id==="admin" && pass==="1234"){
+      loginPage.style.display="none";
+      adminPage.style.display="block";
     } else {
-      document.getElementById("loginError").style.display = "block";
+      loginError.style.display="block";
     }
   }
+
   function logout(){
-    document.getElementById("adminPage").style.display = "none";
-    document.getElementById("loginPage").style.display = "block";
+    adminPage.style.display="none";
+    loginPage.style.display="block";
   }
-
-  // In-memory tree
-  let nodesById = {};
-  let rootId = null;
-  let currentTreeRootId = null;
-  let treeUnsub = null;
-
-  // Start snapshot
-  function startSubscriptions(){
-    if(treeUnsub) treeUnsub();
-    treeUnsub = treeCol.orderBy("createdAt","asc").onSnapshot(snap=>{
-      nodesById = {};
-      rootId = null;
-      snap.forEach(doc=>{
-        nodesById[doc.id] = Object.assign({id: doc.id}, doc.data());
-      });
-      Object.values(nodesById).forEach(n => { if(!n.parentId) rootId = n.id; });
-      recalcAll(); // recompute pairs/commissions
-      drawTreeDiagram(currentTreeRootId || rootId);
-    });
-  }
-
-  // Create root customer
-  async function createRootCustomer(){
-    const name = document.getElementById("rootName").value.trim();
-    const pass = document.getElementById("rootPass").value.trim();
-    if(!name || !pass){ alert("Name और Password दोनों डालें"); return; }
-    try{
-      const newDoc = await treeCol.add({
-        name, password: pass, parentId: null, leftId: null, rightId: null, mainAccountId: null, monthsPaid: 1,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      await newDoc.update({ mainAccountId: newDoc.id });
-      await usersCol.doc(newDoc.id).set({
-        name, password: pass, loginName: name, loginPassword: pass,
-        commissionWallet: 0, bonusWallet: 0, mainAccountId: newDoc.id, monthsPaid: 1, payoutBlocked: false
-      }, {merge:true});
-      document.getElementById("rootName").value = "";
-      document.getElementById("rootPass").value = "";
-      alert("Root created");
-    }catch(err){ alert("Error: " + err.message); }
-  }
-
-  // Utility: counts & commission (kept same logic)
-  function countDescendants(nodeId){
-    const node = nodesById[nodeId]; if(!node) return 0;
-    let c=0; if(node.leftId) c+=1+countDescendants(node.leftId); if(node.rightId) c+=1+countDescendants(node.rightId); return c;
-  }
-  function countSideMembers(nodeId, sideField){
-    const node = nodesById[nodeId]; if(!node || !node[sideField]) return 0; return 1 + countDescendants(node[sideField]);
-  }
-  function getBaseMainName(name){ if(!name) return null; const lower = name.toLowerCase(); const idx = lower.indexOf("sub"); if(idx===-1) return null; return lower.slice(0, idx).trim(); }
-  function isSubName(name){ return getBaseMainName(name) !== null; }
-  function findMainByName(baseName){ if(!baseName) return null; const target = baseName.trim(); let found=null; Object.values(nodesById).forEach(n=>{ if(n.name && n.name.toLowerCase().trim()===target) found=n.id; }); return found; }
-  function getMainAccountId(node){
-    if(!node) return null;
-    if(!isSubName(node.name)) return node.id;
-    const base = getBaseMainName(node.name);
-    const byName = findMainByName(base);
-    if(byName) return byName;
-    let current = node;
-    while(current.parentId && nodesById[current.parentId]){
-      const parent = nodesById[current.parentId];
-      if(!isSubName(parent.name)) return parent.id;
-      current = parent;
-    }
-    return node.id;
-  }
-
-  const LEVEL_RATES = [
-    { level:1, pairs:1,   rate:10 },
-    { level:2, pairs:2,   rate:10 },
-    { level:3, pairs:4,   rate:10 },
-    { level:4, pairs:8,   rate:10 },
-    { level:5, pairs:16,  rate:8  },
-    { level:6, pairs:32,  rate:7  },
-    { level:7, pairs:64,  rate:6  },
-    { level:8, pairs:128, rate:5  },
-    { level:9, pairs:256, rate:4  },
-    { level:10,pairs:512, rate:3  }
-  ];
-  function computeCommissionForPairs(totalPairs){
-    let remaining = totalPairs, commission=0;
-    for(let i=0;i<LEVEL_RATES.length && remaining>0;i++){
-      const slab = LEVEL_RATES[i];
-      const usePairs = Math.min(remaining, slab.pairs);
-      commission += usePairs * slab.rate;
-      remaining -= usePairs;
-    }
-    if(remaining > 0) commission += remaining * LEVEL_RATES[LEVEL_RATES.length-1].rate;
-    return commission;
-  }
-
-  // recalc and update Users (bonus map)
-  async function recalcAll(){
-    const list = Object.values(nodesById);
-    const bonusMap = {};
-    list.forEach(n=>{
-      const members = countDescendants(n.id);
-      const leftCount = countSideMembers(n.id,"leftId");
-      const rightCount = countSideMembers(n.id,"rightId");
-      const pairs = Math.floor(members/2);
-      const cycles = n.monthsPaid || 1;
-      const perCycle = computeCommissionForPairs(pairs);
-      const totalComm = perCycle * cycles;
-      n.members = members; n.leftCount = leftCount; n.rightCount = rightCount; n.pairs = pairs;
-      n.commissionPerCycle = perCycle; n.commission = totalComm;
-      const mainId = getMainAccountId(n);
-      n.mainAccountId = mainId;
-      if(isSubName(n.name) && mainId && mainId !== n.id){
-        const bonusShare = +(totalComm * 0.80).toFixed(2);
-        if(bonusShare>0) bonusMap[mainId] = (bonusMap[mainId]||0) + bonusShare;
-      }
-    });
-
-    // push mainAccountId into tree docs (merge)
-    const batch = db.batch();
-    list.forEach(n=>{
-      const ref = treeCol.doc(n.id);
-      batch.set(ref, { mainAccountId: n.mainAccountId }, {merge:true});
-      const uRef = usersCol.doc(n.id);
-      const udata = {
-        name: n.name||"", password: n.password||"", loginName: n.name||"", loginPassword: n.password||"",
-        commissionWallet: n.commission||0, bonusWallet: +((bonusMap[n.id]||0).toFixed(2)),
-        mainAccountId: n.mainAccountId || n.id, monthsPaid: n.monthsPaid || 1
-      };
-      batch.set(uRef, udata, {merge:true});
-    });
-    try{ await batch.commit(); }catch(e){ console.error(e); }
-  }
-
-  // Add 20₹ cycles
-  async function addTwentyPayment(id){
-    try{
-      const ref = treeCol.doc(id);
-      const snap = await ref.get();
-      if(!snap.exists){ alert("Member नहीं मिला"); return; }
-      const cycles = snap.data().monthsPaid || 1;
-      await ref.update({ monthsPaid: cycles + 1 });
-      await usersCol.doc(id).set({ monthsPaid: cycles + 1 }, {merge:true});
-    }catch(err){ alert("Error: " + err.message); }
-  }
-
-  // Add/Edit/Delete
-  async function addMember(parentId, sideField, name, pass){
-    try{
-      const parentRef = treeCol.doc(parentId);
-      const parentSnap = await parentRef.get();
-      if(!parentSnap.exists){ alert("Parent नहीं मिला"); return; }
-      const parent = parentSnap.data();
-      const existingChildId = parent[sideField] || null;
-      const isSubChild = isSubName(name);
-      const base = getBaseMainName(name);
-      const mainByName = base ? findMainByName(base) : null;
-      let mainForChild = isSubChild ? (mainByName || parent.mainAccountId || parentId) : null;
-      const newRef = await treeCol.add({
-        name, password: pass, parentId: parentId, leftId: null, rightId: null,
-        mainAccountId: mainForChild || (parent.mainAccountId || parentId), monthsPaid: 1,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      const newId = newRef.id;
-      if(!isSubChild) await newRef.update({ mainAccountId: newId });
-      const mainIdForUser = !isSubChild ? newId : (mainForChild || parent.mainAccountId || parentId);
-      await usersCol.doc(newId).set({
-        name, password: pass, loginName: name, loginPassword: pass,
-        commissionWallet: 0, bonusWallet: 0, mainAccountId: mainIdForUser, monthsPaid: 1, payoutBlocked: false
-      }, {merge:true});
-      if(!existingChildId){ const upd = {}; upd[sideField] = newId; await parentRef.update(upd); return; }
-      // redistribute subtree
-      const subtreeIds = []; const queue = [existingChildId];
-      while(queue.length){ const nid = queue.shift(); if(!nodesById[nid]) continue; subtreeIds.push(nid); const nd = nodesById[nid]; if(nd.leftId) queue.push(nd.leftId); if(nd.rightId) queue.push(nd.rightId); }
-      await parentRef.update({ [sideField]: newId });
-      const linkMap = {}; subtreeIds.forEach(id=> linkMap[id] = {parentId:null,leftId:null,rightId:null});
-      const parentsQueue = [newId]; let idx=0; const newNodeLinks = {leftId:null,rightId:null};
-      while(idx < subtreeIds.length && parentsQueue.length){
-        const pId = parentsQueue.shift();
-        for(let k=0;k<2 && idx<subtreeIds.length;k++){
-          const childId = subtreeIds[idx++];
-          if(pId === newId){ if(!newNodeLinks.leftId) newNodeLinks.leftId = childId; else newNodeLinks.rightId = childId; }
-          else { const pLink = linkMap[pId]; if(!pLink.leftId) pLink.leftId = childId; else pLink.rightId = childId; }
-          linkMap[childId].parentId = (pId === newId ? newId : pId);
-          parentsQueue.push(childId);
-        }
-      }
-      const batch = db.batch();
-      batch.update(newRef, { leftId: newNodeLinks.leftId || null, rightId: newNodeLinks.rightId || null });
-      subtreeIds.forEach(id=>{ const l = linkMap[id]; const ref = treeCol.doc(id); batch.update(ref, { parentId: l.parentId || null, leftId: l.leftId || null, rightId: l.rightId || null }); });
-      await batch.commit();
-    }catch(err){ alert("Error: " + err.message); }
-  }
-
-  async function editCustomer(id){
-    const node = nodesById[id]; if(!node) return;
-    const newName = prompt("नया नाम?", node.name); if(!newName) return;
-    const newPass = prompt("नया password? (खाली छोड़ो तो पुराना ही रहेगा)", node.password || "");
-    const update = { name: newName }; if(newPass && newPass.trim()) update.password = newPass.trim();
-    try{ await treeCol.doc(id).update(update); await usersCol.doc(id).set({ name:newName, password:newPass||node.password, loginName:newName, loginPassword:newPass||node.password },{merge:true}); }catch(e){ alert("Error: "+e.message); }
-  }
-
-  async function deleteCustomer(id){
-    const node = nodesById[id]; if(!node) return;
-    if(!confirm(`"${node.name}" और उसका पूरा subtree delete होगा, आगे बढ़ें?`)) return;
-    if(node.parentId){
-      const parentRef = treeCol.doc(node.parentId);
-      const parent = nodesById[node.parentId];
-      if(parent){ const upd = {}; if(parent.leftId === id) upd.leftId = null; if(parent.rightId === id) upd.rightId = null; await parentRef.update(upd); }
-    }
-    async function deleteSubTree(nid){
-      const n = nodesById[nid]; if(!n) return;
-      if(n.leftId) await deleteSubTree(n.leftId);
-      if(n.rightId) await deleteSubTree(n.rightId);
-      await treeCol.doc(nid).delete(); await usersCol.doc(nid).delete();
-    }
-    await deleteSubTree(id);
-  }
-
-  // show full root
-  function showFullRootTree(){ currentTreeRootId = rootId; drawTreeDiagram(currentTreeRootId || rootId); }
-
-  // Canvas diagram (mirrors card content)
-  let treeNodeHitMap = {}; // canvas-space rects (scaled)
-  function setupTreeCanvasClick(){
-    const canvas = document.getElementById("treeCanvas"); if(!canvas) return;
-    if(canvas._setup) return;
-    canvas.addEventListener("click", function(e){
-      const rect = canvas.getBoundingClientRect();
-      const dpr = Math.max(window.devicePixelRatio || 1, 1);
-      const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
-      const cy = (e.clientY - rect.top) * (canvas.height / rect.height);
-      let targetId = null;
-      Object.keys(treeNodeHitMap).forEach(id=>{
-        if(targetId) return;
-        const h = treeNodeHitMap[id];
-        if(cx >= h.left && cx <= h.right && cy >= h.top && cy <= h.bottom) targetId = id;
-      });
-      if(!targetId) return;
-      const node = nodesById[targetId]; if(!node) return;
-      const choice = prompt(`"${node.name}" पर क्या करना है?\n1 = +Member\n2 = Edit\n3 = Delete`);
-      if(!choice) return;
-      const c = choice.trim();
-      if(c==="1"){
-        const side = prompt("Left = L/1 , Right = R/2"); if(!side) return;
-        const s = side.trim().toLowerCase();
-        let sideField = (s==="l"||s==="1")?"leftId":(s==="r"||s==="2")?"rightId":null;
-        if(!sideField){ alert("गलत choice"); return; }
-        const name = prompt("नया member नाम?"); if(!name) return;
-        const pass = prompt("password?"); if(!pass) return;
-        addMember(targetId, sideField, name, pass);
-      } else if(c==="2"){
-        editCustomer(targetId);
-      } else if(c==="3"){
-        deleteCustomer(targetId);
-      } else alert("1,2 या 3 चुनें");
-    });
-    canvas._setup = true;
-  }
-
-  // Draw diagram (full tree)
-  function drawTreeDiagram(startId){
-    const canvas = document.getElementById("treeCanvas"); if(!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if(!startId || !nodesById[startId]){ ctx.clearRect(0,0,canvas.width,canvas.height); treeNodeHitMap={}; return; }
-
-    // compute BFS levels (full)
-    const levels = []; let current = [startId];
-    while(current.length){
-      levels.push(current);
-      const next = [];
-      current.forEach(id=>{ const n = nodesById[id]; if(!n) return; if(n.leftId) next.push(n.leftId); if(n.rightId) next.push(n.rightId); });
-      current = next;
-    }
-
-    // sizing
-    const containerW = Math.min(window.innerWidth - 40, 1400);
-    const dpr = Math.max(window.devicePixelRatio || 1, 1);
-    const levelCount = levels.length;
-    const nodeH = 44;
-    const vGap = 48;
-    const topMargin = 30;
-    const bottomMargin = 40;
-    const canvasHeight = topMargin + levelCount * (nodeH + vGap) + bottomMargin;
-    const canvasWidth = Math.max(containerW, 700);
-
-    canvas.style.width = canvasWidth + "px";
-    canvas.style.height = canvasHeight + "px";
-    canvas.width = Math.floor(canvasWidth * dpr);
-    canvas.height = Math.floor(canvasHeight * dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    ctx.clearRect(0,0,canvas.width/dpr,canvas.height/dpr);
-
-    // positions
-    const pos = {};
-    levels.forEach((lvl, li)=>{
-      const y = topMargin + li * (nodeH + vGap) + nodeH/2;
-      const step = canvasWidth / (lvl.length + 1);
-      lvl.forEach((id, idx)=>{ pos[id] = { x: step*(idx+1), y }; });
-    });
-
-    // connectors
-    ctx.strokeStyle = "rgba(156,163,175,0.6)";
-    ctx.lineWidth = 1;
-    Object.values(nodesById).forEach(n=>{
-      if(!n || !pos[n.id]) return;
-      const p = pos[n.id];
-      if(n.leftId && pos[n.leftId]){ const c = pos[n.leftId]; ctx.beginPath(); ctx.moveTo(p.x, p.y + 18); ctx.lineTo(c.x, c.y - 18); ctx.stroke(); }
-      if(n.rightId && pos[n.rightId]){ const c = pos[n.rightId]; ctx.beginPath(); ctx.moveTo(p.x, p.y + 18); ctx.lineTo(c.x, c.y - 18); ctx.stroke(); }
-    });
-
-    // nodes (mirror card)
-    treeNodeHitMap = {};
-    Object.values(nodesById).forEach(n=>{
-      if(!n || !pos[n.id]) return;
-      const {x,y} = pos[n.id];
-      const name = n.name || "";
-      const leftC = n.leftCount || 0;
-      const rightC = n.rightCount || 0;
-      const cycles = n.monthsPaid || 1;
-      const meta = `L:${leftC} · R:${rightC} · M:${n.members||0} · P:${n.pairs||0} · ₹${n.commission||0} · ${cycles}x20`;
-
-      ctx.font = "12px system-ui";
-      const nameW = Math.min(260, ctx.measureText(name).width + 20);
-      ctx.font = "10px system-ui";
-      const metaW = Math.min(380, ctx.measureText(meta).width + 20);
-      const w = Math.max(140, Math.max(nameW, metaW));
-      const h = nodeH;
-      const left = x - w/2, top = y - h/2;
-
-      // draw rounded rect
-      ctx.beginPath(); roundRect(ctx, left, top, w, h, 8);
-      ctx.fillStyle = (n.id === startId) ? "#2563eb" : "#0b1320";
-      ctx.fill();
-      ctx.strokeStyle = (n.id === startId) ? "#93c5fd" : "#2b3948";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // texts
-      ctx.fillStyle = (n.id === startId) ? "#ffffff" : "#e6eef8";
-      ctx.font = "12px system-ui"; ctx.textAlign = "center";
-      ctx.fillText(name, x, y - 6);
-      ctx.fillStyle = "#9fb0c9"; ctx.font = "10px system-ui";
-      ctx.fillText(meta, x, y + 8);
-
-      // hitmap in canvas coordinates
-      const rectLeft = left * dpr;
-      const rectTop = top * dpr;
-      const rectRight = (left + w) * dpr;
-      const rectBottom = (top + h) * dpr;
-      treeNodeHitMap[n.id] = { left: rectLeft, top: rectTop, right: rectRight, bottom: rectBottom };
-    });
-  }
-
-  function roundRect(ctx,x,y,w,h,r){
-    const min = Math.min(w,h)/2; if(r>min) r=min;
-    ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
-  }
-
-  window.addEventListener("resize", ()=>{ if(Object.keys(nodesById).length) drawTreeDiagram(currentTreeRootId || rootId); });
 </script>
+
 </body>
 </html>
