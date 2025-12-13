@@ -13,48 +13,53 @@ body{
   font-family:system-ui;
 }
 
+/* HEADER */
 .header{
-  padding:10px;
-  background:#020617;
+  padding:8px 12px;
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
-
 .header button{
   background:#2563eb;
-  color:white;
+  color:#fff;
   border:none;
   border-radius:20px;
-  padding:6px 14px;
+  padding:6px 12px;
 }
 
+/* TREE BASE */
 .tree{
   display:flex;
   justify-content:center;
-  padding:10px;
+  padding:6px;
+  overflow-x:auto;
 }
 
+/* LEVEL CONTROL */
 ul{
-  padding-top:20px;
   position:relative;
+  padding-top:14px;
+  display:flex;
+  justify-content:center;
+  gap:6px;
 }
 
+/* LINES */
 ul::before{
   content:'';
   position:absolute;
   top:0;
   left:50%;
   width:1px;
-  height:20px;
+  height:14px;
   background:#475569;
 }
 
 li{
   list-style:none;
-  text-align:center;
-  padding:10px 5px 0 5px;
   position:relative;
+  text-align:center;
 }
 
 li::before, li::after{
@@ -65,7 +70,6 @@ li::before, li::after{
   height:1px;
   background:#475569;
 }
-
 li::before{ right:50%; }
 li::after{ left:50%; }
 
@@ -74,44 +78,63 @@ li:only-child::after{
   display:none;
 }
 
+/* NODE (AUTO SMALL) */
 .node{
   background:#0b1320;
-  padding:6px 10px;
-  border-radius:8px;
-  font-size:12px;
-  min-width:90px;
-  display:inline-block;
+  padding:4px 6px;
+  border-radius:6px;
+  font-size:11px;
+  min-width:70px;
+  line-height:1.2;
 }
 
-.root{ background:#2563eb; }
+/* ROOT */
+.root{
+  background:#2563eb;
+  font-weight:600;
+}
+
+/* LEVEL BASED AUTO SIZE */
+ul ul .node{ font-size:10px; min-width:64px; }
+ul ul ul .node{ font-size:9px; min-width:58px; }
+ul ul ul ul .node{ font-size:8px; min-width:52px; }
+
+/* MOBILE EXTRA SMALL */
+@media(max-width:600px){
+  .node{ font-size:9px; min-width:60px; }
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <div>Simple Tree View</div>
-  <button onclick="history.back()">← Back</button>
+  <div>Simple Binary Tree</div>
+  <button onclick="history.back()">← Admin</button>
 </div>
 
 <div class="tree">
-  <ul>
-    <li>
-      <div class="node root">Rajesh<br>₹20</div>
-      <ul>
-        <li>
-          <div class="node">Rajesh sub1</div>
-          <ul>
-            <li><div class="node">Bhavna sub2</div></li>
-            <li><div class="node">Bhavna sub3</div></li>
-          </ul>
-        </li>
-        <li>
-          <div class="node">Rajesh sub2</div>
-        </li>
-      </ul>
-    </li>
-  </ul>
+<ul>
+  <li>
+    <div class="node root">Rajesh</div>
+    <ul>
+      <li>
+        <div class="node">Rajesh sub1</div>
+        <ul>
+          <li><div class="node">Bhavna sub2</div></li>
+          <li><div class="node">Bhavna sub3</div></li>
+        </ul>
+      </li>
+      <li>
+        <div class="node">Rajesh sub2</div>
+        <ul>
+          <li><div class="node">X</div></li>
+          <li><div class="node">Y</div></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
 </div>
 
 </body>
