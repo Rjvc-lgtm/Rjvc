@@ -11,36 +11,24 @@ body{margin:0;background:#020617;color:#e5e7eb}
 .wrap{max-width:1200px;margin:auto;padding:14px}
 h2{margin-top:0}
 .small{font-size:13px;color:#94a3b8}
+.center{text-align:center}
 
 .btn{padding:8px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer}
 .btn-primary{background:#2563eb;color:#fff}
 .btn-secondary{background:#e5e7eb;color:#111827}
+.btn-danger{background:#dc2626;color:#fff}
 
-.card{
-  background:#0b1320;
-  border-radius:14px;
-  padding:16px;
-}
+.card{background:#0b1320;border-radius:14px;padding:16px}
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:12px;
-}
-th,td{
-  padding:8px;
-  border-bottom:1px solid #1f2937;
-  text-align:center;
-}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{padding:8px;border-bottom:1px solid #1f2937;text-align:center}
 th{background:#020617}
-
-canvas{max-width:100%}
 </style>
 </head>
 
 <body>
 
-<!-- ================= LOGIN ================= -->
+<!-- LOGIN -->
 <div id="loginPage" class="wrap">
   <div class="card" style="max-width:400px;margin:60px auto;">
     <h2 class="center">Admin Login</h2>
@@ -51,47 +39,19 @@ canvas{max-width:100%}
   </div>
 </div>
 
-<!-- ================= ADMIN ================= -->
+<!-- ADMIN -->
 <div id="adminPage" style="display:none">
 
 <div class="wrap">
   <h2>Binary Tree Admin (Firebase)</h2>
   <div class="small">
-    हर ID जब ₹20 देती है → 1 cycle <br>
-    Binary payout levels auto calculate होते हैं
+    हर ID जब ₹20 देती है → 1 cycle<br>
+    Delete के बाद tree auto-fix + auto balance होता है
   </div>
-
-  <!-- 🔹 ADDED BUTTON -->
-  <div style="margin-top:10px">
-    <button class="btn btn-secondary" onclick="logout()">Logout</button>
-    <button class="btn btn-primary" onclick="toggleAdminTree()" style="margin-left:8px">
-      View Tree
-    </button>
-  </div>
+  <button class="btn btn-secondary" onclick="logout()">Logout</button>
 </div>
 
-<!-- 🔹 ADDED TREE VIEW (HIDDEN BY DEFAULT) -->
-<div class="wrap" id="adminTreeBox" style="display:none">
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h3 style="margin:0">Binary Tree View</h3>
-      <button class="btn btn-secondary" onclick="toggleAdminTree()">Close</button>
-    </div>
-
-    <iframe 
-      src="tree.html"
-      style="
-        width:100%;
-        height:75vh;
-        border:none;
-        margin-top:12px;
-        border-radius:12px;
-      ">
-    </iframe>
-  </div>
-</div>
-
-<!-- ===== CREATE ROOT ===== -->
+<!-- CREATE ROOT -->
 <div class="wrap">
   <div class="card">
     <h3>नया Customer (Root)</h3>
@@ -101,17 +61,16 @@ canvas{max-width:100%}
   </div>
 </div>
 
-<!-- ===== COMPANY REPORT ===== -->
+<!-- COMPANY REPORT -->
 <div class="wrap">
   <h2>Company Business Report</h2>
-
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
     <div class="card">
-      <div class="small">Total Business Income</div>
+      <div class="small">Total Business</div>
       <h2 id="totalBusiness">₹0</h2>
     </div>
     <div class="card">
-      <div class="small">Total Binary Payout</div>
+      <div class="small">Total Binary</div>
       <h2 id="totalPayout">₹0</h2>
     </div>
     <div class="card">
@@ -119,11 +78,9 @@ canvas{max-width:100%}
       <h2 id="companyProfit">₹0</h2>
     </div>
   </div>
-
-  <canvas id="businessChart" height="160" style="margin-top:20px"></canvas>
 </div>
 
-<!-- ===== CUSTOMER LIST ===== -->
+<!-- CUSTOMER LIST -->
 <div class="wrap">
   <h2>Customer List</h2>
   <table>
@@ -131,10 +88,10 @@ canvas{max-width:100%}
       <tr>
         <th>#</th>
         <th>Name</th>
-        <th>Total Members</th>
+        <th>Members</th>
         <th>L / R</th>
         <th>Pairs</th>
-        <th>Level</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody id="customerTable"></tbody>
@@ -143,10 +100,9 @@ canvas{max-width:100%}
 
 </div>
 
-<!-- ===== LIBRARIES ===== -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -158,102 +114,110 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
 
+let nodes = {};
+
 /* LOGIN */
 function login(){
   if(adminId.value==="admin" && adminPass.value==="1234"){
     loginPage.style.display="none";
     adminPage.style.display="block";
     loadData();
-  }else{
-    loginError.style.display="block";
-  }
+  }else loginError.style.display="block";
 }
 function logout(){ location.reload(); }
 
-/* 🔹 ADDED FUNCTION */
-function toggleAdminTree(){
-  const box = document.getElementById("adminTreeBox");
-  box.style.display = (box.style.display==="none") ? "block" : "none";
-}
-
-/* DATA */
-let nodes={};
-
+/* LOAD */
 function loadData(){
   treeCol.onSnapshot(snap=>{
     nodes={};
     snap.forEach(d=>nodes[d.id]=d.data());
     calculate();
+    renderTable();
   });
 }
 
-/* CALCULATION */
+/* ROOT */
+function createRoot(){
+  if(!rootName.value||!rootPass.value) return alert("Fill both");
+  treeCol.add({
+    name:rootName.value,
+    password:rootPass.value,
+    monthsPaid:1,
+    commission:0,
+    parentId:null,leftId:null,rightId:null
+  });
+  rootName.value="";rootPass.value="";
+}
+
+/* CALC */
 function calculate(){
-  let totalCycles=0;
-  let totalBinary=0;
-
+  let cycles=0,binary=0;
   Object.values(nodes).forEach(n=>{
-    totalCycles += (n.monthsPaid||1);
-    totalBinary += (n.commission||0);
+    cycles+=(n.monthsPaid||1);
+    binary+=(n.commission||0);
   });
-
-  let business = totalCycles*20;
-  let profit = business-totalBinary;
-
+  let business=cycles*20;
   totalBusiness.innerText="₹"+business;
-  totalPayout.innerText="₹"+totalBinary;
-  companyProfit.innerText="₹"+profit;
-
-  drawChart(business,totalBinary,profit);
-  renderTable();
-}
-
-/* CHART */
-function drawChart(a,b,c){
-  if(window.chart) chart.destroy();
-  chart = new Chart(businessChart,{
-    type:"bar",
-    data:{
-      labels:["Income","Payout","Profit"],
-      datasets:[{
-        data:[a,b,c],
-        backgroundColor:["#3b82f6","#f97316","#22c55e"]
-      }]
-    }
-  });
+  totalPayout.innerText="₹"+binary;
+  companyProfit.innerText="₹"+(business-binary);
 }
 
 /* TABLE */
 function renderTable(){
   customerTable.innerHTML="";
   let i=1;
-  Object.values(nodes).forEach(n=>{
+  Object.entries(nodes).forEach(([id,n])=>{
     let tr=document.createElement("tr");
     tr.innerHTML=`
       <td>${i++}</td>
       <td>${n.name||""}</td>
       <td>${n.members||0}</td>
-      <td>L:${n.leftCount||0} R:${n.rightCount||0}</td>
+      <td>L:${n.leftId?1:0} R:${n.rightId?1:0}</td>
       <td>${n.pairs||0}</td>
-      <td>${Math.min(10,n.pairs||0)}</td>
-    `;
+      <td>
+        <button class="btn btn-danger"
+          onclick="deleteCustomerByAdmin_SAFE('${id}','${n.name}')">
+          Delete
+        </button>
+      </td>`;
     customerTable.appendChild(tr);
   });
 }
+</script>
 
-/* ROOT */
-function createRoot(){
-  if(!rootName.value || !rootPass.value) return alert("Fill both");
-  treeCol.add({
-    name:rootName.value,
-    password:rootPass.value,
-    monthsPaid:1,
-    commission:0
-  });
-  rootName.value="";
-  rootPass.value="";
+<!-- ================= SAFE ADD ONLY PART-4 ================= -->
+<script>
+function __count(id){ if(!id||!nodes[id])return 0;
+ return 1+__count(nodes[id].leftId)+__count(nodes[id].rightId); }
+
+async function __attach(p,c){
+ let ps=await treeCol.doc(p).get();if(!ps.exists)return;
+ let d=ps.data();
+ if(!d.leftId){await treeCol.doc(p).update({leftId:c});await treeCol.doc(c).update({parentId:p});return;}
+ if(!d.rightId){await treeCol.doc(p).update({rightId:c});await treeCol.doc(c).update({parentId:p});return;}
+ await __attach(d.leftId,c);
+}
+
+async function deleteCustomerByAdmin_SAFE(id,name){
+ if(!confirm(name+" delete? Tree auto-fix hoga"))return;
+ let s=await treeCol.doc(id).get();if(!s.exists)return;
+ let n=s.data();
+ let p=n.parentId,L=n.leftId,R=n.rightId;
+ if(p){
+  let ps=await treeCol.doc(p).get();
+  if(ps.exists){
+   let u={},pd=ps.data();
+   if(pd.leftId===id)u.leftId=L||R||null;
+   if(pd.rightId===id)u.rightId=L||R||null;
+   await treeCol.doc(p).update(u);
+  }
+ }
+ if(L)await treeCol.doc(L).update({parentId:p||null});
+ if(R){ if(L)await __attach(L,R); else await treeCol.doc(R).update({parentId:p||null}); }
+ await treeCol.doc(id).delete();
+ alert("Deleted & Tree Balanced");
 }
 </script>
 
 </body>
-  </html>
+    </html>
