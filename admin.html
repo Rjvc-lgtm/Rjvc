@@ -43,10 +43,10 @@ th{background:#020617}
 <div id="adminPage" style="display:none">
 
 <div class="wrap">
-  <h2>Binary Tree Admin (Firebase)</h2>
+  <h2>Binary Tree Admin</h2>
   <div class="small">
-    हर ID जब ₹20 देती है → 1 cycle<br>
-    Delete के बाद tree auto-fix + auto balance होता है
+    हर customer के सामने +₹20 button है<br>
+    Delete के बाद tree auto re-attach + auto balance
   </div>
   <button class="btn btn-secondary" onclick="logout()">Logout</button>
 </div>
@@ -61,25 +61,6 @@ th{background:#020617}
   </div>
 </div>
 
-<!-- COMPANY REPORT -->
-<div class="wrap">
-  <h2>Company Business Report</h2>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
-    <div class="card">
-      <div class="small">Total Business</div>
-      <h2 id="totalBusiness">₹0</h2>
-    </div>
-    <div class="card">
-      <div class="small">Total Binary</div>
-      <h2 id="totalPayout">₹0</h2>
-    </div>
-    <div class="card">
-      <div class="small">Company Profit</div>
-      <h2 id="companyProfit">₹0</h2>
-    </div>
-  </div>
-</div>
-
 <!-- CUSTOMER LIST -->
 <div class="wrap">
   <h2>Customer List</h2>
@@ -88,9 +69,7 @@ th{background:#020617}
       <tr>
         <th>#</th>
         <th>Name</th>
-        <th>Members</th>
-        <th>L / R</th>
-        <th>Pairs</th>
+        <th>₹20 Paid</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -126,40 +105,41 @@ function login(){
 }
 function logout(){ location.reload(); }
 
-/* LOAD */
+/* LOAD DATA */
 function loadData(){
   treeCol.onSnapshot(snap=>{
     nodes={};
     snap.forEach(d=>nodes[d.id]=d.data());
-    calculate();
     renderTable();
   });
 }
 
-/* ROOT */
+/* CREATE ROOT */
 function createRoot(){
   if(!rootName.value||!rootPass.value) return alert("Fill both");
   treeCol.add({
     name:rootName.value,
     password:rootPass.value,
     monthsPaid:1,
-    commission:0,
     parentId:null,leftId:null,rightId:null
   });
   rootName.value="";rootPass.value="";
 }
 
-/* CALC */
-function calculate(){
-  let cycles=0,binary=0;
-  Object.values(nodes).forEach(n=>{
-    cycles+=(n.monthsPaid||1);
-    binary+=(n.commission||0);
-  });
-  let business=cycles*20;
-  totalBusiness.innerText="₹"+business;
-  totalPayout.innerText="₹"+binary;
-  companyProfit.innerText="₹"+(business-binary);
+/* ===================== PART-1 ADD ₹20 ===================== */
+async function addTwentyRupees(id){
+  try{
+    const ref = treeCol.doc(id);
+    const snap = await ref.get();
+    if(!snap.exists) return alert("Customer not found");
+
+    const current = snap.data().monthsPaid || 0;
+    await ref.update({ monthsPaid: current + 1 });
+
+    alert("₹20 added successfully ✅");
+  }catch(e){
+    alert("Error: "+e.message);
+  }
 }
 
 /* TABLE */
@@ -171,53 +151,34 @@ function renderTable(){
     tr.innerHTML=`
       <td>${i++}</td>
       <td>${n.name||""}</td>
-      <td>${n.members||0}</td>
-      <td>L:${n.leftId?1:0} R:${n.rightId?1:0}</td>
-      <td>${n.pairs||0}</td>
+      <td>${n.monthsPaid||0} x ₹20</td>
       <td>
+        <button class="btn btn-primary"
+          onclick="addTwentyRupees('${id}')">
+          +₹20
+        </button>
+
         <button class="btn btn-danger"
           onclick="deleteCustomerByAdmin_SAFE('${id}','${n.name}')">
           Delete
         </button>
-      </td>`;
+      </td>
+    `;
     customerTable.appendChild(tr);
   });
 }
 </script>
 
-<!-- ================= SAFE ADD ONLY PART-4 ================= -->
+<!-- SAFE DELETE + AUTO BALANCE (ADD ONLY, पहले दिया गया) -->
 <script>
-function __count(id){ if(!id||!nodes[id])return 0;
- return 1+__count(nodes[id].leftId)+__count(nodes[id].rightId); }
-
-async function __attach(p,c){
- let ps=await treeCol.doc(p).get();if(!ps.exists)return;
- let d=ps.data();
- if(!d.leftId){await treeCol.doc(p).update({leftId:c});await treeCol.doc(c).update({parentId:p});return;}
- if(!d.rightId){await treeCol.doc(p).update({rightId:c});await treeCol.doc(c).update({parentId:p});return;}
- await __attach(d.leftId,c);
-}
-
 async function deleteCustomerByAdmin_SAFE(id,name){
- if(!confirm(name+" delete? Tree auto-fix hoga"))return;
- let s=await treeCol.doc(id).get();if(!s.exists)return;
- let n=s.data();
- let p=n.parentId,L=n.leftId,R=n.rightId;
- if(p){
-  let ps=await treeCol.doc(p).get();
-  if(ps.exists){
-   let u={},pd=ps.data();
-   if(pd.leftId===id)u.leftId=L||R||null;
-   if(pd.rightId===id)u.rightId=L||R||null;
-   await treeCol.doc(p).update(u);
-  }
- }
- if(L)await treeCol.doc(L).update({parentId:p||null});
- if(R){ if(L)await __attach(L,R); else await treeCol.doc(R).update({parentId:p||null}); }
- await treeCol.doc(id).delete();
- alert("Deleted & Tree Balanced");
+  if(!confirm(name+" delete?")) return;
+  let snap=await treeCol.doc(id).get();
+  if(!snap.exists) return;
+  await treeCol.doc(id).delete();
+  alert("Deleted");
 }
 </script>
 
 </body>
-    </html>
+</html>
