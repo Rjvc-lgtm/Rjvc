@@ -332,6 +332,49 @@ function renderTable(){
 
 <!-- SAFE DELETE + AUTO BALANCE (ADD ONLY, पहले दिया गया) -->
 <script>
+/* ================= STEP-4 : AUTO BALANCE TREE ================= */
+
+/*
+Rule:
+- Parent ke left/right me jahan kam nodes hon
+- wahan child attach karo
+*/
+
+function countSubTree(id){
+  if(!id || !nodes[id]) return 0;
+  let n = nodes[id];
+  return 1 + countSubTree(n.leftId) + countSubTree(n.rightId);
+}
+
+async function autoBalance(parentId, childId){
+  const parentSnap = await treeCol.doc(parentId).get();
+  if(!parentSnap.exists) return;
+
+  const p = parentSnap.data();
+
+  const leftCount = countSubTree(p.leftId);
+  const rightCount = countSubTree(p.rightId);
+
+  if(!p.leftId){
+    await treeCol.doc(parentId).update({leftId: childId});
+    await treeCol.doc(childId).update({parentId: parentId});
+    return;
+  }
+
+  if(!p.rightId){
+    await treeCol.doc(parentId).update({rightId: childId});
+    await treeCol.doc(childId).update({parentId: parentId});
+    return;
+  }
+
+  // dono bhare hue → jahan kam nodes wahan attach
+  if(leftCount <= rightCount){
+    autoBalance(p.leftId, childId);
+  }else{
+    autoBalance(p.rightId, childId);
+  }
+}
+</script>
 async function deleteCustomerByAdmin_SAFE(id,name){
   if(!confirm(name+" delete?")) return;
   let snap=await treeCol.doc(id).get();
