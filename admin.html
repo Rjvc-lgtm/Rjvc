@@ -153,6 +153,13 @@ function renderTable(){
       <td>${n.name||""}</td>
       <td>${n.monthsPaid||0} x ₹20</td>
       <td>
+
+        <!-- 🌳 TREE BUTTON (ADD) -->
+        <button class="btn btn-secondary"
+          onclick="openTreeView('${id}')">
+          🌳 Tree
+        </button>
+
         <button class="btn btn-primary"
           onclick="addTwentyRupees('${id}')">
           +₹20
