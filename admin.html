@@ -1,35 +1,24 @@
-<!DOCTYPE html>
-<html lang="hi">
+<!DOCTYPE html><html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>RJVC Binary Tree Admin</title>
+<title>RJVC Binary Tree Admin (Clean)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 *{box-sizing:border-box;font-family:system-ui}
 body{margin:0;background:#020617;color:#e5e7eb}
 .wrap{max-width:1200px;margin:auto;padding:14px}
 h2{margin-top:0}
 .small{font-size:13px;color:#94a3b8}
-.center{text-align:center}
-
-.btn{padding:8px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer}
-.btn-primary{background:#2563eb;color:#fff}
-.btn-secondary{background:#e5e7eb;color:#111827}
-.btn-danger{background:#dc2626;color:#fff}
+.center{text-align:center}.btn{padding:8px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer} .btn-primary{background:#2563eb;color:#fff} .btn-secondary{background:#e5e7eb;color:#111827} .btn-danger{background:#dc2626;color:#fff}
 
 .card{background:#0b1320;border-radius:14px;padding:16px}
 
-table{width:100%;border-collapse:collapse;margin-top:12px}
-th,td{padding:8px;border-bottom:1px solid #1f2937;text-align:center}
-th{background:#020617}
-</style>
+table{width:100%;border-collapse:collapse;margin-top:12px} th,td{padding:8px;border-bottom:1px solid #1f2937;text-align:center} th{background:#020617}
+
+.action-btn{padding:4px 8px;font-size:12px;border-radius:6px;border:none;cursor:pointer;margin:2px} .btn-tree{background:#2563eb;color:#fff} </style>
+
 </head>
-
-<body>
-
-<!-- LOGIN -->
-<div id="loginPage" class="wrap">
+<body><!-- LOGIN --><div id="loginPage" class="wrap">
   <div class="card" style="max-width:400px;margin:60px auto;">
     <h2 class="center">Admin Login</h2>
     <input id="adminId" placeholder="admin" style="width:100%;padding:10px;margin-top:8px">
@@ -37,206 +26,31 @@ th{background:#020617}
     <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="login()">Login</button>
     <div id="loginError" class="small" style="color:#f87171;display:none">Wrong login</div>
   </div>
-</div>
-
-<!-- ADMIN -->
-<div id="adminPage" style="display:none">
-
-<div class="wrap">
+</div><!-- ADMIN --><div id="adminPage" style="display:none"><div class="wrap">
   <h2>Binary Tree Admin</h2>
-  <div class="small">
-    हर customer के सामने +₹20 button है<br>
-    Delete के बाद tre
-
-<!-- CREATE ROOT -->
-<!-- ================= PART-C : TREE BUTTON ================= -->
-<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
-  
-  <button class="btn btn-primary"
-    onclick="document.getElementById('treeSection').style.display='block'">
-    🌳 Tree Dekho (Admin)
-  </button>
-
-  <a href="tree.html" target="_blank">
-    <button class="btn btn-secondary">
-      🔍 Full Screen Tree
-    </button>
-  </a>
-
-</div>
-</div>
-
-<!-- CUSTOMER LIST -->
-<div class="wrap">
-  <h2>Customer List</h2>
-  <table>...</table>
-</div>
-  <!-- ===== STEP-1 : CUSTOMER SUMMARY CARD ===== -->
-<div class="wrap">
-  <div class="card" style="background:#eef6ff">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h3>Customer List (Tree Nodes)</h3>
-      <div class="small" id="totalCustomers">0 Customers</div>
-    </div>
-
-    <div class="card" style="margin-top:10px;background:#f8fbff">
-      <div class="small">कुल Pairs (पूरा Tree)</div>
-      <h2 id="totalPairs">0</h2>
-    </div>
-
-    <div class="card" style="margin-top:10px;background:#f8fbff">
-      <div class="small">कुल Binary Income (सभी IDs से)</div>
-      <h2 id="totalBinaryIncome">₹0</h2>
-    </div>
-  </div>
-</div>
-<!-- ===== STEP-1 END ===== -->
-<!-- ================= PART-D START ================= -->
-<style>
-.action-btn{
-  padding:4px 8px;
-  font-size:12px;
-  border-radius:6px;
-  border:none;
-  cursor:pointer;
-  margin:2px;
-}
-.btn-tree{background:#2563eb;color:#fff}
-.btn-del{background:#dc2626;color:#fff}
-</style>
-
-<script>
-  /* ===== STEP-2 : TREE BUTTON FUNCTION ===== */
-
-function openTreeForCustomer(customerId){
-  // tree.html page open kare with customer id
-  window.location.href = "tree.html?root=" + customerId;
-}
-/* ================= PART-D : DELETE + TREE ================= */
-
-/* 🔹 Customer table me Tree + Delete button add */
-function enhanceCustomerTable(){
-  const rows = document.querySelectorAll("#customerTable tr");
-  rows.forEach((tr,idx)=>{
-    if(tr.dataset.enhanced) return;
-    tr.dataset.enhanced="yes";
-
-    const nameCell = tr.children[1];
-    const custName = nameCell.innerText;
-
-    const btnWrap = document.createElement("div");
-
-    const treeBtn = document.createElement("button");
-    treeBtn.innerText="🌳 Tree";
-    treeBtn.className="action-btn btn-tree";
-    treeBtn.onclick=()=>openSingleTree(custName);
-
-    const delBtn = document.createElement("button");
-    delBtn.innerText="🗑 Delete";
-    delBtn.className="action-btn btn-del";
-    delBtn.onclick=()=>deleteCustomerOnly(custName);
-
-    btnWrap.appendChild(treeBtn);
-    btnWrap.appendChild(delBtn);
-    nameCell.appendChild(btnWrap);
-  });
-}
-
-/* 🔹 Sirf selected customer ka tree */
-function openSingleTree(name){
-  localStorage.setItem("treeRootName",name);
-  window.open("tree.html","_blank");
-}
-
-/* 🔹 Customer delete (subtree nahi) */
-async function deleteCustomerOnly(name){
-  if(!confirm(name+" delete karna hai?")) return;
-
-  let targetId=null;
-  Object.keys(nodes).forEach(id=>{
-    if(nodes[id].name===name) targetId=id;
-  });
-  if(!targetId){ alert("Customer not found"); return }
-
-  const node = nodes[targetId];
-  const parentId = node.parentId;
-
-  /* 🔁 children auto reattach */
-  const children=[];
-  if(node.leftId) children.push(node.leftId);
-  if(node.rightId) children.push(node.rightId);
-
-  if(parentId){
-    const parentRef = treeCol.doc(parentId);
-    const parent = nodes[parentId];
-    let updates={};
-
-    if(parent.leftId===targetId) updates.leftId=null;
-    if(parent.rightId===targetId) updates.rightId=null;
-    await parentRef.update(updates);
-
-    for(let cid of children){
-      await attachBalanced(parentId,cid);
-    }
-  }
-
-  await treeCol.doc(targetId).delete();
-  alert("Customer deleted & tree balanced");
-}
-
-/* 🔹 Auto balance left/right */
-async function attachBalanced(parentId,childId){
-  const parent = nodes[parentId];
-  const leftCount = countSide(parent.leftId);
-  const rightCount = countSide(parent.rightId);
-
-  let side = leftCount<=rightCount ? "leftId":"rightId";
-  await treeCol.doc(parentId).update({[side]:childId});
-  await treeCol.doc(childId).update({parentId});
-}
-
-function countSide(id){
-  if(!id) return 0;
-  const n = nodes[id];
-  return 1 + countSide(n.leftId) + countSide(n.rightId);
-}
-
-/* 🔄 table render ke baad call */
-const oldRender = renderTable;
-renderTable = function(){
-  oldRender();
-  setTimeout(enhanceCustomerTable,100);
-};
-</script>
-<!-- ================= PART-D END ================= -->
-<!-- 🔽🔽 YAHI PASTE KARE PART-B 🔽🔽 -->
-
-<!-- ================= TREE VIEW (PART-B) ================= -->
-<div id="treeSection" class="wrap" style="display:none">
+  <div class="small">Admin yahan se customer manage kar sakta hai</div>
+  <button class="btn btn-secondary" onclick="logout()">Logout</button>
+</div><div class="wrap">
   <div class="card">
-    <h3>Binary Tree View</h3>
-    <div class="small">
-      Admin yahan se tree dekh sakta hai
-    </div>
-
-    <div id="treeContainer" style="margin-top:14px"></div>
-
-    <button class="btn btn-secondary" style="margin-top:12px"
-      onclick="document.getElementById('treeSection').style.display='none'">
-      Close Tree
-    </button>
+    <h3>Create Root Customer</h3>
+    <input id="rootName" placeholder="Name" style="width:100%;padding:8px">
+    <input id="rootPass" placeholder="Password" style="width:100%;padding:8px;margin-top:8px">
+    <button class="btn btn-primary" style="margin-top:10px" onclick="createRoot()">Add Root</button>
   </div>
-</div>
-
-</div>  <!-- adminPage end -->
-
-</div>
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
-<script>
+</div><div class="wrap">
+  <h2>Customer List</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>₹20 Cycles</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="customerTable"></tbody>
+  </table>
+</div></div><!-- FIREBASE --><script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script><script>
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -245,10 +59,8 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
-
 let nodes = {};
 
-/* LOGIN */
 function login(){
   if(adminId.value==="admin" && adminPass.value==="1234"){
     loginPage.style.display="none";
@@ -256,18 +68,16 @@ function login(){
     loadData();
   }else loginError.style.display="block";
 }
-function logout(){ location.reload(); }
+function logout(){location.reload();}
 
-/* LOAD DATA */
 function loadData(){
   treeCol.onSnapshot(snap=>{
     nodes={};
-    snap.forEach(d=>nodes[d.id]=d.data());
+    snap.forEach(d=>nodes[d.id]=Object.assign({id:d.id},d.data()));
     renderTable();
   });
 }
 
-/* CREATE ROOT */
 function createRoot(){
   if(!rootName.value||!rootPass.value) return alert("Fill both");
   treeCol.add({
@@ -279,111 +89,42 @@ function createRoot(){
   rootName.value="";rootPass.value="";
 }
 
-/* ===================== PART-1 ADD ₹20 ===================== */
 async function addTwentyRupees(id){
-  try{
-    const ref = treeCol.doc(id);
-    const snap = await ref.get();
-    if(!snap.exists) return alert("Customer not found");
-
-    const current = snap.data().monthsPaid || 0;
-    await ref.update({ monthsPaid: current + 1 });
-
-    alert("₹20 added successfully ✅");
-  }catch(e){
-    alert("Error: "+e.message);
-  }
+  const ref=treeCol.doc(id);
+  const snap=await ref.get();
+  if(!snap.exists) return;
+  const c=snap.data().monthsPaid||0;
+  await ref.update({monthsPaid:c+1});
 }
 
-/* TABLE */
+function openTreeView(id){
+  localStorage.setItem("treeRootId",id);
+  window.open("tree.html","_blank");
+}
+
+async function deleteCustomerByAdmin_SAFE(id,name){
+  if(!confirm(name+" delete?") ) return;
+  const snap=await treeCol.doc(id).get();
+  if(!snap.exists) return;
+  await treeCol.doc(id).delete();
+}
+
 function renderTable(){
   customerTable.innerHTML="";
   let i=1;
-  Object.entries(nodes).forEach(([id,n])=>{
-    let tr=document.createElement("tr");
+  Object.values(nodes).forEach(n=>{
+    const tr=document.createElement("tr");
     tr.innerHTML=`
       <td>${i++}</td>
-      <td>${n.name||""}</td>
+      <td>${n.name}</td>
       <td>${n.monthsPaid||0} x ₹20</td>
       <td>
-
-        <!-- 🌳 TREE BUTTON (ADD) -->
-        <button class="btn btn-secondary"
-          onclick="openTreeView('${id}')">
-          🌳 Tree
-        </button>
-
-        <button class="btn btn-primary"
-          onclick="addTwentyRupees('${id}')">
-          +₹20
-        </button>
-
-        <button class="btn btn-danger"
-          onclick="deleteCustomerByAdmin_SAFE('${id}','${n.name}')">
-          Delete
-        </button>
-      </td>
-    `;
+        <button class="action-btn btn-tree" onclick="openTreeView('${n.id}')">🌳 Tree</button>
+        <button class="btn btn-primary" onclick="addTwentyRupees('${n.id}')">+₹20</button>
+        <button class="btn btn-danger" onclick="deleteCustomerByAdmin_SAFE('${n.id}','${n.name}')">Delete</button>
+      </td>`;
     customerTable.appendChild(tr);
   });
-  enhanceCustomerTable();
 }
-</script>
-
-<!-- SAFE DELETE + AUTO BALANCE (ADD ONLY, पहले दिया गया) -->
-<script>
-/* ================= STEP-4 : AUTO BALANCE TREE ================= */
-
-/*
-Rule:
-- Parent ke left/right me jahan kam nodes hon
-- wahan child attach karo
-*/
-
-function countSubTree(id){
-  if(!id || !nodes[id]) return 0;
-  let n = nodes[id];
-  return 1 + countSubTree(n.leftId) + countSubTree(n.rightId);
-}
-
-async function autoBalance(parentId, childId){
-  const parentSnap = await treeCol.doc(parentId).get();
-  if(!parentSnap.exists) return;
-
-  const p = parentSnap.data();
-
-  const leftCount = countSubTree(p.leftId);
-  const rightCount = countSubTree(p.rightId);
-
-  if(!p.leftId){
-    await treeCol.doc(parentId).update({leftId: childId});
-    await treeCol.doc(childId).update({parentId: parentId});
-    return;
-  }
-
-  if(!p.rightId){
-    await treeCol.doc(parentId).update({rightId: childId});
-    await treeCol.doc(childId).update({parentId: parentId});
-    return;
-  }
-
-  // dono bhare hue → jahan kam nodes wahan attach
-  if(leftCount <= rightCount){
-    autoBalance(p.leftId, childId);
-  }else{
-    autoBalance(p.rightId, childId);
-  }
-}
-</script>
-async function deleteCustomerByAdmin_SAFE(id,name){
-  if(!confirm(name+" delete?")) return;
-  let snap=await treeCol.doc(id).get();
-  if(!snap.exists) return;
-  await treeCol.doc(id).delete();
-  alert("Deleted");
-  await autoBalance(parentId);
-}
-</script>
-
-</body>
-</html>
+</script></body>
+        </html>
