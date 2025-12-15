@@ -46,19 +46,24 @@ th{background:#020617}
   <h2>Binary Tree Admin</h2>
   <div class="small">
     हर customer के सामने +₹20 button है<br>
-    Delete के बाद tree auto re-attach + auto balance
-  </div>
-  <button class="btn btn-secondary" onclick="logout()">Logout</button>
-</div>
+    Delete के बाद tre
 
 <!-- CREATE ROOT -->
-<div class="wrap">
-  <div class="card">
-    <h3>नया Customer (Root)</h3>
-    <input id="rootName" placeholder="Name" style="width:100%;padding:8px">
-    <input id="rootPass" placeholder="Password" style="width:100%;padding:8px;margin-top:8px">
-    <button class="btn btn-primary" style="margin-top:10px" onclick="createRoot()">Add Root</button>
-  </div>
+<!-- ================= PART-C : TREE BUTTON ================= -->
+<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+  
+  <button class="btn btn-primary"
+    onclick="document.getElementById('treeSection').style.display='block'">
+    🌳 Tree Dekho (Admin)
+  </button>
+
+  <a href="tree.html" target="_blank">
+    <button class="btn btn-secondary">
+      🔍 Full Screen Tree
+    </button>
+  </a>
+
+</div>
 </div>
 
 <!-- CUSTOMER LIST -->
