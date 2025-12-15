@@ -1,56 +1,69 @@
-<!DOCTYPE html><html lang="hi">
+<!DOCTYPE html>
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>RJVC Binary Tree Admin (Clean)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RJVC Binary Tree Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<!-- Google AdSense (as is) -->
+<script async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-550551515353712"
+  crossorigin="anonymous"></script>
+
 <style>
 *{box-sizing:border-box;font-family:system-ui}
 body{margin:0;background:#020617;color:#e5e7eb}
-.wrap{max-width:1200px;margin:auto;padding:14px}
-h2{margin-top:0}
+.center{text-align:center}
+.wrap{max-width:1200px;margin:auto;padding:12px}
+.btn{border:none;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-secondary{background:#e5e7eb;color:#111827}
+.btn-danger{background:#dc2626;color:#fff}
 .small{font-size:13px;color:#94a3b8}
-.center{text-align:center}.btn{padding:8px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer} .btn-primary{background:#2563eb;color:#fff} .btn-secondary{background:#e5e7eb;color:#111827} .btn-danger{background:#dc2626;color:#fff}
 
-.card{background:#0b1320;border-radius:14px;padding:16px}
+.loginCard{max-width:420px;margin:60px auto;background:#071028;padding:18px;border-radius:12px}
+.loginCard input{width:100%;padding:10px;border-radius:8px;margin-top:6px}
 
-table{width:100%;border-collapse:collapse;margin-top:12px} th,td{padding:8px;border-bottom:1px solid #1f2937;text-align:center} th{background:#020617}
-
-.action-btn{padding:4px 8px;font-size:12px;border-radius:6px;border:none;cursor:pointer;margin:2px} .btn-tree{background:#2563eb;color:#fff} </style>
-
+canvas{max-width:100%;border-radius:8px}
+</style>
 </head>
-<body><!-- LOGIN --><div id="loginPage" class="wrap">
-  <div class="card" style="max-width:400px;margin:60px auto;">
-    <h2 class="center">Admin Login</h2>
-    <input id="adminId" placeholder="admin" style="width:100%;padding:10px;margin-top:8px">
-    <input id="adminPass" type="password" placeholder="1234" style="width:100%;padding:10px;margin-top:8px">
-    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="login()">Login</button>
-    <div id="loginError" class="small" style="color:#f87171;display:none">Wrong login</div>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="wrap">
+  <div class="loginCard">
+    <h2 class="center">RJVC Admin Login</h2>
+    <input id="adminId" placeholder="admin">
+    <input id="adminPass" type="password" placeholder="1234">
+    <button class="btn btn-primary" style="width:100%;margin-top:12px"
+      onclick="login()">Login</button>
+    <div id="loginError" class="small" style="color:#f87171;display:none">
+      Wrong login
+    </div>
   </div>
-</div><!-- ADMIN --><div id="adminPage" style="display:none"><div class="wrap">
-  <h2>Binary Tree Admin</h2>
-  <div class="small">Admin yahan se customer manage kar sakta hai</div>
-  <button class="btn btn-secondary" onclick="logout()">Logout</button>
-</div><div class="wrap">
-  <div class="card">
-    <h3>Create Root Customer</h3>
-    <input id="rootName" placeholder="Name" style="width:100%;padding:8px">
-    <input id="rootPass" placeholder="Password" style="width:100%;padding:8px;margin-top:8px">
-    <button class="btn btn-primary" style="margin-top:10px" onclick="createRoot()">Add Root</button>
+</div>
+
+<!-- ADMIN -->
+<div id="adminPage" style="display:none">
+  <div class="wrap">
+    <h2>Binary Tree — Admin Diagram</h2>
+    <div class="small">
+      Tap node → Delete safely (auto-balance)
+    </div>
+    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+
+    <div style="margin-top:14px;text-align:center">
+      <canvas id="treeCanvas" width="1200" height="520"></canvas>
+    </div>
   </div>
-</div><div class="wrap">
-  <h2>Customer List</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Name</th>
-        <th>₹20 Cycles</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="customerTable"></tbody>
-  </table>
-</div></div><!-- FIREBASE --><script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script><script>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -59,72 +72,138 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
-let nodes = {};
 
+let nodes = {};
+let hitMap = {};
+
+/* LOGIN */
 function login(){
   if(adminId.value==="admin" && adminPass.value==="1234"){
     loginPage.style.display="none";
     adminPage.style.display="block";
-    loadData();
+    loadTree();
   }else loginError.style.display="block";
 }
-function logout(){location.reload();}
+function logout(){ location.reload(); }
 
-function loadData(){
+/* LOAD TREE */
+function loadTree(){
   treeCol.onSnapshot(snap=>{
     nodes={};
-    snap.forEach(d=>nodes[d.id]=Object.assign({id:d.id},d.data()));
-    renderTable();
+    snap.forEach(d=>nodes[d.id]={id:d.id,...d.data()});
+    drawTree();
   });
 }
 
-function createRoot(){
-  if(!rootName.value||!rootPass.value) return alert("Fill both");
-  treeCol.add({
-    name:rootName.value,
-    password:rootPass.value,
-    monthsPaid:1,
-    parentId:null,leftId:null,rightId:null
+/* TREE DRAW (simple canvas) */
+function drawTree(){
+  const canvas=document.getElementById("treeCanvas");
+  const ctx=canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  hitMap={};
+
+  const root=Object.values(nodes).find(n=>!n.parentId);
+  if(!root) return;
+
+  const levels=[];
+  let cur=[root.id];
+  while(cur.length){
+    levels.push(cur);
+    let nxt=[];
+    cur.forEach(id=>{
+      const n=nodes[id];
+      if(n.leftId) nxt.push(n.leftId);
+      if(n.rightId) nxt.push(n.rightId);
+    });
+    cur=nxt;
+  }
+
+  const nodeH=36;
+  levels.forEach((lvl,li)=>{
+    const y=60+li*70;
+    const step=canvas.width/(lvl.length+1);
+    lvl.forEach((id,i)=>{
+      const x=step*(i+1);
+      const n=nodes[id];
+      ctx.fillStyle=li===0?"#2563eb":"#0b1320";
+      ctx.fillRect(x-50,y-18,100,nodeH);
+      ctx.strokeStyle="#64748b";
+      ctx.strokeRect(x-50,y-18,100,nodeH);
+      ctx.fillStyle="#fff";
+      ctx.font="12px system-ui";
+      ctx.textAlign="center";
+      ctx.fillText(n.name||"",x,y);
+
+      hitMap[id]={x1:x-50,y1:y-18,x2:x+50,y2:y+18};
+
+      if(n.parentId){
+        const p=nodes[n.parentId];
+        const py=60+(li-1)*70;
+        ctx.beginPath();
+        ctx.moveTo(x,y-18);
+        ctx.lineTo(x,py+18);
+        ctx.stroke();
+      }
+    });
   });
-  rootName.value="";rootPass.value="";
 }
 
-async function addTwentyRupees(id){
-  const ref=treeCol.doc(id);
-  const snap=await ref.get();
-  if(!snap.exists) return;
-  const c=snap.data().monthsPaid||0;
-  await ref.update({monthsPaid:c+1});
+/* CLICK → DELETE */
+treeCanvas.addEventListener("click",e=>{
+  const r=treeCanvas.getBoundingClientRect();
+  const x=e.clientX-r.left;
+  const y=e.clientY-r.top;
+  for(let id in hitMap){
+    const h=hitMap[id];
+    if(x>=h.x1 && x<=h.x2 && y>=h.y1 && y<=h.y2){
+      deleteCustomer_SAFE(id,nodes[id].name);
+      break;
+    }
+  }
+});
+
+/* ===== STEP-2 LOGIC ===== */
+function countSubTree(id){
+  if(!id||!nodes[id])return 0;
+  const n=nodes[id];
+  return 1+countSubTree(n.leftId)+countSubTree(n.rightId);
 }
 
-function openTreeView(id){
-  localStorage.setItem("treeRootId",id);
-  window.open("tree.html","_blank");
+async function autoAttachBalanced(parentId,childId){
+  const p=nodes[parentId];
+  if(!p.leftId){
+    await treeCol.doc(parentId).update({leftId:childId});
+    await treeCol.doc(childId).update({parentId});
+    return;
+  }
+  if(!p.rightId){
+    await treeCol.doc(parentId).update({rightId:childId});
+    await treeCol.doc(childId).update({parentId});
+    return;
+  }
+  const l=countSubTree(p.leftId);
+  const r=countSubTree(p.rightId);
+  await autoAttachBalanced(l<=r?p.leftId:p.rightId,childId);
 }
 
-async function deleteCustomerByAdmin_SAFE(id,name){
-  if(!confirm(name+" delete?") ) return;
-  const snap=await treeCol.doc(id).get();
-  if(!snap.exists) return;
+async function deleteCustomer_SAFE(id,name){
+  if(!confirm(name+" delete?"))return;
+  const n=nodes[id];
+  const parentId=n.parentId;
+  const kids=[n.leftId,n.rightId].filter(Boolean);
+
+  if(parentId){
+    const p=nodes[parentId];
+    let u={};
+    if(p.leftId===id)u.leftId=null;
+    if(p.rightId===id)u.rightId=null;
+    await treeCol.doc(parentId).update(u);
+  }
   await treeCol.doc(id).delete();
+  for(let k of kids) await autoAttachBalanced(parentId,k);
+  alert("Deleted & balanced");
 }
+</script>
 
-function renderTable(){
-  customerTable.innerHTML="";
-  let i=1;
-  Object.values(nodes).forEach(n=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${i++}</td>
-      <td>${n.name}</td>
-      <td>${n.monthsPaid||0} x ₹20</td>
-      <td>
-        <button class="action-btn btn-tree" onclick="openTreeView('${n.id}')">🌳 Tree</button>
-        <button class="btn btn-primary" onclick="addTwentyRupees('${n.id}')">+₹20</button>
-        <button class="btn btn-danger" onclick="deleteCustomerByAdmin_SAFE('${n.id}','${n.name}')">Delete</button>
-      </td>`;
-    customerTable.appendChild(tr);
-  });
-}
-</script></body>
-        </html>
+</body>
+</html>
