@@ -381,6 +381,7 @@ async function deleteCustomerByAdmin_SAFE(id,name){
   if(!snap.exists) return;
   await treeCol.doc(id).delete();
   alert("Deleted");
+  await autoBalance(parentId);
 }
 </script>
 
