@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>Simple Binary Tree</title>
+<title>RJVC Simple Binary Tree</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -12,8 +12,6 @@ body{
   color:#e5e7eb;
   font-family:system-ui;
 }
-
-/* HEADER */
 .header{
   padding:8px 12px;
   display:flex;
@@ -27,16 +25,12 @@ body{
   border-radius:20px;
   padding:6px 12px;
 }
-
-/* TREE BASE */
 .tree{
   display:flex;
   justify-content:center;
   padding:6px;
   overflow-x:auto;
 }
-
-/* LEVEL CONTROL */
 ul{
   position:relative;
   padding-top:14px;
@@ -44,8 +38,6 @@ ul{
   justify-content:center;
   gap:6px;
 }
-
-/* LINES */
 ul::before{
   content:'';
   position:absolute;
@@ -55,13 +47,11 @@ ul::before{
   height:14px;
   background:#475569;
 }
-
 li{
   list-style:none;
   position:relative;
   text-align:center;
 }
-
 li::before, li::after{
   content:'';
   position:absolute;
@@ -72,13 +62,9 @@ li::before, li::after{
 }
 li::before{ right:50%; }
 li::after{ left:50%; }
-
 li:only-child::before,
-li:only-child::after{
-  display:none;
-}
+li:only-child::after{ display:none; }
 
-/* NODE (AUTO SMALL) */
 .node{
   background:#0b1320;
   padding:4px 6px;
@@ -87,19 +73,14 @@ li:only-child::after{
   min-width:70px;
   line-height:1.2;
 }
-
-/* ROOT */
 .root{
   background:#2563eb;
   font-weight:600;
 }
-
-/* LEVEL BASED AUTO SIZE */
 ul ul .node{ font-size:10px; min-width:64px; }
 ul ul ul .node{ font-size:9px; min-width:58px; }
 ul ul ul ul .node{ font-size:8px; min-width:52px; }
 
-/* MOBILE EXTRA SMALL */
 @media(max-width:600px){
   .node{ font-size:9px; min-width:60px; }
 }
@@ -109,33 +90,63 @@ ul ul ul ul .node{ font-size:8px; min-width:52px; }
 <body>
 
 <div class="header">
-  <div>Simple Binary Tree</div>
+  <div>Binary Tree</div>
   <button onclick="history.back()">← Admin</button>
 </div>
 
-<div class="tree">
-<ul>
-  <li>
-    <div class="node root">Rajesh</div>
-    <ul>
-      <li>
-        <div class="node">Rajesh sub1</div>
-        <ul>
-          <li><div class="node">Bhavna sub2</div></li>
-          <li><div class="node">Bhavna sub3</div></li>
-        </ul>
-      </li>
-      <li>
-        <div class="node">Rajesh sub2</div>
-        <ul>
-          <li><div class="node">X</div></li>
-          <li><div class="node">Y</div></li>
-        </ul>
-      </li>
-    </ul>
-  </li>
-</ul>
-</div>
+<div class="tree" id="treeContainer"></div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+  authDomain: "rjvc-plan.firebaseapp.com",
+  projectId: "rjvc-plan"
+});
+
+const db = firebase.firestore();
+const treeCol = db.collection("TreeNodes");
+
+let nodes = {};
+
+treeCol.onSnapshot(snap=>{
+  nodes = {};
+  snap.forEach(d=>nodes[d.id]=d.data());
+  renderTree();
+});
+
+function renderTree(){
+  const rootId = Object.keys(nodes).find(id=>!nodes[id].parentId);
+  if(!rootId) return;
+
+  const container = document.getElementById("treeContainer");
+  container.innerHTML = buildNode(rootId);
+}
+
+function buildNode(id){
+  const n = nodes[id];
+  if(!n) return "";
+
+  let html = `<ul><li>
+    <div class="node ${!n.parentId ? 'root':''}">
+      ${n.name || ''}
+      <br><small>${n.monthsPaid || 0} x ₹20</small>
+    </div>`;
+
+  if(n.leftId || n.rightId){
+    html += "<ul>";
+    if(n.leftId) html += `<li>${buildNode(n.leftId)}</li>`;
+    if(n.rightId) html += `<li>${buildNode(n.rightId)}</li>`;
+    html += "</ul>";
+  }
+
+  html += "</li></ul>";
+  return html;
+}
+</script>
 
 </body>
 </html>
