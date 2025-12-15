@@ -71,7 +71,118 @@ th{background:#020617}
   <h2>Customer List</h2>
   <table>...</table>
 </div>
+<!-- ================= PART-D START ================= -->
+<style>
+.action-btn{
+  padding:4px 8px;
+  font-size:12px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+  margin:2px;
+}
+.btn-tree{background:#2563eb;color:#fff}
+.btn-del{background:#dc2626;color:#fff}
+</style>
 
+<script>
+/* ================= PART-D : DELETE + TREE ================= */
+
+/* 🔹 Customer table me Tree + Delete button add */
+function enhanceCustomerTable(){
+  const rows = document.querySelectorAll("#customerTable tr");
+  rows.forEach((tr,idx)=>{
+    if(tr.dataset.enhanced) return;
+    tr.dataset.enhanced="yes";
+
+    const nameCell = tr.children[1];
+    const custName = nameCell.innerText;
+
+    const btnWrap = document.createElement("div");
+
+    const treeBtn = document.createElement("button");
+    treeBtn.innerText="🌳 Tree";
+    treeBtn.className="action-btn btn-tree";
+    treeBtn.onclick=()=>openSingleTree(custName);
+
+    const delBtn = document.createElement("button");
+    delBtn.innerText="🗑 Delete";
+    delBtn.className="action-btn btn-del";
+    delBtn.onclick=()=>deleteCustomerOnly(custName);
+
+    btnWrap.appendChild(treeBtn);
+    btnWrap.appendChild(delBtn);
+    nameCell.appendChild(btnWrap);
+  });
+}
+
+/* 🔹 Sirf selected customer ka tree */
+function openSingleTree(name){
+  localStorage.setItem("treeRootName",name);
+  window.open("tree.html","_blank");
+}
+
+/* 🔹 Customer delete (subtree nahi) */
+async function deleteCustomerOnly(name){
+  if(!confirm(name+" delete karna hai?")) return;
+
+  let targetId=null;
+  Object.keys(nodes).forEach(id=>{
+    if(nodes[id].name===name) targetId=id;
+  });
+  if(!targetId){ alert("Customer not found"); return }
+
+  const node = nodes[targetId];
+  const parentId = node.parentId;
+
+  /* 🔁 children auto reattach */
+  const children=[];
+  if(node.leftId) children.push(node.leftId);
+  if(node.rightId) children.push(node.rightId);
+
+  if(parentId){
+    const parentRef = treeCol.doc(parentId);
+    const parent = nodes[parentId];
+    let updates={};
+
+    if(parent.leftId===targetId) updates.leftId=null;
+    if(parent.rightId===targetId) updates.rightId=null;
+    await parentRef.update(updates);
+
+    for(let cid of children){
+      await attachBalanced(parentId,cid);
+    }
+  }
+
+  await treeCol.doc(targetId).delete();
+  alert("Customer deleted & tree balanced");
+}
+
+/* 🔹 Auto balance left/right */
+async function attachBalanced(parentId,childId){
+  const parent = nodes[parentId];
+  const leftCount = countSide(parent.leftId);
+  const rightCount = countSide(parent.rightId);
+
+  let side = leftCount<=rightCount ? "leftId":"rightId";
+  await treeCol.doc(parentId).update({[side]:childId});
+  await treeCol.doc(childId).update({parentId});
+}
+
+function countSide(id){
+  if(!id) return 0;
+  const n = nodes[id];
+  return 1 + countSide(n.leftId) + countSide(n.rightId);
+}
+
+/* 🔄 table render ke baad call */
+const oldRender = renderTable;
+renderTable = function(){
+  oldRender();
+  setTimeout(enhanceCustomerTable,100);
+};
+</script>
+<!-- ================= PART-D END ================= -->
 <!-- 🔽🔽 YAHI PASTE KARE PART-B 🔽🔽 -->
 
 <!-- ================= TREE VIEW (PART-B) ================= -->
