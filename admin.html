@@ -1,95 +1,90 @@
-<!DOCTYPE html>
-<html lang="hi">
+<!DOCTYPE html><html lang="hi">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>RJVC Binary Tree Admin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-*{box-sizing:border-box;font-family:system-ui}
-body{margin:0;background:#020617;color:#e5e7eb}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{margin:0;background:#f3f4f6;color:#111827}
 .wrap{max-width:1200px;margin:auto;padding:14px}
-h2{margin:0 0 8px}
-.small{font-size:12px;color:#94a3b8}
-.center{text-align:center}
-
-.btn{padding:8px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer}
+.panel{background:#fff;border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.1);padding:18px;margin-bottom:18px}
+.flex{display:flex;align-items:center}
+.between{justify-content:space-between}
+.btn{border:none;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
 .btn-primary{background:#2563eb;color:#fff}
 .btn-secondary{background:#e5e7eb;color:#111827}
 .btn-danger{background:#dc2626;color:#fff}
-
-.card{background:#0b1320;border-radius:14px;padding:16px;margin-bottom:14px}
-
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #1f2937;text-align:center}
-th{background:#020617}
-
-.treeBox{
-  background:#020617;
-  border-radius:14px;
-  padding:12px;
-  overflow:auto;
-}
-canvas{width:100%;height:520px}
+.btn-sm{padding:6px 10px;font-size:12px}
+.small{font-size:12px;color:#6b7280}
+input{width:100%;padding:10px;border-radius:12px;border:1px solid #d1d5db}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+th,td{padding:6px 4px;border-bottom:1px solid #e5e7eb;text-align:left}
+th{font-size:12px;color:#6b7280;text-transform:uppercase}
 </style>
 </head>
-
-<body>
-
-<!-- LOGIN -->
-<div id="loginPage" class="wrap">
-  <div class="card" style="max-width:380px;margin:80px auto">
-    <h2 class="center">Admin Login</h2>
-    <input id="adminId" placeholder="admin" style="width:100%;padding:10px;margin-top:8px">
-    <input id="adminPass" type="password" placeholder="1234" style="width:100%;padding:10px;margin-top:8px">
+<body><!-- LOGIN --><div id="loginPage" class="wrap">
+  <div class="panel" style="max-width:420px;margin:60px auto">
+    <h2>Admin Login</h2>
+    <input id="adminId" placeholder="admin" />
+    <input id="adminPass" type="password" placeholder="1234" style="margin-top:8px" />
     <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="login()">Login</button>
-    <div id="loginError" class="small" style="color:#f87171;display:none">Wrong login</div>
+    <div id="loginError" class="small" style="color:#dc2626;display:none">Wrong ID / Password</div>
   </div>
+</div><!-- ADMIN --><div id="adminPage" style="display:none">
+  <div class="wrap"><div class="panel flex between">
+  <div>
+    <h2>RJVC Admin Panel</h2>
+    <div class="small">Tree • Wallet • Withdraw Approval</div>
+  </div>
+  <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
 </div>
 
-<!-- ADMIN -->
-<div id="adminPage" style="display:none">
-
-<div class="wrap">
-
-<h2>RJVC Admin Panel</h2>
-
-<div class="card">
-  <input id="rootName" placeholder="Root name">
-  <input id="rootPass" placeholder="Password" style="margin-top:6px">
-  <button class="btn btn-primary" style="margin-top:8px" onclick="createRoot()">Create Root</button>
+<!-- CREATE ROOT -->
+<div class="panel">
+  <h3>Create Root Customer</h3>
+  <div class="flex" style="gap:10px">
+    <input id="rootName" placeholder="Customer Name" />
+    <input id="rootPass" placeholder="Password" />
+  </div>
+  <button class="btn btn-primary" style="margin-top:10px" onclick="createRoot()">Add Root</button>
 </div>
 
-<div class="card">
+<!-- CUSTOMER LIST -->
+<div class="panel">
   <h3>Customer List</h3>
   <table>
     <thead>
       <tr>
         <th>#</th>
         <th>Name</th>
-        <th>₹20 Cycles</th>
-        <th>Actions</th>
+        <th>Cycles</th>
+        <th>Commission</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody id="customerTable"></tbody>
   </table>
 </div>
 
-<div class="card">
-  <h3>Binary Tree View</h3>
-  <div class="treeBox">
-    <canvas id="treeCanvas"></canvas>
+<!-- WITHDRAW APPROVAL -->
+<div class="panel">
+  <h3>Withdrawal Requests (Admin Approval)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Customer</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="adminWithdrawTable"></tbody>
+  </table>
+</div>
+
   </div>
-</div>
-
-</div>
-</div>
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
-<script>
+</div><!-- Firebase --><script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script><script>
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -98,140 +93,98 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
+const usersCol = db.collection("Users");
+const withdrawCol = db.collection("Withdrawals");
 
 let nodes = {};
-let rootId = null;
 
-/* LOGIN */
 function login(){
   if(adminId.value==="admin" && adminPass.value==="1234"){
     loginPage.style.display="none";
     adminPage.style.display="block";
     loadData();
+    loadWithdrawRequests();
   }else loginError.style.display="block";
 }
+function logout(){location.reload()}
 
-/* LOAD DATA */
 function loadData(){
   treeCol.onSnapshot(snap=>{
-    nodes={}; rootId=null;
-    snap.forEach(d=>{
-      nodes[d.id]=d.data();
-      if(!d.data().parentId) rootId=d.id;
-    });
+    nodes={};
+    snap.forEach(d=>nodes[d.id]=d.data());
     renderTable();
-    drawTree();
   });
 }
 
-/* CREATE ROOT */
+function renderTable(){
+  customerTable.innerHTML="";
+  let i=1;
+  Object.entries(nodes).forEach(([id,n])=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${i++}</td>
+      <td>${n.name||""}</td>
+      <td>${n.monthsPaid||1}</td>
+      <td>₹${n.commission||0}</td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="add20('${id}')">+₹20</button>
+      </td>`;
+    customerTable.appendChild(tr);
+  });
+}
+
+async function add20(id){
+  const ref=treeCol.doc(id);
+  const s=await ref.get();
+  const c=s.data().monthsPaid||1;
+  await ref.update({monthsPaid:c+1});
+}
+
 function createRoot(){
   if(!rootName.value||!rootPass.value) return alert("Fill both");
   treeCol.add({
     name:rootName.value,
     password:rootPass.value,
-    parentId:null,leftId:null,rightId:null,
-    monthsPaid:1
+    monthsPaid:1,
+    commission:0,
+    parentId:null
   });
   rootName.value="";rootPass.value="";
 }
 
-/* TABLE */
-function renderTable(){
-  customerTable.innerHTML="";
-  let i=1;
-  Object.entries(nodes).forEach(([id,n])=>{
-    let tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${i++}</td>
-      <td>${n.name}</td>
-      <td>${n.monthsPaid||1}</td>
-      <td>
-        <button class="btn btn-secondary" onclick="add20('${id}')">+₹20</button>
-        <button class="btn btn-danger" onclick="deleteSafe('${id}')">Delete</button>
-      </td>
-    `;
-    customerTable.appendChild(tr);
+/* ================= WITHDRAW APPROVAL ================= */
+function loadWithdrawRequests(){
+  withdrawCol.orderBy("createdAt","desc").onSnapshot(snap=>{
+    adminWithdrawTable.innerHTML="";
+    snap.forEach(doc=>{
+      const d=doc.data();
+      const tr=document.createElement("tr");
+      const date=d.createdAt?.toDate?d.createdAt.toDate().toLocaleString("en-IN"):"--";
+      tr.innerHTML=`
+        <td>${date}</td>
+        <td>${d.customerName||""}</td>
+        <td>₹${d.amount||0}</td>
+        <td>${d.status}</td>
+        <td>${d.status==="pending"?
+          `<button onclick=\"approveWithdraw('${doc.id}','${d.userId}',${d.amount})\">Approve</button>
+           <button onclick=\"rejectWithdraw('${doc.id}')\">Reject</button>`:"-"}</td>`;
+      adminWithdrawTable.appendChild(tr);
+    });
   });
 }
 
-/* ADD ₹20 */
-async function add20(id){
-  const ref=treeCol.doc(id);
-  const snap=await ref.get();
-  await ref.update({monthsPaid:(snap.data().monthsPaid||1)+1});
+async function approveWithdraw(id,userId,amt){
+  if(!confirm("Approve withdrawal?"))return;
+  const u=await usersCol.doc(userId).get();
+  const bal=u.data().bonusWallet||0;
+  if(amt>bal) return alert("Insufficient bonus");
+  await usersCol.doc(userId).update({bonusWallet:bal-amt});
+  await withdrawCol.doc(id).update({status:"approved"});
 }
 
-/* SAFE DELETE + AUTO BALANCE */
-async function deleteSafe(id){
-  const node=nodes[id];
-  if(!node) return;
-  if(!confirm(node.name+" delete?")) return;
-
-  const parentId=node.parentId;
-  const kids=[node.leftId,node.rightId].filter(Boolean);
-
-  if(parentId){
-    const p=nodes[parentId];
-    let upd={};
-    if(p.leftId===id) upd.leftId=null;
-    if(p.rightId===id) upd.rightId=null;
-    await treeCol.doc(parentId).update(upd);
-
-    for(const cid of kids){
-      await attachBalanced(parentId,cid);
-    }
-  }
-
-  await treeCol.doc(id).delete();
+async function rejectWithdraw(id){
+  if(!confirm("Reject withdrawal?"))return;
+  await withdrawCol.doc(id).update({status:"rejected"});
 }
-
-/* BALANCE */
-async function attachBalanced(parentId,childId){
-  const p=nodes[parentId];
-  if(!p.leftId){
-    await treeCol.doc(parentId).update({leftId:childId});
-  }else if(!p.rightId){
-    await treeCol.doc(parentId).update({rightId:childId});
-  }else{
-    await attachBalanced(p.leftId,childId);
-  }
-  await treeCol.doc(childId).update({parentId});
-}
-
-/* DRAW TREE (AUTO SMALL) */
-function drawTree(){
-  const c=document.getElementById("treeCanvas");
-  const ctx=c.getContext("2d");
-  c.width=c.clientWidth; c.height=520;
-  ctx.clearRect(0,0,c.width,c.height);
-  if(!rootId) return;
-
-  let levels=[[rootId]];
-  for(let i=0;i<5;i++){
-    let next=[];
-    levels[i].forEach(id=>{
-      let n=nodes[id];
-      if(n.leftId) next.push(n.leftId);
-      if(n.rightId) next.push(n.rightId);
-    });
-    if(next.length) levels.push(next);
-  }
-
-  let y=20;
-  levels.forEach(lvl=>{
-    let step=c.width/(lvl.length+1);
-    lvl.forEach((id,i)=>{
-      let x=step*(i+1);
-      ctx.fillStyle="#2563eb";
-      ctx.fillRect(x-50,y,100,36);
-      ctx.fillStyle="#fff";
-      ctx.fillText(nodes[id].name,x-40,y+22);
-    });
-    y+=80;
-  });
-}
-</script>
-
-</body>
-  </html>
+</script></body>
+</html>
