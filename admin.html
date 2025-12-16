@@ -179,6 +179,24 @@ function renderTable(){
     customerTable.appendChild(tr);
   });
 }
+  // ================= BINARY LEVEL SYSTEM =================
+function getLevel(id){
+  let count = 0;
+
+  function countDownline(pid){
+    Object.entries(nodes).forEach(([cid, node])=>{
+      if(node.parentId === pid){
+        count++;
+        countDownline(cid);
+      }
+    });
+  }
+
+  countDownline(id);
+
+  if(count < 2) return 0;
+  return Math.min(10, Math.floor(Math.log2(count)));
+  }
 // ================= STEP 3-A =================
 function openTree(id){
   window.open("tree.html?root=" + id, "_blank");
