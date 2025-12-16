@@ -197,6 +197,53 @@ function getLevel(id){
   if(count < 2) return 0;
   return Math.min(10, Math.floor(Math.log2(count)));
   }
+  // ================= STEP 4.2 : LEVEL AMOUNT SYSTEM =================
+
+const LEVEL_AMOUNT = {
+  1: 100,
+  2: 200,
+  3: 400,
+  4: 800,
+  5: 1600,
+  6: 3200,
+  7: 6400,
+  8: 12800,
+  9: 25600,
+  10: 51200
+};
+
+function membersRequired(level){
+  return Math.pow(2, level);
+}
+
+function getDownlineCount(id){
+  let total = 0;
+
+  function walk(pid){
+    Object.entries(nodes).forEach(([cid, node])=>{
+      if(node.parentId === pid){
+        total++;
+        walk(cid);
+      }
+    });
+  }
+
+  walk(id);
+  return total;
+}
+
+function getLevelIncome(id){
+  const down = getDownlineCount(id);
+  let income = 0;
+
+  for(let lvl = 1; lvl <= 10; lvl++){
+    if(down >= membersRequired(lvl)){
+      income += LEVEL_AMOUNT[lvl];
+    }
+  }
+
+  return income;
+}
 // ================= STEP 3-A =================
 function openTree(id){
   window.open("tree.html?root=" + id, "_blank");
