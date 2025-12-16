@@ -183,6 +183,24 @@ function renderTable(){
 function openTree(id){
   window.open("tree.html?root=" + id, "_blank");
 }
+// ================= STEP 3-B =================
+async function deleteCustomer(id){
+  if(!confirm("Are you sure? Customer permanently delete ho jayega.")){
+    return;
+  }
+
+  try{
+    // Tree node delete
+    await treeCol.doc(id).delete();
+
+    // User login data delete
+    await usersCol.doc(id).delete();
+
+    alert("Customer successfully deleted");
+  }catch(err){
+    alert("Delete error: " + err.message);
+  }
+}
 async function add20(id){
   const ref=treeCol.doc(id);
   const s=await ref.get();
