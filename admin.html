@@ -146,17 +146,36 @@ function loadData(){
 
 function renderTable(){
   customerTable.innerHTML="";
-  let i=1;
+  let i = 1;
+
   Object.entries(nodes).forEach(([id,n])=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
       <td>${i++}</td>
-      <td>${n.name||""}</td>
-      <td>${n.monthsPaid||1}</td>
-      <td>₹${n.commission||0}</td>
+
       <td>
-        <button class="btn btn-sm btn-primary" onclick="add20('${id}')">+₹20</button>
-      </td>`;
+        <b>${n.name || ""}</b><br>
+        <span class="small">Pass: ${n.password || "-"}</span>
+      </td>
+
+      <td>${n.monthsPaid || 1}</td>
+
+      <td>₹${n.commission || 0}</td>
+
+      <td>
+        <button class="btn btn-sm btn-secondary"
+          onclick="openTree('${id}')">
+          🌳 Tree
+        </button>
+
+        <button class="btn btn-sm btn-danger"
+          onclick="deleteCustomer('${id}','${n.name}')">
+          🗑 Delete
+        </button>
+      </td>
+    `;
+
     customerTable.appendChild(tr);
   });
 }
