@@ -179,6 +179,18 @@ function renderTable(){
     customerTable.appendChild(tr);
   });
 }
+  // ================= STEP 4.3 : SAVE COMMISSION TO FIREBASE =================
+async function syncCommission(id){
+  const income = getLevelIncome(id);
+
+  try{
+    await treeCol.doc(id).update({
+      commission: income
+    });
+  }catch(e){
+    console.log("Commission update error", e.message);
+  }
+  }
   // ================= BINARY LEVEL SYSTEM =================
 function getLevel(id){
   let count = 0;
