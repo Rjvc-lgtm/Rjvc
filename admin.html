@@ -65,7 +65,35 @@ th{font-size:12px;color:#6b7280;text-transform:uppercase}
     <tbody id="customerTable"></tbody>
   </table>
 </div>
+<!-- ================= WITHDRAWAL REQUESTS (ADMIN) ================= -->
+<div class="panel">
+  <h3>Withdrawal Requests (Pending)</h3>
+  <p class="small">
+    यहाँ customer की withdrawal requests दिखेंगी।  
+    Approve करने पर bonus wallet से amount कटेगा।
+  </p>
 
+  <div style="overflow-x:auto;margin-top:10px;">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Customer</th>
+          <th>Amount (₹)</th>
+          <th>Bank / UPI</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="adminWithdrawTable">
+        <tr>
+          <td colspan="6" class="small">Loading...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<!-- ================= END WITHDRAWAL REQUESTS ================= -->
 <!-- WITHDRAW APPROVAL -->
 <div class="panel">
   <h3>Withdrawal Requests (Admin Approval)</h3>
