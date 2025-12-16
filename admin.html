@@ -179,7 +179,10 @@ function renderTable(){
     customerTable.appendChild(tr);
   });
 }
-
+// ================= STEP 3-A =================
+function openTree(id){
+  window.open("tree.html?root=" + id, "_blank");
+}
 async function add20(id){
   const ref=treeCol.doc(id);
   const s=await ref.get();
