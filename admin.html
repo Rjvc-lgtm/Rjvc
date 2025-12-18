@@ -261,28 +261,6 @@ function openTree(id){
   window.open("tree.html?root=" + id, "_blank");
 }
   async function deleteWithDownline(rootId){
-  
-  // ================= STEP 3.3 : DELETE WITH DOWNLINE =================
-async function deleteWithDownline(rootId){
-
-  let idsToDelete = [];
-
-  function findChildren(pid){
-    Object.entries(nodes).forEach(([cid, node])=>{
-      if(node.parentId === pid){
-        idsToDelete.push(cid);
-        findChildren(cid);
-      }
-    });
-  }
-
-  idsToDelete.push(rootId);
-  findChildren(rootId);
-
-  for(const id of idsToDelete){
-    await deleteWithDownline(id);
-  }
-}
   // ================= STEP 4.1 : COUNT TOTAL DOWNLINE =================
 function countDownlineForDelete(rootId){
   let count = 0;
