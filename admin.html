@@ -261,26 +261,7 @@ function openTree(id){
   window.open("tree.html?root=" + id, "_blank");
 }
   async function deleteWithDownline(rootId){
-  const toDelete = [];
-
-  function findChildren(pid){
-    Object.entries(nodes).forEach(([cid, node])=>{
-      if(node.parentId === pid){
-        toDelete.push(cid);
-        findChildren(cid);
-      }
-    });
-  }
-
-  // root bhi add
-  toDelete.push(rootId);
-  findChildren(rootId);
-
-  // delete all
-  for(const id of toDelete){
-    await deleteWithDownline(id);
-  }
-  }
+  
   // ================= STEP 3.3 : DELETE WITH DOWNLINE =================
 async function deleteWithDownline(rootId){
 
