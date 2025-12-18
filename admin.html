@@ -278,19 +278,21 @@ function countDownlineForDelete(rootId){
   return count + 1; // root + all children
 }
 // ================= STEP 3-B =================
+    // =============== FINAL DELETE CUSTOMER ===============
 async function deleteCustomer(id){
-  if(!confirm("Are you sure? Customer permanently delete ho jayega.")){
+
+  if(!confirm("Are you sure? Sirf ye customer delete hoga")){
     return;
   }
 
   try{
-    // Tree node delete
+    // TreeNodes se delete
     await treeCol.doc(id).delete();
 
-    // User login data delete
+    // Users se delete
     await usersCol.doc(id).delete();
 
-    alert("Customer successfully deleted");
+    alert("Customer deleted successfully");
   }catch(err){
     alert("Delete error: " + err.message);
   }
