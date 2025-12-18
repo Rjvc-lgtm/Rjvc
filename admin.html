@@ -279,24 +279,43 @@ function countDownlineForDelete(rootId){
 }
 // ================= STEP 3-B =================
     // =============== FINAL DELETE CUSTOMER ===============
-async function deleteCustomer(id){
+// ================= FINAL DELETE (MAIN + ALL DOWNLINE) =================
+async function deleteCustomer(rootId){
 
-  if(!confirm("Are you sure? Sirf ye customer delete hoga")){
+  if(!confirm("Are you sure? Customer aur uski puri downline delete hogi")){
     return;
   }
 
+  let idsToDelete = [];
+
+  function findChildren(pid){
+    Object.entries(nodes).forEach(([cid, node])=>{
+      if(node.parentId === pid){
+        idsToDelete.push(cid);
+        findChildren(cid);
+      }
+    });
+  }
+
+  // root bhi include
+  idsToDelete.push(rootId);
+  findChildren(rootId);
+
   try{
-    // TreeNodes se delete
-    await treeCol.doc(id).delete();
+    for(const id of idsToDelete){
+      // TreeNodes delete
+      await treeCol.doc(id).delete();
 
-    // Users se delete
-    await usersCol.doc(id).delete();
+      // Users delete
+      await usersCol.doc(id).delete();
+    }
 
-    alert("Customer deleted successfully");
+    alert("Customer aur uski puri downline delete ho gayi");
+
   }catch(err){
     alert("Delete error: " + err.message);
   }
-}
+  }
 async function add20(id){
   const ref=treeCol.doc(id);
   const s=await ref.get();
