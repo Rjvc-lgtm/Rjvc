@@ -285,17 +285,40 @@ async function add20(id){
   await ref.update({monthsPaid:c+1});
 }
 
-function createRoot(){
-  if(!rootName.value||!rootPass.value) return alert("Fill both");
-  treeCol.add({
-    name:rootName.value,
-    password:rootPass.value,
-    monthsPaid:1,
-    commission:0,
-    parentId:null
-  });
-  rootName.value="";rootPass.value="";
-}
+async function createRoot(){
+  if(!rootName.value || !rootPass.value){
+    return alert("Fill both");
+  }
+
+  try{
+    // 1️⃣ TreeNodes में add
+    const docRef = await treeCol.add({
+      name: rootName.value,
+      password: rootPass.value,
+      monthsPaid: 1,
+      commission: 0,
+      parentId: null
+    });
+
+    // 2️⃣ Users collection में SAME ID से add  ✅ (Step 3.1)
+    await usersCol.doc(docRef.id).set({
+      name: rootName.value,
+      password: rootPass.value,
+      bonusWallet: 0,
+      commissionWallet: 0,
+      isBlocked: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Root customer created successfully");
+
+    rootName.value="";
+    rootPass.value="";
+
+  }catch(err){
+    alert("Error: " + err.message);
+  }
+  }
 
 /* ================= WITHDRAW APPROVAL ================= */
 function loadWithdrawRequests(){
