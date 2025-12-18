@@ -281,6 +281,28 @@ function openTree(id){
     await deleteWithDownline(id);
   }
   }
+  // ================= STEP 3.3 : DELETE WITH DOWNLINE =================
+async function deleteWithDownline(rootId){
+
+  let idsToDelete = [];
+
+  function findChildren(pid){
+    Object.entries(nodes).forEach(([cid, node])=>{
+      if(node.parentId === pid){
+        idsToDelete.push(cid);
+        findChildren(cid);
+      }
+    });
+  }
+
+  idsToDelete.push(rootId);
+  findChildren(rootId);
+
+  for(const id of idsToDelete){
+    await treeCol.doc(id).delete();
+    await usersCol.doc(id).delete();
+  }
+}
 // ================= STEP 3-B =================
 async function deleteCustomer(id){
   if(!confirm("Are you sure? Customer permanently delete ho jayega.")){
