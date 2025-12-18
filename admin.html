@@ -299,8 +299,7 @@ async function deleteWithDownline(rootId){
   findChildren(rootId);
 
   for(const id of idsToDelete){
-    await treeCol.doc(id).delete();
-    await usersCol.doc(id).delete();
+    await deleteWithDownline(id);
   }
 }
 // ================= STEP 3-B =================
