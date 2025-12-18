@@ -260,6 +260,27 @@ function getLevelIncome(id){
 function openTree(id){
   window.open("tree.html?root=" + id, "_blank");
 }
+  async function deleteWithDownline(rootId){
+  const toDelete = [];
+
+  function findChildren(pid){
+    Object.entries(nodes).forEach(([cid, node])=>{
+      if(node.parentId === pid){
+        toDelete.push(cid);
+        findChildren(cid);
+      }
+    });
+  }
+
+  // root bhi add
+  toDelete.push(rootId);
+  findChildren(rootId);
+
+  // delete all
+  for(const id of toDelete){
+    await deleteWithDownline(id);
+  }
+  }
 // ================= STEP 3-B =================
 async function deleteCustomer(id){
   if(!confirm("Are you sure? Customer permanently delete ho jayega.")){
