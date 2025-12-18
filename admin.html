@@ -302,6 +302,22 @@ async function deleteWithDownline(rootId){
     await deleteWithDownline(id);
   }
 }
+  // ================= STEP 4.1 : COUNT TOTAL DOWNLINE =================
+function countDownlineForDelete(rootId){
+  let count = 0;
+
+  function find(pid){
+    Object.entries(nodes).forEach(([cid, node])=>{
+      if(node.parentId === pid){
+        count++;
+        find(cid);
+      }
+    });
+  }
+
+  find(rootId);
+  return count + 1; // root + all children
+}
 // ================= STEP 3-B =================
 async function deleteCustomer(id){
   if(!confirm("Are you sure? Customer permanently delete ho jayega.")){
