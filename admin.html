@@ -373,6 +373,8 @@ async function addCycle(id){
     lastPaidAt: firebase.firestore.FieldValue.serverTimestamp()
   });
 
+  await syncCommission(id);
+  
   alert("₹20 payment received. Cycle activated.");
 }
 
