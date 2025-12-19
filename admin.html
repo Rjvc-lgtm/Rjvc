@@ -319,11 +319,25 @@ async function deleteCustomer(rootId){
     alert("Delete error: " + err.message);
   }
   }
-async function add20(id){
-  const ref=treeCol.doc(id);
-  const s=await ref.get();
-  const c=s.data().monthsPaid||1;
-  await ref.update({monthsPaid:c+1});
+// ================= STEP 2 : ADMIN PAYMENT RECEIVED =================
+async function addCycle(id){
+  const ref = usersCol.doc(id);
+  const snap = await ref.get();
+
+  if(!snap.exists){
+    return alert("User not found");
+  }
+
+  const data = snap.data();
+  const cycle = data.cycleCount || 0;
+
+  await ref.update({
+    cycleCount: cycle + 1,
+    isActive: true,
+    lastPaidAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  alert("₹20 payment received. Cycle activated.");
 }
 
 async function createRoot(){
