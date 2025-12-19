@@ -249,15 +249,51 @@ function getDownlineCount(id){
 }
 
 function getLevelIncome(id){
-  const down = getDownlineCount(id);
-  let income = 0;
 
-  for(let lvl = 1; lvl <= 10; lvl++){
-    if(down >= membersRequired(lvl)){
-      income += LEVEL_AMOUNT[lvl];
-    }
+  // ❌ agar customer ne ₹20 nahi diya (inactive)
+  if(!nodes[id] || nodes[id].isActive !== true){
+    return 0;
   }
 
+  let income = 0;
+
+  const LEVEL_COMMISSION = {
+    1: 10,
+    2: 10,
+    3: 10,
+    4: 10,
+    5: 9,
+    6: 8,
+    7: 7,
+    8: 6,
+    9: 5,
+    10: 4,
+    11: 3
+  };
+
+  function walk(pid, level){
+    if(level > 11) return;
+
+    let activeChildren = [];
+
+    Object.entries(nodes).forEach(([cid, node])=>{
+      if(node.parentId === pid && node.isActive === true){
+        activeChildren.push(cid);
+      }
+    });
+
+    const pairs = Math.floor(activeChildren.length / 2);
+
+    if(pairs > 0){
+      income += pairs * LEVEL_COMMISSION[level];
+    }
+
+    activeChildren.forEach(cid=>{
+      walk(cid, level + 1);
+    });
+  }
+
+  walk(id, 1);
   return income;
 }
 // ================= STEP 3-A =================
