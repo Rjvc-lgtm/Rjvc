@@ -185,15 +185,47 @@ if(parent[side + "Id"]){
 }
 
 // 1️⃣ Child add
-const childRef = await treeCol.add({
-  name: name,
-  password: pass,
-  parentId: parentId,
-  leftId: null,
-  rightId: null,
-  monthsPaid: 0,
-  isActive: false
-});
+async function joinMember(parentId, side){
+
+  const name = prompt("New member name:");
+  const pass = prompt("Password:");
+
+  if(!name || !pass){
+    alert("Name aur password required");
+    return;
+  }
+
+  try{
+    const parentSnap = await treeCol.doc(parentId).get();
+    const parent = parentSnap.data();
+
+    if(parent[side + "Id"]){
+      alert(side.toUpperCase() + " side already filled");
+      return;
+    }
+
+    // 1️⃣ child create
+    const childRef = await treeCol.add({
+      name: name,
+      password: pass,
+      parentId: parentId,
+      leftId: null,
+      rightId: null,
+      monthsPaid: 0,
+      isActive: false
+    });
+
+    // 2️⃣ parent update
+    await treeCol.doc(parentId).update({
+      [side + "Id"]: childRef.id
+    });
+
+    alert("Member added on " + side.toUpperCase());
+
+  }catch(err){
+    alert("Error: " + err.message);
+  }
+}
 
 // 2️⃣ Parent update (LEFT / RIGHT link)
 await treeCol.doc(parentId).update({
