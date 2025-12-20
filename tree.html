@@ -131,10 +131,15 @@ function buildNode(id){
   if(!n) return "";
 
   let html = `<ul><li>
-    <div class="node ${!n.parentId ? 'root':''}">
-      ${n.name || ''}
-      <br><small>${n.monthsPaid || 0} x ₹20</small>
-    </div>`;
+  <div class="node ${!n.parentId ? 'root' : ''}">
+    <b>${n.name || ''}</b><br>
+    <small>Cycles: ${n.monthsPaid || 1}</small><br>
+
+    <button style="margin-top:4px;font-size:10px"
+      onclick="joinMember('${id}')">
+      ➕ Join
+    </button>
+  </div>`;
 
   if(n.leftId || n.rightId){
     html += "<ul>";
