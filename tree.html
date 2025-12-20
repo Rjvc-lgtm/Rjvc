@@ -134,11 +134,17 @@ function buildNode(id){
   <div class="node ${!n.parentId ? 'root' : ''}">
     <b>${n.name || ''}</b><br>
     <small>Cycles: ${n.monthsPaid || 1}</small><br>
+<div style="margin-top:4px">
+  <button style="font-size:10px"
+    onclick="joinMember('${id}','left')">
+    ⬅ LEFT
+  </button>
 
-    <button style="margin-top:4px;font-size:10px"
-      onclick="joinMember('${id}')">
-      ➕ Join
-    </button>
+  <button style="font-size:10px;margin-left:4px"
+    onclick="joinMember('${id}','right')">
+    RIGHT ➡
+  </button>
+</div>
   </div>`;
 
   if(n.leftId || n.rightId){
