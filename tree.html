@@ -122,11 +122,15 @@ treeCol.onSnapshot(snap=>{
 });
 
 function renderTree(){
-  const rootId = Object.keys(nodes).find(id=>!nodes[id].parentId);
-  if(!rootId) return;
 
-  const container = document.getElementById("treeContainer");
-  container.innerHTML = buildNode(rootId);
+  if(!ROOT_ID || !nodes[ROOT_ID]){
+    document.getElementById("treeContainer").innerHTML =
+      "<p style='padding:10px'>Tree not found</p>";
+    return;
+  }
+
+  document.getElementById("treeContainer").innerHTML =
+    buildNode(ROOT_ID);
 }
 
 function buildNode(id){
