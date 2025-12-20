@@ -151,6 +151,32 @@ function buildNode(id){
   html += "</li></ul>";
   return html;
 }
+  async function joinMember(parentId){
+
+  const name = prompt("New member name:");
+  const pass = prompt("Password:");
+
+  if(!name || !pass){
+    alert("Name aur password required");
+    return;
+  }
+
+  try{
+    // TreeNodes me add
+    const docRef = await treeCol.add({
+      name: name,
+      password: pass,
+      parentId: parentId,
+      monthsPaid: 0,
+      isActive: false
+    });
+
+    alert("Member successfully joined");
+
+  }catch(err){
+    alert("Error: " + err.message);
+  }
+  }
 </script>
 
 </body>
