@@ -162,14 +162,37 @@ function buildNode(id){
   }
 
   try{
-    // TreeNodes me add
-    const docRef = await treeCol.add({
-      name: name,
-      password: pass,
-      parentId: parentId,
-      monthsPaid: 0,
-      isActive: false
-    });
+    const side = prompt("Type LEFT or RIGHT").toLowerCase();
+
+if(!["left","right"].includes(side)){
+  alert("LEFT ya RIGHT likho");
+  return;
+}
+
+// Parent data lao
+const parentSnap = await treeCol.doc(parentId).get();
+const parent = parentSnap.data();
+
+if(parent[side + "Id"]){
+  alert(side.toUpperCase() + " side already filled");
+  return;
+}
+
+// 1️⃣ Child add
+const childRef = await treeCol.add({
+  name: name,
+  password: pass,
+  parentId: parentId,
+  leftId: null,
+  rightId: null,
+  monthsPaid: 0,
+  isActive: false
+});
+
+// 2️⃣ Parent update (LEFT / RIGHT link)
+await treeCol.doc(parentId).update({
+  [side + "Id"]: childRef.id
+});
 
     alert("Member successfully joined");
 
