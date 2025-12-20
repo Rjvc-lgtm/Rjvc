@@ -300,8 +300,12 @@ function getLevelIncome(id){
   return income;
 }
 // ================= STEP 3-A =================
-function openTree(id){
-  window.open("tree.html?root=" + id, "_blank");
+function openTree(id, adminAdd=false){
+  let url = "tree.html?root=" + id;
+  if(adminAdd){
+    url += "&admin=1";
+  }
+  window.open(url, "_blank");
 }
   // ================= STEP 4.1 : COUNT TOTAL DOWNLINE =================
 function countDownlineForDelete(rootId){
