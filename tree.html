@@ -160,7 +160,46 @@ function buildNode(id){
   html += "</li></ul>";
   return html;
 }
-  async function joinMember(parentId){
+  async function joinMember(parentId, side){
+
+  const parent = nodes[parentId];
+
+  if(side === "left" && parent.leftId){
+    return alert("Left side already filled");
+  }
+  if(side === "right" && parent.rightId){
+    return alert("Right side already filled");
+  }
+
+  const name = prompt("New member name:");
+  const pass = prompt("Password:");
+
+  if(!name || !pass){
+    alert("Name aur password required");
+    return;
+  }
+
+  try{
+    // 1️⃣ नया member add
+    const docRef = await treeCol.add({
+      name: name,
+      password: pass,
+      parentId: parentId,
+      monthsPaid: 0,
+      isActive: false
+    });
+
+    // 2️⃣ parent में leftId / rightId set
+    await treeCol.doc(parentId).update({
+      [side + "Id"]: docRef.id
+    });
+
+    alert("Member joined on " + side.toUpperCase());
+
+  }catch(err){
+    alert("Error: " + err.message);
+  }
+  }
 
   const name = prompt("New member name:");
   const pass = prompt("Password:");
