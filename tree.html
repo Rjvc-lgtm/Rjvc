@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>RJVC Binary Tree (Admin Only)</title>
+<title>RJVC Binary Tree – Admin Only</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -28,15 +28,15 @@ body{
 .tree{
   display:flex;
   justify-content:center;
-  padding:6px;
+  padding:10px;
   overflow-x:auto;
 }
 ul{
   position:relative;
-  padding-top:14px;
+  padding-top:16px;
   display:flex;
   justify-content:center;
-  gap:6px;
+  gap:10px;
 }
 ul::before{
   content:'';
@@ -44,7 +44,7 @@ ul::before{
   top:0;
   left:50%;
   width:1px;
-  height:14px;
+  height:16px;
   background:#475569;
 }
 li{
@@ -67,15 +67,30 @@ li:only-child::after{ display:none; }
 
 .node{
   background:#0b1320;
-  padding:4px 6px;
-  border-radius:6px;
-  font-size:11px;
-  min-width:70px;
+  padding:6px;
+  border-radius:8px;
+  font-size:12px;
+  min-width:90px;
 }
 .root{
   background:#2563eb;
-  font-weight:600;
+  font-weight:700;
 }
+.actions{
+  margin-top:6px;
+  display:flex;
+  gap:4px;
+  justify-content:center;
+}
+.actions button{
+  font-size:10px;
+  padding:2px 6px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+.left{background:#16a34a;color:#fff}
+.right{background:#0284c7;color:#fff}
 </style>
 </head>
 
@@ -100,11 +115,10 @@ const IS_ADMIN = params.get("admin") === "1";
 
 if(!IS_ADMIN){
   document.body.innerHTML = `
-    <div style="padding:20px;text-align:center">
+    <div style="padding:30px;text-align:center">
       <h3>Access Denied</h3>
       <p>Tree sirf Admin ke liye hai</p>
-    </div>
-  `;
+    </div>`;
   throw new Error("Not Admin");
 }
 
@@ -117,15 +131,17 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
+
 let nodes = {};
 
-/* ================= LOAD TREE ================= */
+/* ================= LOAD DATA ================= */
 treeCol.onSnapshot(snap=>{
   nodes = {};
   snap.forEach(d=>nodes[d.id]=d.data());
   renderTree();
 });
 
+/* ================= RENDER TREE ================= */
 function renderTree(){
   if(!ROOT_ID || !nodes[ROOT_ID]){
     treeContainer.innerHTML = "<p>Tree not found</p>";
@@ -139,14 +155,15 @@ function buildNode(id){
   const n = nodes[id];
   if(!n) return "";
 
-  let html = `<ul><li>
+  let html = `
+  <ul><li>
     <div class="node ${!n.parentId ? 'root' : ''}">
       <b>${n.name}</b><br>
-      <small>Cycles: ${n.monthsPaid || 0}</small><br>
+      <small>ID: ${id.slice(0,6)}</small>
 
-      <div style="margin-top:4px">
-        <button onclick="joinMember('${id}','left')">⬅ LEFT</button>
-        <button onclick="joinMember('${id}','right')">RIGHT ➡</button>
+      <div class="actions">
+        <button class="left" onclick="joinMember('${id}','left')">LEFT</button>
+        <button class="right" onclick="joinMember('${id}','right')">RIGHT</button>
       </div>
     </div>`;
 
@@ -161,18 +178,22 @@ function buildNode(id){
   return html;
 }
 
-/* ================= JOIN MEMBER ================= */
+/* ================= JOIN MEMBER (ANYWHERE) ================= */
 async function joinMember(parentId, side){
   const parent = nodes[parentId];
 
-  if(parent[side+"Id"]){
-    return alert(side.toUpperCase()+" side already filled");
+  if(parent[side + "Id"]){
+    alert(side.toUpperCase() + " side already filled");
+    return;
   }
 
   const name = prompt("New member name:");
   const pass = prompt("Password:");
 
-  if(!name || !pass) return alert("Name & password required");
+  if(!name || !pass){
+    alert("Name & password required");
+    return;
+  }
 
   try{
     const childRef = await treeCol.add({
@@ -186,7 +207,7 @@ async function joinMember(parentId, side){
     });
 
     await treeCol.doc(parentId).update({
-      [side+"Id"]: childRef.id
+      [side + "Id"]: childRef.id
     });
 
     alert("Member added on " + side.toUpperCase());
