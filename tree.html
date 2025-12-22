@@ -152,7 +152,23 @@ const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
 
 let nodes = {};
+// ===== STEP 2A : FIND TREE DEPTH =====
+function getTreeDepth(id){
+  if(!nodes[id]) return 0;
 
+  let leftDepth = 0;
+  let rightDepth = 0;
+
+  if(nodes[id].leftId){
+    leftDepth = getTreeDepth(nodes[id].leftId);
+  }
+
+  if(nodes[id].rightId){
+    rightDepth = getTreeDepth(nodes[id].rightId);
+  }
+
+  return Math.max(leftDepth, rightDepth) + 1;
+  }
 /* ================= LOAD DATA ================= */
 treeCol.onSnapshot(snap=>{
   nodes = {};
