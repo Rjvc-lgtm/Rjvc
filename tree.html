@@ -178,10 +178,23 @@ treeCol.onSnapshot(snap=>{
 
 /* ================= RENDER TREE ================= */
 function renderTree(){
+
   if(!ROOT_ID || !nodes[ROOT_ID]){
-    treeContainer.innerHTML = "<p>Tree not found</p>";
+    treeContainer.innerHTML =
+      "<p style='padding:10px'>Tree not found</p>";
     return;
   }
+
+  // ===== STEP 2B : AUTO SHRINK TREE =====
+  const depth = getTreeDepth(ROOT_ID);
+
+  treeContainer.className = "tree"; // reset classes
+
+  if(depth >= 2) treeContainer.classList.add("level-2");
+  if(depth >= 3) treeContainer.classList.add("level-3");
+  if(depth >= 4) treeContainer.classList.add("level-4");
+  if(depth >= 5) treeContainer.classList.add("level-5");
+
   treeContainer.innerHTML = buildNode(ROOT_ID);
 }
 
