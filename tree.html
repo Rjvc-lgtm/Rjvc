@@ -243,6 +243,29 @@ treeEl.addEventListener("touchend", () => {
 });
 </script>
 <script>
+  <script>
+// ===== STEP 6A : FIND NEXT EMPTY SLOT =====
+function findEmptySlot(startId){
+  let queue = [startId];
+
+  while(queue.length){
+    const id = queue.shift();
+    const n = nodes[id];
+    if(!n) continue;
+
+    if(!n.leftId){
+      return { parentId: id, side: "left" };
+    }
+    if(!n.rightId){
+      return { parentId: id, side: "right" };
+    }
+
+    queue.push(n.leftId);
+    queue.push(n.rightId);
+  }
+  return null;
+}
+</script>
 /* ================= ADMIN CHECK ================= */
 const params = new URLSearchParams(window.location.search);
 const ROOT_ID = params.get("root");
