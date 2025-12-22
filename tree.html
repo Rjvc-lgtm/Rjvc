@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>RJVC Simple Binary Tree</title>
+<title>RJVC Binary Tree (Admin Only)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -71,18 +71,10 @@ li:only-child::after{ display:none; }
   border-radius:6px;
   font-size:11px;
   min-width:70px;
-  line-height:1.2;
 }
 .root{
   background:#2563eb;
   font-weight:600;
-}
-ul ul .node{ font-size:10px; min-width:64px; }
-ul ul ul .node{ font-size:9px; min-width:58px; }
-ul ul ul ul .node{ font-size:8px; min-width:52px; }
-
-@media(max-width:600px){
-  .node{ font-size:9px; min-width:60px; }
 }
 </style>
 </head>
@@ -90,7 +82,7 @@ ul ul ul ul .node{ font-size:8px; min-width:52px; }
 <body>
 
 <div class="header">
-  <div>Binary Tree</div>
+  <div>Binary Tree (Admin)</div>
   <button onclick="history.back()">← Admin</button>
 </div>
 
@@ -101,9 +93,22 @@ ul ul ul ul .node{ font-size:8px; min-width:52px; }
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
-  const params = new URLSearchParams(window.location.search);
+/* ================= ADMIN CHECK ================= */
+const params = new URLSearchParams(window.location.search);
 const ROOT_ID = params.get("root");
 const IS_ADMIN = params.get("admin") === "1";
+
+if(!IS_ADMIN){
+  document.body.innerHTML = `
+    <div style="padding:20px;text-align:center">
+      <h3>Access Denied</h3>
+      <p>Tree sirf Admin ke liye hai</p>
+    </div>
+  `;
+  throw new Error("Not Admin");
+}
+
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -112,9 +117,9 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
-
 let nodes = {};
 
+/* ================= LOAD TREE ================= */
 treeCol.onSnapshot(snap=>{
   nodes = {};
   snap.forEach(d=>nodes[d.id]=d.data());
@@ -122,37 +127,28 @@ treeCol.onSnapshot(snap=>{
 });
 
 function renderTree(){
-
   if(!ROOT_ID || !nodes[ROOT_ID]){
-    document.getElementById("treeContainer").innerHTML =
-      "<p style='padding:10px'>Tree not found</p>";
+    treeContainer.innerHTML = "<p>Tree not found</p>";
     return;
   }
-
-  document.getElementById("treeContainer").innerHTML =
-    buildNode(ROOT_ID);
+  treeContainer.innerHTML = buildNode(ROOT_ID);
 }
 
+/* ================= BUILD NODE ================= */
 function buildNode(id){
   const n = nodes[id];
   if(!n) return "";
 
   let html = `<ul><li>
-  <div class="node ${!n.parentId ? 'root' : ''}">
-    <b>${n.name || ''}</b><br>
-    <small>Cycles: ${n.monthsPaid || 1}</small><br>
-<div style="margin-top:4px">
-  <button style="font-size:10px"
-    onclick="joinMember('${id}','left')">
-    ⬅ LEFT
-  </button>
+    <div class="node ${!n.parentId ? 'root' : ''}">
+      <b>${n.name}</b><br>
+      <small>Cycles: ${n.monthsPaid || 0}</small><br>
 
-  <button style="font-size:10px;margin-left:4px"
-    onclick="joinMember('${id}','right')">
-    RIGHT ➡
-  </button>
-</div>
-  </div>`;
+      <div style="margin-top:4px">
+        <button onclick="joinMember('${id}','left')">⬅ LEFT</button>
+        <button onclick="joinMember('${id}','right')">RIGHT ➡</button>
+      </div>
+    </div>`;
 
   if(n.leftId || n.rightId){
     html += "<ul>";
@@ -164,126 +160,40 @@ function buildNode(id){
   html += "</li></ul>";
   return html;
 }
-  async function joinMember(parentId, side){
 
+/* ================= JOIN MEMBER ================= */
+async function joinMember(parentId, side){
   const parent = nodes[parentId];
 
-  if(side === "left" && parent.leftId){
-    return alert("Left side already filled");
-  }
-  if(side === "right" && parent.rightId){
-    return alert("Right side already filled");
+  if(parent[side+"Id"]){
+    return alert(side.toUpperCase()+" side already filled");
   }
 
   const name = prompt("New member name:");
   const pass = prompt("Password:");
 
-  if(!name || !pass){
-    alert("Name aur password required");
-    return;
-  }
+  if(!name || !pass) return alert("Name & password required");
 
   try{
-    // 1️⃣ नया member add
-    const docRef = await treeCol.add({
-      name: name,
-      password: pass,
-      parentId: parentId,
-      monthsPaid: 0,
-      isActive: false
-    });
-
-    // 2️⃣ parent में leftId / rightId set
-    await treeCol.doc(parentId).update({
-      [side + "Id"]: docRef.id
-    });
-
-    alert("Member joined on " + side.toUpperCase());
-
-  }catch(err){
-    alert("Error: " + err.message);
-  }
-  }
-
-  const name = prompt("New member name:");
-  const pass = prompt("Password:");
-
-  if(!name || !pass){
-    alert("Name aur password required");
-    return;
-  }
-
-  try{
-    const side = prompt("Type LEFT or RIGHT").toLowerCase();
-
-if(!["left","right"].includes(side)){
-  alert("LEFT ya RIGHT likho");
-  return;
-}
-
-// Parent data lao
-const parentSnap = await treeCol.doc(parentId).get();
-const parent = parentSnap.data();
-
-if(parent[side + "Id"]){
-  alert(side.toUpperCase() + " side already filled");
-  return;
-}
-
-// 1️⃣ Child add
-async function joinMember(parentId, side){
-
-  const name = prompt("New member name:");
-  const pass = prompt("Password:");
-
-  if(!name || !pass){
-    alert("Name aur password required");
-    return;
-  }
-
-  try{
-    const parentSnap = await treeCol.doc(parentId).get();
-    const parent = parentSnap.data();
-
-    if(parent[side + "Id"]){
-      alert(side.toUpperCase() + " side already filled");
-      return;
-    }
-
-    // 1️⃣ child create
     const childRef = await treeCol.add({
-      name: name,
+      name,
       password: pass,
-      parentId: parentId,
+      parentId,
       leftId: null,
       rightId: null,
       monthsPaid: 0,
       isActive: false
     });
 
-    // 2️⃣ parent update
     await treeCol.doc(parentId).update({
-      [side + "Id"]: childRef.id
+      [side+"Id"]: childRef.id
     });
 
     alert("Member added on " + side.toUpperCase());
-
-  }catch(err){
-    alert("Error: " + err.message);
+  }catch(e){
+    alert("Error: " + e.message);
   }
 }
-
-// 2️⃣ Parent update (LEFT / RIGHT link)
-await treeCol.doc(parentId).update({
-  [side + "Id"]: childRef.id
-});
-
-    alert("Member successfully joined");
-
-  }catch(err){
-    alert("Error: " + err.message);
-  }
-  }
 </script>
 
 </body>
