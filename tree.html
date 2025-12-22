@@ -29,8 +29,24 @@ body{
   display:flex;
   justify-content:center;
   padding:10px;
-  overflow-x:auto;
+  overflow:auto;
+  transform-origin: top center;
+  transition: transform 0.3s ease;
 }
+
+/* auto scale by depth */
+.tree.level-1{ transform: scale(1); }
+.tree.level-2{ transform: scale(0.92); }
+.tree.level-3{ transform: scale(0.85); }
+.tree.level-4{ transform: scale(0.78); }
+.tree.level-5{ transform: scale(0.7); }
+
+@media(max-width:600px){
+  .tree.level-3{ transform: scale(0.75); }
+  .tree.level-4{ transform: scale(0.65); }
+  .tree.level-5{ transform: scale(0.55); }
+}
+
 ul{
   position:relative;
   padding-top:16px;
@@ -91,95 +107,6 @@ li:only-child::after{ display:none; }
 }
 .left{background:#16a34a;color:#fff}
 .right{background:#0284c7;color:#fff}
-  /* ===== AUTO TREE SCALE ===== */
-.tree{
-  transform-origin: top center;
-  transition: transform 0.3s ease;
-}
-
-/* Depth based size */
-.tree.level-1{ transform: scale(1); }
-.tree.level-2{ transform: scale(0.92); }
-.tree.level-3{ transform: scale(0.85); }
-.tree.level-4{ transform: scale(0.78); }
-.tree.level-5{ transform: scale(0.7); }
-
-/* Mobile extra shrink */
-@media(max-width:600px){
-  .tree.level-3{ transform: scale(0.75); }
-  .tree.level-4{ transform: scale(0.65); }
-  .tree.level-5{ transform: scale(0.55); }
-}
-  /* ===== STEP 5 : ZOOM + DRAG LOGIC ===== */
-let scale = 1;
-let posX = 0;
-let posY = 0;
-let isDragging = false;
-let startX, startY;
-
-const treeEl = document.getElementById("treeContainer");
-
-function applyTransform(){
-  treeEl.style.transform =
-    `translate(${posX}px, ${posY}px) scale(${scale})`;
-}
-
-function zoomIn(){
-  scale += 0.1;
-  applyTransform();
-}
-
-function zoomOut(){
-  scale = Math.max(0.3, scale - 0.1);
-  applyTransform();
-}
-
-function resetZoom(){
-  scale = 1;
-  posX = 0;
-  posY = 0;
-  applyTransform();
-}
-
-/* ===== DRAG SUPPORT ===== */
-treeEl.addEventListener("mousedown", e=>{
-  isDragging = true;
-  treeEl.classList.add("dragging");
-  startX = e.clientX - posX;
-  startY = e.clientY - posY;
-});
-
-document.addEventListener("mousemove", e=>{
-  if(!isDragging) return;
-  posX = e.clientX - startX;
-  posY = e.clientY - startY;
-  applyTransform();
-});
-
-document.addEventListener("mouseup", ()=>{
-  isDragging = false;
-  treeEl.classList.remove("dragging");
-});
-
-/* ===== MOBILE TOUCH ===== */
-treeEl.addEventListener("touchstart", e=>{
-  if(e.touches.length === 1){
-    isDragging = true;
-    startX = e.touches[0].clientX - posX;
-    startY = e.touches[0].clientY - posY;
-  }
-});
-
-treeEl.addEventListener("touchmove", e=>{
-  if(!isDragging) return;
-  posX = e.touches[0].clientX - startX;
-  posY = e.touches[0].clientY - startY;
-  applyTransform();
-});
-
-treeEl.addEventListener("touchend", ()=>{
-  isDragging = false;
-});
 </style>
 </head>
 
@@ -192,95 +119,22 @@ treeEl.addEventListener("touchend", ()=>{
 
 <div class="tree" id="treeContainer"></div>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<!-- ===== STEP 5B : DRAG TREE ===== -->
+
 <script>
-const treeEl = document.getElementById("treeContainer");
-
-let isDragging = false;
-let startX = 0, startY = 0;
-let currentX = 0, currentY = 0;
-
-treeEl.addEventListener("mousedown", e => {
-  isDragging = true;
-  treeEl.classList.add("dragging");
-  startX = e.clientX - currentX;
-  startY = e.clientY - currentY;
-});
-
-document.addEventListener("mousemove", e => {
-  if(!isDragging) return;
-  currentX = e.clientX - startX;
-  currentY = e.clientY - startY;
-  treeEl.style.transform = `translate(${currentX}px, ${currentY}px)`;
-});
-
-document.addEventListener("mouseup", () => {
-  isDragging = false;
-  treeEl.classList.remove("dragging");
-});
-
-/* Mobile touch support */
-treeEl.addEventListener("touchstart", e => {
-  const t = e.touches[0];
-  isDragging = true;
-  startX = t.clientX - currentX;
-  startY = t.clientY - currentY;
-});
-
-treeEl.addEventListener("touchmove", e => {
-  if(!isDragging) return;
-  const t = e.touches[0];
-  currentX = t.clientX - startX;
-  currentY = t.clientY - startY;
-  treeEl.style.transform = `translate(${currentX}px, ${currentY}px)`;
-});
-
-treeEl.addEventListener("touchend", () => {
-  isDragging = false;
-});
-</script>
-<script>
-  <script>
-// ===== STEP 6A : FIND NEXT EMPTY SLOT =====
-function findEmptySlot(startId){
-  let queue = [startId];
-
-  while(queue.length){
-    const id = queue.shift();
-    const n = nodes[id];
-    if(!n) continue;
-
-    if(!n.leftId){
-      return { parentId: id, side: "left" };
-    }
-    if(!n.rightId){
-      return { parentId: id, side: "right" };
-    }
-
-    queue.push(n.leftId);
-    queue.push(n.rightId);
-  }
-  return null;
-}
-</script>
-/* ================= ADMIN CHECK ================= */
-const params = new URLSearchParams(window.location.search);
+// ===== ADMIN CHECK =====
+const params = new URLSearchParams(location.search);
 const ROOT_ID = params.get("root");
 const IS_ADMIN = params.get("admin") === "1";
 
 if(!IS_ADMIN){
-  document.body.innerHTML = `
-    <div style="padding:30px;text-align:center">
-      <h3>Access Denied</h3>
-      <p>Tree sirf Admin ke liye hai</p>
-    </div>`;
+  document.body.innerHTML =
+    "<h3 style='padding:30px;text-align:center'>Access Denied</h3>";
   throw new Error("Not Admin");
 }
 
-/* ================= FIREBASE ================= */
+// ===== FIREBASE =====
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -291,118 +145,93 @@ const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
 
 let nodes = {};
-// ===== STEP 2A : FIND TREE DEPTH =====
+const treeEl = document.getElementById("treeContainer");
+
+// ===== FIND TREE DEPTH =====
 function getTreeDepth(id){
   if(!nodes[id]) return 0;
+  return 1 + Math.max(
+    nodes[id].leftId ? getTreeDepth(nodes[id].leftId) : 0,
+    nodes[id].rightId ? getTreeDepth(nodes[id].rightId) : 0
+  );
+}
 
-  let leftDepth = 0;
-  let rightDepth = 0;
-
-  if(nodes[id].leftId){
-    leftDepth = getTreeDepth(nodes[id].leftId);
+// ===== FIND NEXT EMPTY SLOT =====
+function findEmptySlot(startId){
+  let q=[startId];
+  while(q.length){
+    let id=q.shift(), n=nodes[id];
+    if(!n.leftId) return {parentId:id, side:"left"};
+    if(!n.rightId) return {parentId:id, side:"right"};
+    q.push(n.leftId,n.rightId);
   }
+  return null;
+}
 
-  if(nodes[id].rightId){
-    rightDepth = getTreeDepth(nodes[id].rightId);
-  }
-
-  return Math.max(leftDepth, rightDepth) + 1;
-  }
-/* ================= LOAD DATA ================= */
+// ===== LOAD TREE =====
 treeCol.onSnapshot(snap=>{
-  nodes = {};
+  nodes={};
   snap.forEach(d=>nodes[d.id]=d.data());
   renderTree();
 });
 
-/* ================= RENDER TREE ================= */
+// ===== RENDER TREE =====
 function renderTree(){
-
   if(!ROOT_ID || !nodes[ROOT_ID]){
-    treeContainer.innerHTML =
-      "<p style='padding:10px'>Tree not found</p>";
+    treeEl.innerHTML="Tree not found";
     return;
   }
+  const depth=getTreeDepth(ROOT_ID);
+  treeEl.className="tree";
+  if(depth>=2) treeEl.classList.add("level-2");
+  if(depth>=3) treeEl.classList.add("level-3");
+  if(depth>=4) treeEl.classList.add("level-4");
+  if(depth>=5) treeEl.classList.add("level-5");
 
-  // ===== STEP 2B : AUTO SHRINK TREE =====
-  const depth = getTreeDepth(ROOT_ID);
-
-  treeContainer.className = "tree"; // reset classes
-
-  if(depth >= 2) treeContainer.classList.add("level-2");
-  if(depth >= 3) treeContainer.classList.add("level-3");
-  if(depth >= 4) treeContainer.classList.add("level-4");
-  if(depth >= 5) treeContainer.classList.add("level-5");
-
-  treeContainer.innerHTML = buildNode(ROOT_ID);
+  treeEl.innerHTML=buildNode(ROOT_ID);
 }
 
-/* ================= BUILD NODE ================= */
+// ===== BUILD NODE =====
 function buildNode(id){
-  const n = nodes[id];
+  const n=nodes[id];
   if(!n) return "";
-
-  let html = `
-  <ul><li>
-    <div class="node ${!n.parentId ? 'root' : ''}">
-      <b>${n.name}</b><br>
-      <small>ID: ${id.slice(0,6)}</small>
-
-      <div class="actions">
-        <button class="left" onclick="joinMember('${id}','left')">LEFT</button>
-        <button class="right" onclick="joinMember('${id}','right')">RIGHT</button>
-      </div>
-    </div>`;
-
-  if(n.leftId || n.rightId){
-    html += "<ul>";
-    if(n.leftId) html += `<li>${buildNode(n.leftId)}</li>`;
-    if(n.rightId) html += `<li>${buildNode(n.rightId)}</li>`;
-    html += "</ul>";
+  let html=`<ul><li>
+  <div class="node ${!n.parentId?'root':''}">
+    <b>${n.name}</b><br>
+    <small>${id.slice(0,6)}</small>
+    <div class="actions">
+      <button class="left" onclick="joinMember('${id}','left')">LEFT</button>
+      <button class="right" onclick="joinMember('${id}','right')">RIGHT</button>
+    </div>
+  </div>`;
+  if(n.leftId||n.rightId){
+    html+="<ul>";
+    if(n.leftId) html+=`<li>${buildNode(n.leftId)}</li>`;
+    if(n.rightId) html+=`<li>${buildNode(n.rightId)}</li>`;
+    html+="</ul>";
   }
-
-  html += "</li></ul>";
-  return html;
+  return html+"</li></ul>";
 }
 
-/* ================= JOIN MEMBER (ANYWHERE) ================= */
-async function joinMember(parentId, side){
-  const parent = nodes[parentId];
+// ===== JOIN MEMBER =====
+async function joinMember(parentId,side){
+  let target=!nodes[parentId][side+"Id"]
+    ?{parentId,side}
+    :findEmptySlot(parentId);
 
-  if(parent[side + "Id"]){
-    alert(side.toUpperCase() + " side already filled");
-    return;
-  }
+  if(!target) return alert("Tree full");
 
-  const name = prompt("New member name:");
-  const pass = prompt("Password:");
+  const name=prompt("Name?");
+  const pass=prompt("Password?");
+  if(!name||!pass) return;
 
-  if(!name || !pass){
-    alert("Name & password required");
-    return;
-  }
-
-  try{
-    const childRef = await treeCol.add({
-      name,
-      password: pass,
-      parentId,
-      leftId: null,
-      rightId: null,
-      monthsPaid: 0,
-      isActive: false
-    });
-
-    await treeCol.doc(parentId).update({
-      [side + "Id"]: childRef.id
-    });
-
-    alert("Member added on " + side.toUpperCase());
-  }catch(e){
-    alert("Error: " + e.message);
-  }
+  const child=await treeCol.add({
+    name,password:pass,parentId:target.parentId,
+    leftId:null,rightId:null
+  });
+  await treeCol.doc(target.parentId)
+    .update({[target.side+"Id"]:child.id});
 }
 </script>
-
 </body>
 </html>
