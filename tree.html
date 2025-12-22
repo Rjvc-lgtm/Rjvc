@@ -213,7 +213,42 @@ function buildNode(id){
   return html+"</li></ul>";
 }
 
-// ===== JOIN MEMBER =====
+// ===== STEP 6B : JOIN MEMBER (AUTO + MANUAL) =====
+async function joinMember(parentId, side){
+
+  // agar side khali hai to wahi join
+  let target = !nodes[parentId][side + "Id"]
+    ? { parentId, side }
+    : findEmptySlot(parentId); // warna auto empty slot
+
+  if(!target){
+    alert("Tree full, no empty slot");
+    return;
+  }
+
+  const name = prompt("Name?");
+  const pass = prompt("Password?");
+  if(!name || !pass) return;
+
+  try{
+    const child = await treeCol.add({
+      name: name,
+      password: pass,
+      parentId: target.parentId,
+      leftId: null,
+      rightId: null
+    });
+
+    await treeCol.doc(target.parentId).update({
+      [target.side + "Id"]: child.id
+    });
+
+    alert("Member added on " + target.side.toUpperCase());
+  }catch(e){
+    alert("Error: " + e.message);
+  }
+    }
+  // ===== JOIN MEMBER =====
 async function joinMember(parentId,side){
   let target=!nodes[parentId][side+"Id"]
     ?{parentId,side}
