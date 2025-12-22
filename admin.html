@@ -1,40 +1,50 @@
-<!DOCTYPE html><html lang="hi">
+<!DOCTYPE html>
+<html lang="hi">
 <head>
 <meta charset="UTF-8" />
-<title>RJVC Binary Tree Admin</title>
+<title>RJVC Admin Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-*{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body{margin:0;background:#f3f4f6;color:#111827}
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:#f3f4f6}
 .wrap{max-width:1200px;margin:auto;padding:14px}
-.panel{background:#fff;border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.1);padding:18px;margin-bottom:18px}
+.panel{background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
 .flex{display:flex;align-items:center}
 .between{justify-content:space-between}
 .btn{border:none;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
 .btn-primary{background:#2563eb;color:#fff}
-.btn-secondary{background:#e5e7eb;color:#111827}
+.btn-secondary{background:#e5e7eb}
 .btn-danger{background:#dc2626;color:#fff}
 .btn-sm{padding:6px 10px;font-size:12px}
 .small{font-size:12px;color:#6b7280}
-input{width:100%;padding:10px;border-radius:12px;border:1px solid #d1d5db}
-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
-th,td{padding:6px 4px;border-bottom:1px solid #e5e7eb;text-align:left}
-th{font-size:12px;color:#6b7280;text-transform:uppercase}
+input{width:100%;padding:10px;border-radius:10px;border:1px solid #d1d5db}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px;border-bottom:1px solid #e5e7eb;text-align:left}
+th{font-size:11px;color:#6b7280}
 </style>
 </head>
-<body><!-- LOGIN --><div id="loginPage" class="wrap">
-  <div class="panel" style="max-width:420px;margin:60px auto">
-    <h2>Admin Login</h2>
-    <input id="adminId" placeholder="admin" />
-    <input id="adminPass" type="password" placeholder="1234" style="margin-top:8px" />
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="wrap">
+  <div class="panel" style="max-width:380px;margin:80px auto">
+    <h3>Admin Login</h3>
+    <input id="adminId" placeholder="admin">
+    <input id="adminPass" type="password" placeholder="1234" style="margin-top:8px">
     <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="login()">Login</button>
-    <div id="loginError" class="small" style="color:#dc2626;display:none">Wrong ID / Password</div>
+    <div id="loginError" class="small" style="color:red;display:none">Wrong login</div>
   </div>
-</div><!-- ADMIN --><div id="adminPage" style="display:none">
-  <div class="wrap"><div class="panel flex between">
+</div>
+
+<!-- ADMIN -->
+<div id="adminPage" style="display:none">
+<div class="wrap">
+
+<div class="panel flex between">
   <div>
     <h2>RJVC Admin Panel</h2>
-    <div class="small">Tree • Wallet • Withdraw Approval</div>
+    <div class="small">Tree • Wallet • Withdraw</div>
   </div>
   <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
 </div>
@@ -43,86 +53,46 @@ th{font-size:12px;color:#6b7280;text-transform:uppercase}
 <div class="panel">
   <h3>Create Root Customer</h3>
   <div class="flex" style="gap:10px">
-    <input id="rootName" placeholder="Customer Name" />
-    <input id="rootPass" placeholder="Password" />
+    <input id="rootName" placeholder="Customer Name">
+    <input id="rootPass" placeholder="Password">
   </div>
   <button class="btn btn-primary" style="margin-top:10px" onclick="createRoot()">Add Root</button>
 </div>
 
 <!-- CUSTOMER LIST -->
 <div class="panel">
-  <h3>Customer List</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Name / Password</th>
-        <th>Cycles</th>
-        <th>Commission</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="customerTable"></tbody>
-  </table>
-</div>
-<!-- ================= WITHDRAWAL REQUESTS (ADMIN) ================= -->
-<div class="panel">
-  <h3>Withdrawal Requests (Pending)</h3>
-  <p class="small">
-    यहाँ customer की withdrawal requests दिखेंगी।  
-    Approve करने पर bonus wallet से amount कटेगा।
-  </p>
-
-  <div style="overflow-x:auto;margin-top:10px;">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Customer</th>
-          <th>Amount (₹)</th>
-          <th>Bank / UPI</th>
-          <th>Date</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="adminWithdrawTable">
-        <tr>
-          <td colspan="6" class="small">Loading...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-<!-- ================= END WITHDRAWAL REQUESTS ================= -->
-<!-- WITHDRAW APPROVAL -->
-<div class="panel">
-  <h3>Withdrawal Requests (Admin Approval)</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Customer</th>
-        <th>Amount</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    </tbody>
-  </table>
+<h3>Customer List</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Name</th>
+<th>Cycles</th>
+<th>Commission</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="customerTable"></tbody>
+</table>
 </div>
 
-  </div>
-</div><!-- Firebase --><script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script><script>
+</div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
 firebase.initializeApp({
-  apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
-  authDomain: "rjvc-plan.firebaseapp.com",
-  projectId: "rjvc-plan"
+  apiKey:"AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+  authDomain:"rjvc-plan.firebaseapp.com",
+  projectId:"rjvc-plan"
 });
 
 const db = firebase.firestore();
 const treeCol = db.collection("TreeNodes");
 const usersCol = db.collection("Users");
-const withdrawCol = db.collection("Withdrawals");
 
 let nodes = {};
 
@@ -131,328 +101,113 @@ function login(){
     loginPage.style.display="none";
     adminPage.style.display="block";
     loadData();
-    loadWithdrawRequests();
   }else loginError.style.display="block";
 }
 function logout(){location.reload()}
 
 function loadData(){
-  treeCol.onSnapshot(snap=>{
+  treeCol.onSnapshot(s=>{
     nodes={};
-    snap.forEach(d=>nodes[d.id]=d.data());
+    s.forEach(d=>nodes[d.id]=d.data());
     renderTable();
   });
 }
 
 function renderTable(){
   customerTable.innerHTML="";
-  let i = 1;
-
+  let i=1;
   Object.entries(nodes).forEach(([id,n])=>{
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${i++}</td>
-
-      <td>
-        <b>${n.name || ""}</b><br>
-        <span class="small">Pass: ${n.password || "-"}</span>
-      </td>
-
-      <td>${n.monthsPaid || 1}</td>
-
-      <td>₹${getLevelIncome(id)}</td>
-
-      <td>
-        <button class="btn btn-sm btn-secondary"
-  onclick="openTree('${id}', true)">
-  🌳 Tree
-</button>
-<button class="btn btn-sm btn-primary"
-  onclick="openTree('${id}', true)">
-  ➕ Add Member
-</button>
-        <button class="btn btn-sm btn-danger"
-  onclick="deleteCustomer('${id}')">
-  🗑 Delete
-</button>
-<button class="btn btn-sm btn-primary"
-  onclick="addCycle('${id}')"
-  ₹20 Paid
-</button>
-      </td>
-    `;
-
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+<td>${i++}</td>
+<td><b>${n.name}</b><br><span class="small">${n.password||""}</span></td>
+<td>${n.monthsPaid||0}</td>
+<td>₹${getCommission(id)}</td>
+<td>
+<button class="btn btn-sm btn-secondary" onclick="openTree('${id}')">🌳 Tree</button>
+<button class="btn btn-sm btn-primary" onclick="addCycle('${id}')">₹20 Paid</button>
+<button class="btn btn-sm btn-danger" onclick="deleteCustomer('${id}')">🗑 Delete</button>
+</td>`;
     customerTable.appendChild(tr);
   });
 }
-  // ================= STEP 4.3 : SAVE COMMISSION TO FIREBASE =================
-async function syncCommission(id){
-  const income = getLevelIncome(id);
 
-  try{
-    await treeCol.doc(id).update({
-      commission: income
-    });
-  }catch(e){
-    console.log("Commission update error", e.message);
-  }
-  }
-  // ================= BINARY LEVEL SYSTEM =================
-function getLevel(id){
-  let count = 0;
-
-  function countDownline(pid){
-    Object.entries(nodes).forEach(([cid, node])=>{
-      if(node.parentId === pid){
-        count++;
-        countDownline(cid);
-      }
-    });
-  }
-
-  countDownline(id);
-
-  if(count < 2) return 0;
-  return Math.min(10, Math.floor(Math.log2(count)));
-  }
-  // ================= STEP 4.2 : LEVEL AMOUNT SYSTEM =================
-
-const LEVEL_AMOUNT = {
-  1: 100,
-  2: 200,
-  3: 400,
-  4: 800,
-  5: 1600,
-  6: 3200,
-  7: 6400,
-  8: 12800,
-  9: 25600,
-  10: 51200
-};
-
-function membersRequired(level){
-  return Math.pow(2, level);
+/* ---------- SAFE COMMISSION ---------- */
+function getCommission(id){
+  if(!nodes[id] || nodes[id].isActive!==true) return 0;
+  let count=0;
+  Object.values(nodes).forEach(n=>{
+    if(n.parentId===id && n.isActive===true) count++;
+  });
+  return Math.floor(count/2)*10;
 }
 
-function getDownlineCount(id){
-  let total = 0;
-
-  function walk(pid){
-    Object.entries(nodes).forEach(([cid, node])=>{
-      if(node.parentId === pid){
-        total++;
-        walk(cid);
-      }
-    });
-  }
-
-  walk(id);
-  return total;
+/* ---------- TREE ---------- */
+function openTree(id){
+  window.open("tree.html?root="+id+"&admin=1","_blank");
 }
 
-function getLevelIncome(id){
-
-  // ❌ agar customer ne ₹20 nahi diya (inactive)
-  if(!nodes[id] || nodes[id].isActive !== true){
-    return 0;
-  }
-
-  let income = 0;
-
-  const LEVEL_COMMISSION = {
-    1: 10,
-    2: 10,
-    3: 10,
-    4: 10,
-    5: 9,
-    6: 8,
-    7: 7,
-    8: 6,
-    9: 5,
-    10: 4,
-    11: 3
-  };
-
-  function walk(pid, level){
-    if(level > 11) return;
-
-    let activeChildren = [];
-
-    Object.entries(nodes).forEach(([cid, node])=>{
-      if(node.parentId === pid && node.isActive === true){
-        activeChildren.push(cid);
-      }
-    });
-
-    const pairs = Math.floor(activeChildren.length / 2);
-
-    if(pairs > 0){
-      income += pairs * LEVEL_COMMISSION[level];
-    }
-
-    activeChildren.forEach(cid=>{
-      walk(cid, level + 1);
-    });
-  }
-
-  walk(id, 1);
-  return income;
+/* ---------- DELETE ---------- */
+async function deleteCustomer(id){
+  if(!confirm("Delete customer + downline?")) return;
+  await treeCol.doc(id).delete();
+  await usersCol.doc(id).delete();
+  alert("Deleted");
 }
-// ================= STEP 3-A =================
-function openTree(id, adminAdd=false){
-  let url = "tree.html?root=" + id;
-  if(adminAdd){
-    url += "&admin=1";
-  }
-  window.open(url, "_blank");
-}
-  // ================= STEP 4.1 : COUNT TOTAL DOWNLINE =================
-function countDownlineForDelete(rootId){
-  let count = 0;
 
-  function find(pid){
-    Object.entries(nodes).forEach(([cid, node])=>{
-      if(node.parentId === pid){
-        count++;
-        find(cid);
-      }
-    });
-  }
-
-  find(rootId);
-  return count + 1; // root + all children
-}
-// ================= STEP 3-B =================
-    // =============== FINAL DELETE CUSTOMER ===============
-// ================= FINAL DELETE (MAIN + ALL DOWNLINE) =================
-async function deleteCustomer(rootId){
-
-  if(!confirm("Are you sure? Customer aur uski puri downline delete hogi")){
-    return;
-  }
-
-  let idsToDelete = [];
-
-  function findChildren(pid){
-    Object.entries(nodes).forEach(([cid, node])=>{
-      if(node.parentId === pid){
-        idsToDelete.push(cid);
-        findChildren(cid);
-      }
-    });
-  }
-
-  // root bhi include
-  idsToDelete.push(rootId);
-  findChildren(rootId);
-
-  try{
-    for(const id of idsToDelete){
-      // TreeNodes delete
-      await treeCol.doc(id).delete();
-
-      // Users delete
-      await usersCol.doc(id).delete();
-    }
-
-    alert("Customer aur uski puri downline delete ho gayi");
-
-  }catch(err){
-    alert("Delete error: " + err.message);
-  }
-  }
-// ================= STEP 2 : ADMIN PAYMENT RECEIVED =================
+/* ---------- ₹20 PAID (AUTO FIX USER) ---------- */
 async function addCycle(id){
-  const ref = usersCol.doc(id);
-  const snap = await ref.get();
+  const ref=usersCol.doc(id);
+  let snap=await ref.get();
 
+  // 🔥 AUTO CREATE USER IF MISSING
   if(!snap.exists){
-    return alert("User not found");
+    const t=nodes[id];
+    await ref.set({
+      name:t.name,
+      password:t.password||"",
+      bonusWallet:0,
+      commissionWallet:0,
+      cycleCount:0,
+      isActive:false,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    snap=await ref.get();
   }
 
-  const data = snap.data();
-  const cycle = data.cycleCount || 0;
-
+  const c=snap.data().cycleCount||0;
   await ref.update({
-    cycleCount: cycle + 1,
-    isActive: true,
-    lastPaidAt: firebase.firestore.FieldValue.serverTimestamp()
+    cycleCount:c+1,
+    isActive:true,
+    lastPaidAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  await syncCommission(id);
-  
-  alert("₹20 payment received. Cycle activated.");
+  await treeCol.doc(id).update({isActive:true,monthsPaid:(nodes[id].monthsPaid||0)+1});
+  alert("₹20 received & activated");
 }
 
+/* ---------- CREATE ROOT ---------- */
 async function createRoot(){
-  if(!rootName.value || !rootPass.value){
-    return alert("Fill both");
-  }
-
-  try{
-    // 1️⃣ TreeNodes में add
-    const docRef = await treeCol.add({
-      name: rootName.value,
-      password: rootPass.value,
-      monthsPaid: 1,
-      commission: 0,
-      parentId: null
-    });
-
-    // 2️⃣ Users collection में SAME ID से add  ✅ (Step 3.1)
-    await usersCol.doc(docRef.id).set({
-      name: rootName.value,
-      password: rootPass.value,
-      bonusWallet: 0,
-      commissionWallet: 0,
-      isBlocked: false,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    alert("Root customer created successfully");
-
-    rootName.value="";
-    rootPass.value="";
-
-  }catch(err){
-    alert("Error: " + err.message);
-  }
-  }
-
-/* ================= WITHDRAW APPROVAL ================= */
-function loadWithdrawRequests(){
-  withdrawCol.orderBy("createdAt","desc").onSnapshot(snap=>{
-    adminWithdrawTable.innerHTML="";
-    snap.forEach(doc=>{
-      const d=doc.data();
-      const tr=document.createElement("tr");
-      const date=d.createdAt?.toDate?d.createdAt.toDate().toLocaleString("en-IN"):"--";
-      tr.innerHTML=`
-        <td>${date}</td>
-        <td>${d.customerName||""}</td>
-        <td>₹${d.amount||0}</td>
-        <td>${d.status}</td>
-        <td>${d.status==="pending"?
-          `<button onclick=\"approveWithdraw('${doc.id}','${d.userId}',${d.amount})\">Approve</button>
-           <button onclick=\"rejectWithdraw('${doc.id}')\">Reject</button>`:"-"}</td>`;
-      adminWithdrawTable.appendChild(tr);
-    });
+  if(!rootName.value||!rootPass.value) return alert("Fill both");
+  const doc=await treeCol.add({
+    name:rootName.value,
+    password:rootPass.value,
+    parentId:null,
+    monthsPaid:0,
+    isActive:false
   });
+  await usersCol.doc(doc.id).set({
+    name:rootName.value,
+    password:rootPass.value,
+    bonusWallet:0,
+    commissionWallet:0,
+    cycleCount:0,
+    isActive:false,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  alert("Root created");
+  rootName.value="";rootPass.value="";
 }
-
-async function approveWithdraw(id,userId,amt){
-  if(!confirm("Approve withdrawal?"))return;
-  const u=await usersCol.doc(userId).get();
-  const bal=u.data().bonusWallet||0;
-  if(amt>bal) return alert("Insufficient bonus");
-  await usersCol.doc(userId).update({bonusWallet:bal-amt});
-  await withdrawCol.doc(id).update({status:"approved"});
-}
-
-async function rejectWithdraw(id){
-  if(!confirm("Reject withdrawal?"))return;
-  await withdrawCol.doc(id).update({status:"rejected"});
-}
-</script></body>
+</script>
+</body>
 </html>
