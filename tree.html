@@ -33,7 +33,18 @@ body{
   transform-origin: top center;
   transition: transform 0.3s ease;
 }
+/* ===== STEP 2 : TREE WRAPPER SCROLL ===== */
+.tree-wrapper{
+  width:100%;
+  height:calc(100vh - 60px);
+  overflow:auto;
+}
 
+/* Tree minimum size so it never cuts */
+.tree{
+  min-width:900px;
+  min-height:600px;
+}
 /* auto scale by depth */
 .tree.level-1{ transform: scale(1); }
 .tree.level-2{ transform: scale(0.92); }
