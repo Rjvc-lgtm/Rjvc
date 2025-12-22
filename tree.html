@@ -195,7 +195,53 @@ treeEl.addEventListener("touchend", ()=>{
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<!-- ===== STEP 5B : DRAG TREE ===== -->
+<script>
+const treeEl = document.getElementById("treeContainer");
 
+let isDragging = false;
+let startX = 0, startY = 0;
+let currentX = 0, currentY = 0;
+
+treeEl.addEventListener("mousedown", e => {
+  isDragging = true;
+  treeEl.classList.add("dragging");
+  startX = e.clientX - currentX;
+  startY = e.clientY - currentY;
+});
+
+document.addEventListener("mousemove", e => {
+  if(!isDragging) return;
+  currentX = e.clientX - startX;
+  currentY = e.clientY - startY;
+  treeEl.style.transform = `translate(${currentX}px, ${currentY}px)`;
+});
+
+document.addEventListener("mouseup", () => {
+  isDragging = false;
+  treeEl.classList.remove("dragging");
+});
+
+/* Mobile touch support */
+treeEl.addEventListener("touchstart", e => {
+  const t = e.touches[0];
+  isDragging = true;
+  startX = t.clientX - currentX;
+  startY = t.clientY - currentY;
+});
+
+treeEl.addEventListener("touchmove", e => {
+  if(!isDragging) return;
+  const t = e.touches[0];
+  currentX = t.clientX - startX;
+  currentY = t.clientY - startY;
+  treeEl.style.transform = `translate(${currentX}px, ${currentY}px)`;
+});
+
+treeEl.addEventListener("touchend", () => {
+  isDragging = false;
+});
+</script>
 <script>
 /* ================= ADMIN CHECK ================= */
 const params = new URLSearchParams(window.location.search);
