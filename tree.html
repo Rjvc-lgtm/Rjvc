@@ -91,6 +91,25 @@ li:only-child::after{ display:none; }
 }
 .left{background:#16a34a;color:#fff}
 .right{background:#0284c7;color:#fff}
+  /* ===== AUTO TREE SCALE ===== */
+.tree{
+  transform-origin: top center;
+  transition: transform 0.3s ease;
+}
+
+/* Depth based size */
+.tree.level-1{ transform: scale(1); }
+.tree.level-2{ transform: scale(0.92); }
+.tree.level-3{ transform: scale(0.85); }
+.tree.level-4{ transform: scale(0.78); }
+.tree.level-5{ transform: scale(0.7); }
+
+/* Mobile extra shrink */
+@media(max-width:600px){
+  .tree.level-3{ transform: scale(0.75); }
+  .tree.level-4{ transform: scale(0.65); }
+  .tree.level-5{ transform: scale(0.55); }
+}
 </style>
 </head>
 
