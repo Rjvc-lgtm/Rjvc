@@ -128,7 +128,17 @@ li:only-child::after{ display:none; }
 const params = new URLSearchParams(location.search);
 const IS_ADMIN = params.get("admin") === "1";
 const COMPANY_ID = params.get("company");
-const ROOT_ID = params.get("root");
+let ROOT_ID = null;
+
+function findRootNode() {
+  for (let id in nodes) {
+    const n = nodes[id];
+    if (n.parentId === null || n.parentId === "" || !n.parentId) {
+      return id;
+    }
+  }
+  return null;
+}
 
 if(!IS_ADMIN || !COMPANY_ID || !ROOT_ID){
   document.body.innerHTML="<h3 style='padding:30px;text-align:center'>Invalid URL</h3>";
