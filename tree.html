@@ -316,25 +316,6 @@ async function joinMember(parentId, side){
     alert("Error: " + e.message);
   }
     }
-  // ===== JOIN MEMBER =====
-async function joinMember(parentId,side){
-  let target=!nodes[parentId][side+"Id"]
-    ?{parentId,side}
-    :findEmptySlot(parentId);
-
-  if(!target) return alert("Tree full");
-
-  const name=prompt("Name?");
-  const pass=prompt("Password?");
-  if(!name||!pass) return;
-
-  const child=await treeCol.add({
-    name,password:pass,parentId:target.parentId,
-    leftId:null,rightId:null
-  });
-  await treeCol.doc(target.parentId)
-    .update({[target.side+"Id"]:child.id});
-}
 </script>
 </body>
 </html>
