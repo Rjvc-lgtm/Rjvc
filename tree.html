@@ -171,13 +171,6 @@ treeCol.onSnapshot(snap=>{
 });
 
 /* ================= RENDER ================= */
-function renderTree(){
-  if(!nodes[ROOT_ID]){
-    treeEl.innerHTML = "<h3>Root not found</h3>";
-    return;
-  }
-  treeEl.innerHTML = buildNode(ROOT_ID);
-}
 
 /* ================= BUILD NODE ================= */
 function buildNode(id){
