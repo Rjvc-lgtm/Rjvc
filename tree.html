@@ -127,23 +127,14 @@ li:only-child::after{ display:none; }
 /* ================= PARAMS ================= */
 const params = new URLSearchParams(location.search);
 const IS_ADMIN = params.get("admin") === "1";
-const COMPANY_ID = params.get("company");
-let ROOT_ID = null;
+const COMPANY_ID = params.get("company") || "main";
+const IS_ADMIN = params.get("admin") === "1";
 
-function findRootNode() {
-  for (let id in nodes) {
-    const n = nodes[id];
-    if (n.parentId === null || n.parentId === "" || !n.parentId) {
-      return id;
-    }
+if(!IS_ADMIN){
+  document.body.innerHTML =
+    "<h3 style='padding:30px;text-align:center'>Access Denied</h3>";
+  throw "Not Admin";
   }
-  return null;
-}
-
-if(!IS_ADMIN || !COMPANY_ID || !ROOT_ID){
-  document.body.innerHTML="<h3 style='padding:30px;text-align:center'>Invalid URL</h3>";
-  throw "Invalid URL";
-}
 
 /* ================= FIREBASE ================= */
 firebase.initializeApp({
