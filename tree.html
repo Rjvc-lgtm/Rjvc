@@ -12,10 +12,8 @@ body{
   color:#e5e7eb;
   font-family:system-ui;
 }
-
-/* HEADER */
 .header{
-  padding:8px 12px;
+  padding:10px 14px;
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -25,49 +23,29 @@ body{
   color:#fff;
   border:none;
   border-radius:20px;
-  padding:6px 12px;
+  padding:6px 14px;
 }
-
-/* WRAPPER */
 .tree-wrapper{
   width:100%;
-  height:calc(100vh - 50px);
+  height:calc(100vh - 60px);
   overflow:auto;
 }
-
-/* TREE */
 .tree{
   display:flex;
   justify-content:center;
-  padding:80px 20px;   /* 🔥 top space fix */
+  padding:80px 20px;
   min-width:900px;
   min-height:600px;
-  transform-origin: top center;
-  transition: transform 0.25s ease;
+  transform-origin:top center;
   cursor:grab;
 }
-.tree.dragging{ cursor:grabbing; }
-
-/* AUTO SCALE */
-.tree.level-1{ transform:scale(1); }
-.tree.level-2{ transform:scale(0.92); }
-.tree.level-3{ transform:scale(0.85); }
-.tree.level-4{ transform:scale(0.78); }
-.tree.level-5{ transform:scale(0.7); }
-
-@media(max-width:600px){
-  .tree.level-3{ transform:scale(0.75); }
-  .tree.level-4{ transform:scale(0.65); }
-  .tree.level-5{ transform:scale(0.55); }
-}
-
-/* TREE LINES */
+.tree.dragging{cursor:grabbing;}
 ul{
   position:relative;
-  padding-top:16px;
+  padding-top:20px;
   display:flex;
   justify-content:center;
-  gap:10px;
+  gap:16px;
 }
 ul::before{
   content:'';
@@ -75,7 +53,7 @@ ul::before{
   top:0;
   left:50%;
   width:1px;
-  height:16px;
+  height:20px;
   background:#475569;
 }
 li{
@@ -83,7 +61,7 @@ li{
   position:relative;
   text-align:center;
 }
-li::before, li::after{
+li::before,li::after{
   content:'';
   position:absolute;
   top:0;
@@ -91,36 +69,33 @@ li::before, li::after{
   height:1px;
   background:#475569;
 }
-li::before{ right:50%; }
-li::after{ left:50%; }
+li::before{right:50%}
+li::after{left:50%}
 li:only-child::before,
-li:only-child::after{ display:none; }
+li:only-child::after{display:none}
 
-/* NODE */
 .node{
   background:#0b1320;
-  padding:6px;
-  border-radius:8px;
+  padding:8px;
+  border-radius:10px;
+  min-width:100px;
   font-size:12px;
-  min-width:90px;
 }
 .root{
   background:#2563eb;
   font-weight:700;
 }
-
-/* ACTIONS */
 .actions{
   margin-top:6px;
   display:flex;
-  gap:4px;
+  gap:6px;
   justify-content:center;
 }
 .actions button{
   font-size:10px;
-  padding:2px 6px;
+  padding:3px 8px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   cursor:pointer;
 }
 .left{background:#16a34a;color:#fff}
@@ -136,22 +111,20 @@ li:only-child::after{ display:none; }
 </div>
 
 <div class="tree-wrapper">
-  <div class="tree" id="treeContainer"></div>
+  <div class="tree" id="tree"></div>
 </div>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
-/* ===== ADMIN CHECK ===== */
+/* ===== URL PARAMS ===== */
 const params = new URLSearchParams(location.search);
-const ROOT_ID = params.get("root");
+const ROOT_ID = params.get("id");
 const IS_ADMIN = params.get("admin") === "1";
 
 if(!IS_ADMIN){
-  document.body.innerHTML =
-    "<h3 style='padding:30px;text-align:center'>Access Denied</h3>";
+  document.body.innerHTML="<h3 style='padding:30px;text-align:center'>Access Denied</h3>";
   throw new Error("Not Admin");
 }
 
@@ -163,33 +136,19 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
-const treeCol = db.collection("TreeNodes");
 
-const treeEl = document.getElementById("treeContainer");
+/* 🔴 CHANGE ONLY IF COMPANY ID CHANGES */
+const COMPANY_ID = "J0wwVOznhoo1seRzo2aT";
+
+const treeCol = db
+  .collection("CompanyWallets")
+  .doc(COMPANY_ID)
+  .collection("TreeNodes");
+
+const treeEl = document.getElementById("tree");
 let nodes = {};
 
-/* ===== DEPTH ===== */
-function getTreeDepth(id){
-  if(!nodes[id]) return 0;
-  return 1 + Math.max(
-    nodes[id].leftId ? getTreeDepth(nodes[id].leftId) : 0,
-    nodes[id].rightId ? getTreeDepth(nodes[id].rightId) : 0
-  );
-}
-
-/* ===== FIND EMPTY SLOT ===== */
-function findEmptySlot(startId){
-  let q=[startId];
-  while(q.length){
-    let id=q.shift(), n=nodes[id];
-    if(!n.leftId) return {parentId:id, side:"left"};
-    if(!n.rightId) return {parentId:id, side:"right"};
-    q.push(n.leftId,n.rightId);
-  }
-  return null;
-}
-
-/* ===== LOAD ===== */
+/* ===== LOAD TREE ===== */
 treeCol.onSnapshot(snap=>{
   nodes={};
   snap.forEach(d=>nodes[d.id]=d.data());
@@ -199,92 +158,71 @@ treeCol.onSnapshot(snap=>{
 /* ===== RENDER ===== */
 function renderTree(){
   if(!ROOT_ID || !nodes[ROOT_ID]){
-    treeEl.innerHTML="Tree not found";
+    treeEl.innerHTML="<h3>Tree not found</h3>";
     return;
   }
-
-  const depth=getTreeDepth(ROOT_ID);
-  treeEl.className="tree";
-  if(depth>=2) treeEl.classList.add("level-2");
-  if(depth>=3) treeEl.classList.add("level-3");
-  if(depth>=4) treeEl.classList.add("level-4");
-  if(depth>=5) treeEl.classList.add("level-5");
-
   treeEl.innerHTML=buildNode(ROOT_ID);
 }
 
-/* ===== BUILD ===== */
+/* ===== BUILD NODE ===== */
 function buildNode(id){
-  const n=nodes[id];
+  const n = nodes[id];
   if(!n) return "";
-  let html=`<ul><li>
-    <div class="node ${!n.parentId?'root':''}">
+
+  let html = `
+  <ul><li>
+    <div class="node ${!n.parentId ? "root" : ""}">
       <b>${n.name}</b><br>
       <small>${id.slice(0,6)}</small>
       <div class="actions">
-        <button class="left" onclick="joinMember('${id}','left')">LEFT</button>
-        <button class="right" onclick="joinMember('${id}','right')">RIGHT</button>
+        ${n.leftId === null ? `<button class="left" onclick="joinMember('${id}','left')">LEFT</button>` : ""}
+        ${n.rightId === null ? `<button class="right" onclick="joinMember('${id}','right')">RIGHT</button>` : ""}
       </div>
-    </div>`;
-  if(n.leftId||n.rightId){
-    html+="<ul>";
-    if(n.leftId) html+=`<li>${buildNode(n.leftId)}</li>`;
-    if(n.rightId) html+=`<li>${buildNode(n.rightId)}</li>`;
-    html+="</ul>";
+    </div>
+  `;
+
+  if(n.leftId || n.rightId){
+    html += "<ul>";
+    if(n.leftId) html += `<li>${buildNode(n.leftId)}</li>`;
+    if(n.rightId) html += `<li>${buildNode(n.rightId)}</li>`;
+    html += "</ul>";
   }
-  return html+"</li></ul>";
+
+  return html + "</li></ul>";
 }
 
 /* ===== JOIN MEMBER ===== */
 async function joinMember(parentId, side){
-  let target=!nodes[parentId][side+"Id"]
-    ?{parentId,side}
-    :findEmptySlot(parentId);
+  const name = prompt("Member name?");
+  if(!name) return;
 
-  if(!target) return alert("Tree full");
-
-  const name=prompt("Name?");
-  const pass=prompt("Password?");
-  if(!name||!pass) return;
-
-  const child=await treeCol.add({
-    name,password:pass,
-    parentId:target.parentId,
-    leftId:null,rightId:null
+  const doc = await treeCol.add({
+    name:name,
+    parentId:parentId,
+    leftId:null,
+    rightId:null,
+    isActive:true,
+    joinedAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  await treeCol.doc(target.parentId)
-    .update({[target.side+"Id"]:child.id});
+  await treeCol.doc(parentId)
+    .update({[side+"Id"]:doc.id});
 }
 
 /* ===== DRAG ===== */
 let drag=false,sx=0,sy=0,x=0,y=0;
 treeEl.addEventListener("mousedown",e=>{
-  drag=true;treeEl.classList.add("dragging");
+  drag=true; treeEl.classList.add("dragging");
   sx=e.clientX-x; sy=e.clientY-y;
 });
 document.addEventListener("mousemove",e=>{
-  if(!drag)return;
+  if(!drag) return;
   x=e.clientX-sx; y=e.clientY-sy;
   treeEl.style.transform=`translate(${x}px,${y}px)`;
 });
 document.addEventListener("mouseup",()=>{
   drag=false; treeEl.classList.remove("dragging");
 });
-
-/* TOUCH */
-treeEl.addEventListener("touchstart",e=>{
-  drag=true;
-  sx=e.touches[0].clientX-x;
-  sy=e.touches[0].clientY-y;
-});
-treeEl.addEventListener("touchmove",e=>{
-  if(!drag)return;
-  x=e.touches[0].clientX-sx;
-  y=e.touches[0].clientY-sy;
-  treeEl.style.transform=`translate(${x}px,${y}px)`;
-});
-treeEl.addEventListener("touchend",()=>drag=false);
 </script>
 
 </body>
