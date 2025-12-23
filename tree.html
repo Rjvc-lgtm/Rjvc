@@ -153,7 +153,16 @@ const treeCol = db
 
 const treeEl = document.getElementById("tree");
 let nodes = {};
-
+// 🔥 STEP 3A — FIND ROOT NODE (AUTO)
+function findRootNode(){
+  for(let id in nodes){
+    const n = nodes[id];
+    if(!n.parentId || n.parentId === ""){
+      return id;
+    }
+  }
+  return null;
+                                   }
 /* ================= LOAD DATA ================= */
 treeCol.onSnapshot(snap=>{
   nodes = {};
@@ -162,7 +171,17 @@ treeCol.onSnapshot(snap=>{
 });
 
 /* ================= RENDER ================= */
+function renderTree(){
+  const ROOT_ID = findRootNode();
 
+  if(!ROOT_ID){
+    treeEl.innerHTML =
+      "<h3 style='color:red;text-align:center'>Root node not found</h3>";
+    return;
+  }
+
+  treeEl.innerHTML = buildNode(ROOT_ID);
+  }
 /* ================= BUILD NODE ================= */
 function buildNode(id){
   const n = nodes[id];
