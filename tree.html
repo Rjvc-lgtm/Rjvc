@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>RJVC Binary Tree – Admin</title>
@@ -12,6 +12,8 @@ body{
   color:#e5e7eb;
   font-family:system-ui;
 }
+
+/* HEADER */
 .header{
   padding:10px 14px;
   display:flex;
@@ -25,27 +27,26 @@ body{
   border-radius:20px;
   padding:6px 14px;
 }
+
+/* TREE WRAP */
 .tree-wrapper{
   width:100%;
   height:calc(100vh - 60px);
   overflow:auto;
 }
+
+/* TREE */
 .tree{
   display:flex;
   justify-content:center;
   padding:80px 20px;
   min-width:900px;
-  min-height:600px;
-  transform-origin:top center;
-  cursor:grab;
 }
-.tree.dragging{cursor:grabbing;}
 ul{
-  position:relative;
   padding-top:20px;
+  position:relative;
   display:flex;
   justify-content:center;
-  gap:16px;
 }
 ul::before{
   content:'';
@@ -58,8 +59,9 @@ ul::before{
 }
 li{
   list-style:none;
-  position:relative;
   text-align:center;
+  position:relative;
+  padding:20px 5px 0 5px;
 }
 li::before,li::after{
   content:'';
@@ -69,11 +71,12 @@ li::before,li::after{
   height:1px;
   background:#475569;
 }
-li::before{right:50%}
-li::after{left:50%}
+li::before{ right:50%; }
+li::after{ left:50%; }
 li:only-child::before,
-li:only-child::after{display:none}
+li:only-child::after{ display:none; }
 
+/* NODE */
 .node{
   background:#0b1320;
   padding:8px;
@@ -85,17 +88,19 @@ li:only-child::after{display:none}
   background:#2563eb;
   font-weight:700;
 }
+
+/* BUTTONS */
 .actions{
   margin-top:6px;
   display:flex;
-  gap:6px;
+  gap:4px;
   justify-content:center;
 }
 .actions button{
   font-size:10px;
-  padding:3px 8px;
+  padding:3px 6px;
   border:none;
-  border-radius:12px;
+  border-radius:10px;
   cursor:pointer;
 }
 .left{background:#16a34a;color:#fff}
@@ -114,21 +119,23 @@ li:only-child::after{display:none}
   <div class="tree" id="tree"></div>
 </div>
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
-/* ===== URL PARAMS ===== */
+/* ================= PARAMS ================= */
 const params = new URLSearchParams(location.search);
-const ROOT_ID = params.get("id");
 const IS_ADMIN = params.get("admin") === "1";
+const COMPANY_ID = params.get("company");
+const ROOT_ID = params.get("root");
 
-if(!IS_ADMIN){
-  document.body.innerHTML="<h3 style='padding:30px;text-align:center'>Access Denied</h3>";
-  throw new Error("Not Admin");
+if(!IS_ADMIN || !COMPANY_ID || !ROOT_ID){
+  document.body.innerHTML="<h3 style='padding:30px;text-align:center'>Invalid URL</h3>";
+  throw "Invalid URL";
 }
 
-/* ===== FIREBASE ===== */
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -137,9 +144,7 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-/* 🔴 CHANGE ONLY IF COMPANY ID CHANGES */
-const COMPANY_ID = "J0wwVOznhoo1seRzo2aT";
-
+/* 🔥 CORRECT COLLECTION PATH 🔥 */
 const treeCol = db
   .collection("CompanyWallets")
   .doc(COMPANY_ID)
@@ -148,37 +153,38 @@ const treeCol = db
 const treeEl = document.getElementById("tree");
 let nodes = {};
 
-/* ===== LOAD TREE ===== */
+/* ================= LOAD DATA ================= */
 treeCol.onSnapshot(snap=>{
-  nodes={};
-  snap.forEach(d=>nodes[d.id]=d.data());
+  nodes = {};
+  snap.forEach(d => nodes[d.id] = d.data());
   renderTree();
 });
 
-/* ===== RENDER ===== */
+/* ================= RENDER ================= */
 function renderTree(){
-  if(!ROOT_ID || !nodes[ROOT_ID]){
-    treeEl.innerHTML="<h3>Tree not found</h3>";
+  if(!nodes[ROOT_ID]){
+    treeEl.innerHTML = "<h3>Root not found</h3>";
     return;
   }
-  treeEl.innerHTML=buildNode(ROOT_ID);
+  treeEl.innerHTML = buildNode(ROOT_ID);
 }
 
-/* ===== BUILD NODE ===== */
+/* ================= BUILD NODE ================= */
 function buildNode(id){
   const n = nodes[id];
   if(!n) return "";
 
   let html = `
-  <ul><li>
-    <div class="node ${!n.parentId ? "root" : ""}">
-      <b>${n.name}</b><br>
-      <small>${id.slice(0,6)}</small>
-      <div class="actions">
-        ${n.leftId === null ? `<button class="left" onclick="joinMember('${id}','left')">LEFT</button>` : ""}
-        ${n.rightId === null ? `<button class="right" onclick="joinMember('${id}','right')">RIGHT</button>` : ""}
+  <ul>
+    <li>
+      <div class="node ${!n.parentId ? 'root' : ''}">
+        <b>${n.name}</b><br>
+        <small>${id.slice(0,6)}</small>
+        <div class="actions">
+          ${n.leftId ? '' : `<button class="left" onclick="addMember('${id}','left')">LEFT</button>`}
+          ${n.rightId ? '' : `<button class="right" onclick="addMember('${id}','right')">RIGHT</button>`}
+        </div>
       </div>
-    </div>
   `;
 
   if(n.leftId || n.rightId){
@@ -188,41 +194,30 @@ function buildNode(id){
     html += "</ul>";
   }
 
-  return html + "</li></ul>";
+  html += "</li></ul>";
+  return html;
 }
 
-/* ===== JOIN MEMBER ===== */
-async function joinMember(parentId, side){
-  const name = prompt("Member name?");
-  if(!name) return;
+/* ================= ADD MEMBER ================= */
+async function addMember(parentId, side){
+  const name = prompt("Customer name?");
+  const pass = prompt("Password?");
+  if(!name || !pass) return;
 
-  const doc = await treeCol.add({
-    name:name,
-    parentId:parentId,
-    leftId:null,
-    rightId:null,
-    isActive:true,
-    joinedAt:firebase.firestore.FieldValue.serverTimestamp()
+  const child = await treeCol.add({
+    name,
+    password: pass,
+    parentId,
+    leftId: null,
+    rightId: null,
+    isActive: true,
+    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  await treeCol.doc(parentId)
-    .update({[side+"Id"]:doc.id});
+  await treeCol.doc(parentId).update({
+    [side + "Id"]: child.id
+  });
 }
-
-/* ===== DRAG ===== */
-let drag=false,sx=0,sy=0,x=0,y=0;
-treeEl.addEventListener("mousedown",e=>{
-  drag=true; treeEl.classList.add("dragging");
-  sx=e.clientX-x; sy=e.clientY-y;
-});
-document.addEventListener("mousemove",e=>{
-  if(!drag) return;
-  x=e.clientX-sx; y=e.clientY-sy;
-  treeEl.style.transform=`translate(${x}px,${y}px)`;
-});
-document.addEventListener("mouseup",()=>{
-  drag=false; treeEl.classList.remove("dragging");
-});
 </script>
 
 </body>
