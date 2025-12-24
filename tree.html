@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
 <title>RJVC Binary Tree – Admin</title>
@@ -28,7 +28,7 @@ body{
   padding:6px 14px;
 }
 
-/* TREE WRAP */
+/* WRAPPER */
 .tree-wrapper{
   width:100%;
   height:calc(100vh - 60px);
@@ -42,9 +42,11 @@ body{
   padding:80px 20px;
   min-width:900px;
 }
+
+/* CONNECTORS */
 ul{
-  padding-top:20px;
   position:relative;
+  padding-top:20px;
   display:flex;
   justify-content:center;
 }
@@ -59,9 +61,9 @@ ul::before{
 }
 li{
   list-style:none;
-  text-align:center;
   position:relative;
-  padding:20px 5px 0 5px;
+  text-align:center;
+  padding:20px 5px 0;
 }
 li::before,li::after{
   content:'';
@@ -89,7 +91,7 @@ li:only-child::after{ display:none; }
   font-weight:700;
 }
 
-/* BUTTONS */
+/* ACTION BUTTONS */
 .actions{
   margin-top:6px;
   display:flex;
@@ -124,19 +126,18 @@ li:only-child::after{ display:none; }
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
-/* ================= PARAMS ================= */
+/* ================= ADMIN CHECK ================= */
 const params = new URLSearchParams(location.search);
 const IS_ADMIN = params.get("admin") === "1";
 const COMPANY_ID = params.get("company") || "main";
-const IS_ADMIN = params.get("admin") === "1";
 
 if(!IS_ADMIN){
   document.body.innerHTML =
     "<h3 style='padding:30px;text-align:center'>Access Denied</h3>";
   throw "Not Admin";
-  }
+}
 
-/* ================= FIREBASE ================= */
+/* ================= FIREBASE INIT ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -145,7 +146,7 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-/* 🔥 CORRECT COLLECTION PATH 🔥 */
+/* 🔥 CORRECT PATH 🔥 */
 const treeCol = db
   .collection("CompanyWallets")
   .doc(COMPANY_ID)
@@ -153,35 +154,37 @@ const treeCol = db
 
 const treeEl = document.getElementById("tree");
 let nodes = {};
-// 🔥 STEP 3A — FIND ROOT NODE (AUTO)
-function findRootNode(){
-  for(let id in nodes){
-    const n = nodes[id];
-    if(!n.parentId || n.parentId === ""){
+
+/* ================= LOAD DATA ================= */
+treeCol.onSnapshot(snapshot=>{
+  nodes = {};
+  snapshot.forEach(doc=>{
+    nodes[doc.id] = doc.data();
+  });
+  renderTree();
+});
+
+/* ================= FIND ROOT ================= */
+function findRoot(){
+  for(const id in nodes){
+    if(nodes[id].parentId === null){
       return id;
     }
   }
   return null;
-                                   }
-/* ================= LOAD DATA ================= */
-treeCol.onSnapshot(snap=>{
-  nodes = {};
-  snap.forEach(d => nodes[d.id] = d.data());
-  renderTree();
-});
+}
 
-/* ================= RENDER ================= */
+/* ================= RENDER TREE ================= */
 function renderTree(){
-  const ROOT_ID = findRootNode();
-
-  if(!ROOT_ID){
+  const rootId = findRoot();
+  if(!rootId){
     treeEl.innerHTML =
-      "<h3 style='color:red;text-align:center'>Root node not found</h3>";
+      "<h3 style='color:red;text-align:center'>❌ Root not found</h3>";
     return;
   }
+  treeEl.innerHTML = buildNode(rootId);
+}
 
-  treeEl.innerHTML = buildNode(ROOT_ID);
-  }
 /* ================= BUILD NODE ================= */
 function buildNode(id){
   const n = nodes[id];
@@ -190,12 +193,12 @@ function buildNode(id){
   let html = `
   <ul>
     <li>
-      <div class="node ${!n.parentId ? 'root' : ''}">
+      <div class="node ${n.parentId === null ? 'root' : ''}">
         <b>${n.name}</b><br>
         <small>${id.slice(0,6)}</small>
         <div class="actions">
-          ${n.leftId ? '' : `<button class="left" onclick="addMember('${id}','left')">LEFT</button>`}
-          ${n.rightId ? '' : `<button class="right" onclick="addMember('${id}','right')">RIGHT</button>`}
+          ${!n.leftId ? `<button class="left" onclick="addMember('${id}','left')">LEFT</button>` : ''}
+          ${!n.rightId ? `<button class="right" onclick="addMember('${id}','right')">RIGHT</button>` : ''}
         </div>
       </div>
   `;
@@ -220,7 +223,7 @@ async function addMember(parentId, side){
   const child = await treeCol.add({
     name,
     password: pass,
-    parentId,
+    parentId: parentId,
     leftId: null,
     rightId: null,
     isActive: true,
@@ -231,37 +234,6 @@ async function addMember(parentId, side){
     [side + "Id"]: child.id
   });
 }
-  // ===== STEP 1 : AUTO ROOT DETECT =====
-
-// LINE ~30 SE YAHAN ADD KARE
-const params = new URLSearchParams(window.location.search);
-const COMPANY_ID = params.get("company") || "main";
-let ROOT_ID = params.get("root");
-
-const db = firebase.firestore();
-const treeCol = db
-  .collection("CompanyWallets")
-  .doc(COMPANY_ID)
-  .collection("TreeNodes");
-
-async function detectRoot(){
-  if(ROOT_ID){
-    loadTree(ROOT_ID);
-    return;
-  }
-
-  const snap = await treeCol.where("parentId", "==", null).limit(1).get();
-  if(snap.empty){
-    alert("❌ Root not found");
-    return;
-  }
-
-  ROOT_ID = snap.docs[0].id;
-  loadTree(ROOT_ID);
-}
-
-// PAGE LOAD
-detectRoot();
 </script>
 
 </body>
