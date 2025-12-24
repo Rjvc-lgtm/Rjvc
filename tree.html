@@ -1,115 +1,29 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>RJVC Binary Tree – Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-body{
-  margin:0;
-  background:#020617;
-  color:#e5e7eb;
-  font-family:system-ui;
-}
-
-/* HEADER */
-.header{
-  padding:10px 14px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.header button{
-  background:#2563eb;
-  color:#fff;
-  border:none;
-  border-radius:20px;
-  padding:6px 14px;
-}
-
-/* WRAPPER */
-.tree-wrapper{
-  width:100%;
-  height:calc(100vh - 60px);
-  overflow:auto;
-}
-
-/* TREE */
-.tree{
-  display:flex;
-  justify-content:center;
-  padding:80px 20px;
-  min-width:900px;
-}
-
-/* CONNECTORS */
-ul{
-  position:relative;
-  padding-top:20px;
-  display:flex;
-  justify-content:center;
-}
-ul::before{
-  content:'';
-  position:absolute;
-  top:0;
-  left:50%;
-  width:1px;
-  height:20px;
-  background:#475569;
-}
-li{
-  list-style:none;
-  position:relative;
-  text-align:center;
-  padding:20px 5px 0;
-}
-li::before,li::after{
-  content:'';
-  position:absolute;
-  top:0;
-  width:50%;
-  height:1px;
-  background:#475569;
-}
-li::before{ right:50%; }
-li::after{ left:50%; }
-li:only-child::before,
-li:only-child::after{ display:none; }
-
-/* NODE */
-.node{
-  background:#0b1320;
-  padding:8px;
-  border-radius:10px;
-  min-width:100px;
-  font-size:12px;
-}
-.root{
-  background:#2563eb;
-  font-weight:700;
-}
-
-/* ACTION BUTTONS */
-.actions{
-  margin-top:6px;
-  display:flex;
-  gap:4px;
-  justify-content:center;
-}
-.actions button{
-  font-size:10px;
-  padding:3px 6px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-}
+body{margin:0;background:#020617;color:#e5e7eb;font-family:system-ui}
+.header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.header button{background:#2563eb;color:#fff;border:none;border-radius:20px;padding:6px 14px}
+.tree-wrapper{width:100%;height:calc(100vh - 60px);overflow:auto}
+.tree{display:flex;justify-content:center;padding:80px 20px;min-width:900px}
+ul{padding-top:20px;position:relative;display:flex;justify-content:center}
+ul::before{content:'';position:absolute;top:0;left:50%;width:1px;height:20px;background:#475569}
+li{list-style:none;text-align:center;position:relative;padding:20px 5px 0}
+li::before,li::after{content:'';position:absolute;top:0;width:50%;height:1px;background:#475569}
+li::before{right:50%} li::after{left:50%}
+li:only-child::before,li:only-child::after{display:none}
+.node{background:#0b1320;padding:8px;border-radius:10px;min-width:100px;font-size:12px}
+.root{background:#2563eb;font-weight:700}
+.actions{margin-top:6px;display:flex;gap:4px;justify-content:center}
+.actions button{font-size:10px;padding:3px 6px;border:none;border-radius:10px;cursor:pointer}
 .left{background:#16a34a;color:#fff}
 .right{background:#0284c7;color:#fff}
 </style>
 </head>
-
 <body>
 
 <div class="header">
@@ -121,23 +35,10 @@ li:only-child::after{ display:none; }
   <div class="tree" id="tree"></div>
 </div>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
-/* ================= ADMIN CHECK ================= */
-const params = new URLSearchParams(location.search);
-const IS_ADMIN = params.get("admin") === "1";
-const COMPANY_ID = params.get("company") || "main";
-
-if(!IS_ADMIN){
-  document.body.innerHTML =
-    "<h3 style='padding:30px;text-align:center'>Access Denied</h3>";
-  throw "Not Admin";
-}
-
-/* ================= FIREBASE INIT ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
@@ -145,96 +46,61 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
-
-/* 🔥 CORRECT PATH 🔥 */
-const treeCol = db
-  .collection("CompanyWallets")
-  .doc(COMPANY_ID)
-  .collection("TreeNodes");
-
+const treeCol = db.collection("CompanyWallets").doc("main").collection("TreeNodes");
 const treeEl = document.getElementById("tree");
 let nodes = {};
 
-/* ================= LOAD DATA ================= */
-treeCol.onSnapshot(snapshot=>{
-  nodes = {};
-  snapshot.forEach(doc=>{
-    nodes[doc.id] = doc.data();
-  });
-  renderTree();
-});
-
-/* ================= FIND ROOT ================= */
 function findRoot(){
-  for(const id in nodes){
-    if(nodes[id].parentId === null){
-      return id;
-    }
+  for(let id in nodes){
+    if(nodes[id].parentId === null) return id;
   }
   return null;
 }
 
-/* ================= RENDER TREE ================= */
-function renderTree(){
+treeCol.onSnapshot(snap=>{
+  nodes = {};
+  snap.forEach(d=>nodes[d.id]=d.data());
+  render();
+});
+
+function render(){
   const rootId = findRoot();
   if(!rootId){
-    treeEl.innerHTML =
-      "<h3 style='color:red;text-align:center'>❌ Root not found</h3>";
+    treeEl.innerHTML="<h3>Root not found</h3>";
     return;
   }
-  treeEl.innerHTML = buildNode(rootId);
+  treeEl.innerHTML = build(rootId);
 }
 
-/* ================= BUILD NODE ================= */
-function buildNode(id){
+function build(id){
   const n = nodes[id];
   if(!n) return "";
-
-  let html = `
-  <ul>
-    <li>
-      <div class="node ${n.parentId === null ? 'root' : ''}">
-        <b>${n.name}</b><br>
-        <small>${id.slice(0,6)}</small>
-        <div class="actions">
-          ${!n.leftId ? `<button class="left" onclick="addMember('${id}','left')">LEFT</button>` : ''}
-          ${!n.rightId ? `<button class="right" onclick="addMember('${id}','right')">RIGHT</button>` : ''}
-        </div>
-      </div>
-  `;
-
-  if(n.leftId || n.rightId){
-    html += "<ul>";
-    if(n.leftId) html += `<li>${buildNode(n.leftId)}</li>`;
-    if(n.rightId) html += `<li>${buildNode(n.rightId)}</li>`;
-    html += "</ul>";
+  let html = `<ul><li>
+  <div class="node ${n.parentId===null?'root':''}">
+    <b>${n.name}</b><br><small>${id.slice(0,6)}</small>
+    <div class="actions">
+      ${n.leftId?'':`<button class="left" onclick="add('${id}','left')">LEFT</button>`}
+      ${n.rightId?'':`<button class="right" onclick="add('${id}','right')">RIGHT</button>`}
+    </div>
+  </div>`;
+  if(n.leftId||n.rightId){
+    html+="<ul>";
+    if(n.leftId) html+=`<li>${build(n.leftId)}</li>`;
+    if(n.rightId) html+=`<li>${build(n.rightId)}</li>`;
+    html+="</ul>";
   }
-
-  html += "</li></ul>";
-  return html;
+  return html+"</li></ul>";
 }
 
-/* ================= ADD MEMBER ================= */
-async function addMember(parentId, side){
-  const name = prompt("Customer name?");
-  const pass = prompt("Password?");
-  if(!name || !pass) return;
-
-  const child = await treeCol.add({
-    name,
-    password: pass,
-    parentId: parentId,
-    leftId: null,
-    rightId: null,
-    isActive: true,
-    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+async function add(parent,side){
+  const name=prompt("Name?");
+  const pass=prompt("Password?");
+  if(!name||!pass) return;
+  const doc=await treeCol.add({
+    name,password:pass,parentId:parent,leftId:null,rightId:null
   });
-
-  await treeCol.doc(parentId).update({
-    [side + "Id"]: child.id
-  });
+  await treeCol.doc(parent).update({[side+"Id"]:doc.id});
 }
 </script>
-
 </body>
 </html>
