@@ -231,6 +231,37 @@ async function addMember(parentId, side){
     [side + "Id"]: child.id
   });
 }
+  // ===== STEP 1 : AUTO ROOT DETECT =====
+
+// LINE ~30 SE YAHAN ADD KARE
+const params = new URLSearchParams(window.location.search);
+const COMPANY_ID = params.get("company") || "main";
+let ROOT_ID = params.get("root");
+
+const db = firebase.firestore();
+const treeCol = db
+  .collection("CompanyWallets")
+  .doc(COMPANY_ID)
+  .collection("TreeNodes");
+
+async function detectRoot(){
+  if(ROOT_ID){
+    loadTree(ROOT_ID);
+    return;
+  }
+
+  const snap = await treeCol.where("parentId", "==", null).limit(1).get();
+  if(snap.empty){
+    alert("❌ Root not found");
+    return;
+  }
+
+  ROOT_ID = snap.docs[0].id;
+  loadTree(ROOT_ID);
+}
+
+// PAGE LOAD
+detectRoot();
 </script>
 
 </body>
