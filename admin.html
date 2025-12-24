@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <title>RJVC Admin Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+
 <style>
 *{box-sizing:border-box;font-family:system-ui}
 body{margin:0;background:#f3f4f6}
@@ -84,6 +85,7 @@ th{font-size:11px;color:#6b7280}
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <script>
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey:"AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain:"rjvc-plan.firebaseapp.com",
@@ -91,31 +93,42 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
+
+/* 🔥 COMPANY ID (FIXED) */
+const COMPANY_ID = "main";
+
+/* 🔥 CORRECT COLLECTION */
 const treeCol = db
   .collection("CompanyWallets")
   .doc(COMPANY_ID)
   .collection("TreeNodes");
+
 const usersCol = db.collection("Users");
 
 let nodes = {};
 
+/* ================= LOGIN ================= */
 function login(){
   if(adminId.value==="admin" && adminPass.value==="1234"){
     loginPage.style.display="none";
     adminPage.style.display="block";
     loadData();
-  }else loginError.style.display="block";
+  }else{
+    loginError.style.display="block";
+  }
 }
-function logout(){location.reload()}
+function logout(){ location.reload(); }
 
+/* ================= LOAD DATA ================= */
 function loadData(){
-  treeCol.onSnapshot(s=>{
-    nodes={};
-    s.forEach(d=>nodes[d.id]=d.data());
+  treeCol.onSnapshot(snap=>{
+    nodes = {};
+    snap.forEach(d => nodes[d.id] = d.data());
     renderTable();
   });
 }
 
+/* ================= TABLE ================= */
 function renderTable(){
   customerTable.innerHTML="";
   let i=1;
@@ -135,7 +148,7 @@ function renderTable(){
   });
 }
 
-/* ---------- SAFE COMMISSION ---------- */
+/* ================= COMMISSION ================= */
 function getCommission(id){
   if(!nodes[id] || nodes[id].isActive!==true) return 0;
   let count=0;
@@ -145,15 +158,15 @@ function getCommission(id){
   return Math.floor(count/2)*10;
 }
 
-/* ---------- TREE ---------- */
+/* ================= TREE OPEN ================= */
 function openTree(id){
   window.open(
-  "tree.html?admin=1&company=main",
-  "_blank"
-);
+    "tree.html?admin=1&company=main&root=" + id,
+    "_blank"
+  );
 }
 
-/* ---------- DELETE ---------- */
+/* ================= DELETE ================= */
 async function deleteCustomer(id){
   if(!confirm("Delete customer + downline?")) return;
   await treeCol.doc(id).delete();
@@ -161,14 +174,13 @@ async function deleteCustomer(id){
   alert("Deleted");
 }
 
-/* ---------- ₹20 PAID (AUTO FIX USER) ---------- */
+/* ================= ₹20 PAID ================= */
 async function addCycle(id){
-  const ref=usersCol.doc(id);
-  let snap=await ref.get();
+  const ref = usersCol.doc(id);
+  let snap = await ref.get();
 
-  // 🔥 AUTO CREATE USER IF MISSING
   if(!snap.exists){
-    const t=nodes[id];
+    const t = nodes[id];
     await ref.set({
       name:t.name,
       password:t.password||"",
@@ -178,30 +190,39 @@ async function addCycle(id){
       isActive:false,
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
-    snap=await ref.get();
+    snap = await ref.get();
   }
 
-  const c=snap.data().cycleCount||0;
+  const c = snap.data().cycleCount||0;
   await ref.update({
     cycleCount:c+1,
     isActive:true,
     lastPaidAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  await treeCol.doc(id).update({isActive:true,monthsPaid:(nodes[id].monthsPaid||0)+1});
+  await treeCol.doc(id).update({
+    isActive:true,
+    monthsPaid:(nodes[id].monthsPaid||0)+1
+  });
+
   alert("₹20 received & activated");
 }
 
-/* ---------- CREATE ROOT ---------- */
+/* ================= CREATE ROOT ================= */
 async function createRoot(){
-  if(!rootName.value||!rootPass.value) return alert("Fill both");
-  const doc=await treeCol.add({
+  if(!rootName.value || !rootPass.value) return alert("Fill both");
+
+  const doc = await treeCol.add({
     name:rootName.value,
     password:rootPass.value,
     parentId:null,
+    leftId:null,
+    rightId:null,
     monthsPaid:0,
-    isActive:false
+    isActive:false,
+    joinedAt:firebase.firestore.FieldValue.serverTimestamp()
   });
+
   await usersCol.doc(doc.id).set({
     name:rootName.value,
     password:rootPass.value,
@@ -211,9 +232,11 @@ async function createRoot(){
     isActive:false,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
+
   alert("Root created");
-  rootName.value="";rootPass.value="";
+  rootName.value="";
+  rootPass.value="";
 }
 </script>
 </body>
-</html>
+  </html>
