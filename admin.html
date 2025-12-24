@@ -91,7 +91,10 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
-const treeCol = db.collection("TreeNodes");
+const treeCol = db
+  .collection("CompanyWallets")
+  .doc(COMPANY_ID)
+  .collection("TreeNodes");
 const usersCol = db.collection("Users");
 
 let nodes = {};
