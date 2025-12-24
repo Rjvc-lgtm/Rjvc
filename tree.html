@@ -40,7 +40,7 @@ li:only-child::before,li:only-child::after{display:none}
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+  apiKey: "AIzaSyBDW_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
   authDomain: "rjvc-plan.firebaseapp.com",
   projectId: "rjvc-plan"
 });
@@ -50,6 +50,19 @@ const treeCol = db.collection("CompanyWallets").doc("main").collection("TreeNode
 const treeEl = document.getElementById("tree");
 let nodes = {};
 
+async function ensureRoot(){
+  const snap = await treeCol.where("parentId","==",null).get();
+  if(snap.empty){
+    await treeCol.add({
+      name: "ADMIN",
+      password: "1234",
+      parentId: null,
+      leftId: null,
+      rightId: null
+    });
+  }
+}
+
 function findRoot(){
   for(let id in nodes){
     if(nodes[id].parentId === null) return id;
@@ -57,9 +70,13 @@ function findRoot(){
   return null;
 }
 
-treeCol.onSnapshot(snap=>{
+treeCol.onSnapshot(async snap=>{
   nodes = {};
   snap.forEach(d=>nodes[d.id]=d.data());
+  if(Object.keys(nodes).length===0){
+    await ensureRoot();
+    return;
+  }
   render();
 });
 
@@ -77,7 +94,8 @@ function build(id){
   if(!n) return "";
   let html = `<ul><li>
   <div class="node ${n.parentId===null?'root':''}">
-    <b>${n.name}</b><br><small>${id.slice(0,6)}</small>
+    <b>${n.name}</b><br>
+    <small>${id.slice(0,6)}</small>
     <div class="actions">
       ${n.leftId?'':`<button class="left" onclick="add('${id}','left')">LEFT</button>`}
       ${n.rightId?'':`<button class="right" onclick="add('${id}','right')">RIGHT</button>`}
@@ -93,14 +111,27 @@ function build(id){
 }
 
 async function add(parent,side){
-  const name=prompt("Name?");
-  const pass=prompt("Password?");
-  if(!name||!pass) return;
-  const doc=await treeCol.add({
-    name,password:pass,parentId:parent,leftId:null,rightId:null
+  const name = prompt("Name?");
+  const pass = prompt("Password?");
+  if(!name || !pass) return;
+
+  const doc = await treeCol.add({
+    name,
+    password: pass,
+    parentId: parent,
+    leftId: null,
+    rightId: null
   });
-  await treeCol.doc(parent).update({[side+"Id"]:doc.id});
+
+  await treeCol.doc(parent).update({
+    [side+"Id"]: doc.id
+  });
 }
+  </script>
+
+
+
+  
 </script>
 </body>
 </html>
