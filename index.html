@@ -101,7 +101,8 @@
     if(id==="admin" && pass==="1234"){
       loginPage.style.display="none";
       adminPage.style.display="block";
-drawTree();   // 👈 ये line add करो
+loadTreeFromFirebase();
+loadParentsDropdown();
     } else {
       loginError.style.display="block";
     }
