@@ -56,7 +56,28 @@
       <h2>Binary Tree — Diagram View</h2>
       <button class="btn btn-secondary" onclick="logout()">Logout</button>
     </div>
+<!-- ADD USER FORM -->
+<div style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;">
+  
+  <input id="newName" placeholder="User Name"
+    style="padding:8px;border-radius:6px;border:none;">
 
+  <select id="parentId"
+    style="padding:8px;border-radius:6px;">
+    <option value="root">Root</option>
+    <option value="u1">Left (u1)</option>
+    <option value="u2">Right (u2)</option>
+  </select>
+
+  <select id="newPosition"
+    style="padding:8px;border-radius:6px;">
+    <option value="left">Left</option>
+    <option value="right">Right</option>
+  </select>
+
+  <button class="btn btn-primary"
+    onclick="addUser()">Add User</button>
+</div>
     <div class="canvas-wrap">
       <canvas id="treeCanvas" width="1200" height="520"></canvas>
     </div>
