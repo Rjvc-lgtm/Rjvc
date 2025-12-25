@@ -115,7 +115,28 @@ function logout(){
 }
 
 /* 👇👇👇 STEP 4 YAHI SE ADD KARNA HAI 👇👇👇 */
+async function addUser(){
+  const name = document.getElementById("newName").value;
+  const parent = document.getElementById("parentId").value;
+  const position = document.getElementById("newPosition").value;
 
+  if(!name){
+    alert("User name likho");
+    return;
+  }
+
+  const id = "u" + Date.now(); // unique ID
+
+  await db.collection("users").doc(id).set({
+    name: name,
+    parent: parent,
+    position: position
+  });
+
+  document.getElementById("newName").value = "";
+
+  loadTreeFromFirebase(); // tree refresh
+}
 function drawTree(){
   const canvas = document.getElementById("treeCanvas");
   const ctx = canvas.getContext("2d");
