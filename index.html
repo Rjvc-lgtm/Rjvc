@@ -179,6 +179,21 @@ function drawLine(x1,y1,x2,y2){
   ctx.lineTo(x2,y2);
   ctx.stroke();
   }
+  async function loadParentsDropdown(){
+  const select = document.getElementById("parentId");
+  if(!select) return;
+
+  select.innerHTML = "";
+
+  const snap = await db.collection("users").get();
+
+  snap.forEach(doc=>{
+    const opt = document.createElement("option");
+    opt.value = doc.id;
+    opt.textContent = doc.data().name + " (" + doc.id + ")";
+    select.appendChild(opt);
+  });
+  }
 </script>
 
 </body>
