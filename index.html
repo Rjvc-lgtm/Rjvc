@@ -88,9 +88,56 @@ drawTree();   // 👈 ये line add करो
     }
   }
 
-  function logout(){
-    adminPage.style.display="none";
-    loginPage.style.display="block";
+function logout(){
+  adminPage.style.display="none";
+  loginPage.style.display="block";
+}
+
+/* 👇👇👇 STEP 4 YAHI SE ADD KARNA HAI 👇👇👇 */
+
+function drawTree(){
+  const canvas = document.getElementById("treeCanvas");
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle = "#94a3b8";
+  ctx.fillStyle = "#2563eb";
+  ctx.lineWidth = 2;
+  ctx.font = "14px system-ui";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  drawNode(600, 80, "Root");
+
+  drawLine(600, 100, 400, 200);
+  drawLine(600, 100, 800, 200);
+
+  drawNode(400, 220, "Left");
+  drawNode(800, 220, "Right");
+}
+
+function drawNode(x,y,text){
+  const canvas = document.getElementById("treeCanvas");
+  const ctx = canvas.getContext("2d");
+
+  ctx.beginPath();
+  ctx.arc(x,y,26,0,Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle="#fff";
+  ctx.fillText(text,x,y);
+  ctx.fillStyle="#2563eb";
+}
+
+function drawLine(x1,y1,x2,y2){
+  const canvas = document.getElementById("treeCanvas");
+  const ctx = canvas.getContext("2d");
+
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  ctx.stroke();
   }
 </script>
 
