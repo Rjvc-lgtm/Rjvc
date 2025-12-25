@@ -135,6 +135,7 @@ async function addUser(){
   document.getElementById("newName").value = "";
 
   loadTreeFromFirebase(); // tree refresh
+  loadParentsDropdown();
 }
 function drawTree(){
   const canvas = document.getElementById("treeCanvas");
