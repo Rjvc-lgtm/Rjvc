@@ -1,173 +1,158 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Binary Tree – Compact Stable</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Binary Tree – Full View (Zoom)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body{
-      margin:0;
-      background:#020617;
-      color:#e5e7eb;
-      font-family:system-ui;
-    }
-    .wrap{
-      max-width:1200px;
-      margin:auto;
-      padding:14px;
-    }
-    .loginCard{
-      max-width:420px;
-      margin:80px auto;
-      background:#071028;
-      padding:20px;
-      border-radius:12px;
-    }
-    input{
-      width:100%;
-      padding:10px;
-      margin-top:8px;
-      border-radius:6px;
-      border:none;
-    }
-    button{
-      margin-top:14px;
-      padding:10px;
-      width:100%;
-      border:none;
-      border-radius:20px;
-      background:#2563eb;
-      color:white;
-      font-weight:600;
-      cursor:pointer;
-    }
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-    .canvas-wrap{
-      margin-top:10px;
-      display:flex;
-      justify-content:center;
-    }
-    canvas{
-      background:#020617;
-      border-radius:10px;
-    }
-    .control{
-      margin-top:10px;
-      color:#cbd5f5;
-      font-size:14px;
-    }
-  </style>
+<style>
+  body{
+    margin:0;
+    background:#020617;
+    color:#e5e7eb;
+    font-family:system-ui;
+  }
+  header{
+    padding:10px 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#020617;
+  }
+  button{
+    background:#2563eb;
+    color:#fff;
+    border:none;
+    border-radius:20px;
+    padding:6px 14px;
+    cursor:pointer;
+  }
+  svg{
+    width:100%;
+    height:calc(100vh - 50px);
+    background:#020617;
+  }
+  .node circle{
+    fill:#2563eb;
+    stroke:#94a3b8;
+    stroke-width:2;
+  }
+  .node text{
+    fill:#fff;
+    font-size:12px;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+  }
+  .link{
+    fill:none;
+    stroke:#94a3b8;
+    stroke-width:2;
+  }
+</style>
+
 </head>
-
 <body>
 
-<!-- LOGIN -->
-<div id="loginPage" class="wrap">
-  <div class="loginCard">
-    <h2 style="text-align:center">Admin Login</h2>
+<header>
+  <h3>Binary Tree – Full View</h3>
+  <button onclick="resetZoom()">Reset Zoom</button>
+</header>
 
-    <label>Admin ID</label>
-    <input id="adminId" value="admin">
+<svg id="treeSvg"></svg>
 
-    <label>Password</label>
-    <input id="adminPass" type="password" value="1234">
-
-    <button onclick="handleAdminLogin()">Login</button>
-  </div>
-</div>
-
-<!-- ADMIN -->
-<div id="adminPage" style="display:none">
-  <div class="wrap">
-
-    <div class="topbar">
-      <h3>Binary Tree (Compact)</h3>
-      <button onclick="logout()" style="width:auto;padding:6px 16px">Logout</button>
-    </div>
-
-    <!-- SIZE CONTROL -->
-    <div class="control">
-      Tree Width:
-      <input type="range"
-             min="40"
-             max="200"
-             value="100"
-             id="sizeRange"
-             oninput="drawTree()" />
-    </div>
-
-    <!-- TREE -->
-    <div class="canvas-wrap">
-      <canvas id="treeCanvas" width="1200" height="420"></canvas>
-    </div>
-
-  </div>
-</div>
+<!-- D3.js -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
 
 <script>
-/* LOGIN */
-function handleAdminLogin(){
-  loginPage.style.display = "none";
-  adminPage.style.display = "block";
-  drawTree();
+/* =========================
+   DEMO TREE DATA
+   (Firebase later)
+========================= */
+const treeData = {
+  name: "ROOT",
+  children: [
+    {
+      name: "LEFT",
+      children: [
+        { name: "L-L" },
+        { name: "L-R" }
+      ]
+    },
+    {
+      name: "RIGHT",
+      children: [
+        { name: "R-L" },
+        { name: "R-R" }
+      ]
+    }
+  ]
+};
+
+/* =========================
+   SVG + ZOOM SETUP
+========================= */
+const svg = d3.select("#treeSvg");
+const width = window.innerWidth;
+const height = window.innerHeight;
+
+const g = svg.append("g")
+  .attr("transform", "translate(40,40)");
+
+const zoom = d3.zoom()
+  .scaleExtent([0.2, 3])   // zoom out / zoom in
+  .on("zoom", (event) => {
+    g.attr("transform", event.transform);
+  });
+
+svg.call(zoom);
+
+function resetZoom(){
+  svg.transition().duration(500).call(
+    zoom.transform,
+    d3.zoomIdentity.translate(40,40).scale(1)
+  );
 }
 
-function logout(){
-  adminPage.style.display = "none";
-  loginPage.style.display = "block";
-}
+/* =========================
+   TREE LAYOUT
+========================= */
+const root = d3.hierarchy(treeData);
 
-/* TREE */
-function drawTree(){
-  const canvas = document.getElementById("treeCanvas");
-  const ctx = canvas.getContext("2d");
-  const gap = parseInt(document.getElementById("sizeRange").value);
+const treeLayout = d3.tree()
+  .nodeSize([80, 120]); // auto spacing
 
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle = "#94a3b8";
-  ctx.fillStyle = "#2563eb";
-  ctx.lineWidth = 2;
-  ctx.font = "13px system-ui";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+treeLayout(root);
 
-  // ROOT
-  drawNode(600, 70, "ROOT");
+/* =========================
+   LINKS
+========================= */
+g.selectAll(".link")
+  .data(root.links())
+  .enter()
+  .append("path")
+  .attr("class","link")
+  .attr("d", d3.linkVertical()
+    .x(d => d.x)
+    .y(d => d.y)
+  );
 
-  // LEFT
-  drawLine(600, 88, 600-gap, 150);
-  drawNode(600-gap, 165, "LEFT");
+/* =========================
+   NODES
+========================= */
+const node = g.selectAll(".node")
+  .data(root.descendants())
+  .enter()
+  .append("g")
+  .attr("class","node")
+  .attr("transform", d => `translate(${d.x},${d.y})`);
 
-  // RIGHT
-  drawLine(600, 88, 600+gap, 150);
-  drawNode(600+gap, 165, "RIGHT");
-}
+node.append("circle")
+  .attr("r", 18);
 
-function drawNode(x,y,text){
-  const ctx = treeCanvas.getContext("2d");
-
-  ctx.beginPath();
-  ctx.arc(x,y,18,0,Math.PI*2);   // 🔽 smaller node
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle="#fff";
-  ctx.fillText(text,x,y);
-  ctx.fillStyle="#2563eb";
-}
-
-function drawLine(x1,y1,x2,y2){
-  const ctx = treeCanvas.getContext("2d");
-  ctx.beginPath();
-  ctx.moveTo(x1,y1);
-  ctx.lineTo(x2,y2);
-  ctx.stroke();
-}
+node.append("text")
+  .attr("dy","0.35em")
+  .text(d => d.data.name);
 </script>
 
 </body>
