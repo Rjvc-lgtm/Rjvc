@@ -1,88 +1,106 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8" />
-  <title>RJVC Binary Tree Admin — Diagram Only</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-  <!-- ✅ Google AdSense Verification Code (DO NOT REMOVE) -->
-  <script async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-550551515353712"
-    crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
+  <title>RJVC Binary Tree Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
-    body{margin:0;background:#020617;color:#e5e7eb;}
-    .center{text-align:center;}
-    .btn{border:none;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;}
-    .btn-primary{background:#2563eb;color:#fff;}
-    .btn-secondary{background:#e5e7eb;color:#111827;}
-    .wrap{max-width:1200px;margin:12px auto;padding:12px;}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;}
-    .small{font-size:13px;color:#9fb0c9;}
-    .canvas-wrap{display:flex;justify-content:center;padding:18px 12px 60px;}
-    canvas{border-radius:8px;max-width:100%;}
-    label,input{font-size:14px;}
-    .loginCard{max-width:420px;margin:60px auto;background:#071028;padding:18px;border-radius:12px;}
-    .loginCard input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef8;margin-top:6px;}
-    .loginCard .btn{width:100%;margin-top:12px;}
-    .muted{color:#94a3b8;font-size:12px;margin-top:8px;}
-    @media(max-width:720px){
-      .wrap{padding:8px;}
+    body{
+      margin:0;
+      background:#020617;
+      color:#e5e7eb;
+      font-family:system-ui;
+    }
+    .wrap{max-width:1200px;margin:auto;padding:12px;}
+    .loginCard{
+      max-width:420px;
+      margin:80px auto;
+      background:#071028;
+      padding:18px;
+      border-radius:12px;
+    }
+    input,select{
+      width:100%;
+      padding:10px;
+      margin-top:6px;
+      border-radius:6px;
+      border:none;
+    }
+    button{
+      margin-top:12px;
+      padding:10px;
+      width:100%;
+      border:none;
+      border-radius:20px;
+      background:#2563eb;
+      color:white;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .canvas-wrap{
+      margin-top:20px;
+      display:flex;
+      justify-content:center;
     }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN PAGE -->
 <div id="loginPage" class="wrap">
   <div class="loginCard">
-    <h2 class="center">RJVC Admin Login</h2>
+    <h2 style="text-align:center">Admin Login</h2>
+
     <label>Admin ID</label>
-    <input id="adminId" placeholder="admin" />
+    <input id="adminId" value="admin">
+
     <label>Password</label>
-    <input id="adminPass" type="password" placeholder="1234" />
-    <button class="btn btn-primary" onclick="handleAdminLogin()">Login</button>
-    <div id="loginError" class="muted" style="display:none;color:#ff7b7b;">गलत ID या Password</div>
-    <div class="muted">Default: <b>admin</b> / <b>1234</b></div>
+    <input id="adminPass" type="password" value="1234">
+
+    <button onclick="handleAdminLogin()">Login</button>
+
+    <div id="loginError" style="color:red;display:none;text-align:center;margin-top:8px">
+      Wrong ID or Password
+    </div>
   </div>
 </div>
 
-<!-- ADMIN -->
-<div id="adminPage" style="display:none;">
+<!-- ADMIN PAGE -->
+<div id="adminPage" style="display:none">
   <div class="wrap">
+
     <div class="topbar">
-      <h2>Binary Tree — Diagram View</h2>
-      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+      <h2>Binary Tree (Firebase)</h2>
+      <button onclick="logout()" style="width:auto;padding:6px 16px">Logout</button>
     </div>
-<!-- ADD USER FORM -->
-<div style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;">
-  
-  <input id="newName" placeholder="User Name"
-    style="padding:8px;border-radius:6px;border:none;">
 
-  <select id="parentId"
-    style="padding:8px;border-radius:6px;">
-  
-  </select>
+    <!-- ADD USER FORM -->
+    <div style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap">
+      <input id="newName" placeholder="User Name">
+      <select id="parentId"></select>
+      <select id="newPosition">
+        <option value="left">Left</option>
+        <option value="right">Right</option>
+      </select>
+      <button onclick="addUser()" style="width:auto;padding:8px 16px">Add User</button>
+    </div>
 
-  <select id="newPosition"
-    style="padding:8px;border-radius:6px;">
-    <option value="left">Left</option>
-    <option value="right">Right</option>
-  </select>
-
-  <button class="btn btn-primary"
-    onclick="addUser()">Add User</button>
-</div>
+    <!-- TREE -->
     <div class="canvas-wrap">
       <canvas id="treeCanvas" width="1200" height="520"></canvas>
     </div>
+
   </div>
 </div>
 
-<!-- Firebase -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
@@ -90,111 +108,106 @@
   const firebaseConfig = {
     apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
     authDomain: "rjvc-plan.firebaseapp.com",
-    projectId: "rjvc-plan",
+    projectId: "rjvc-plan"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
   function handleAdminLogin(){
-    const id = adminId.value;
-    const pass = adminPass.value;
-    if(id==="admin" && pass==="1234"){
+    if(adminId.value==="admin" && adminPass.value==="1234"){
       loginPage.style.display="none";
       adminPage.style.display="block";
-loadTreeFromFirebase();
-loadParentsDropdown();
-    } else {
+      loadTreeFromFirebase();
+      loadParentsDropdown();
+    }else{
       loginError.style.display="block";
     }
   }
 
-function logout(){
-  adminPage.style.display="none";
-  loginPage.style.display="block";
-}
-
-/* 👇👇👇 STEP 4 YAHI SE ADD KARNA HAI 👇👇👇 */
-async function addUser(){
-  const name = document.getElementById("newName").value;
-  const parent = document.getElementById("parentId").value;
-  const position = document.getElementById("newPosition").value;
-
-  if(!name){
-    alert("User name likho");
-    return;
+  function logout(){
+    adminPage.style.display="none";
+    loginPage.style.display="block";
   }
 
-  const id = "u" + Date.now(); // unique ID
-
-  await db.collection("users").doc(id).set({
-    name: name,
-    parent: parent,
-    position: position
-  });
-
-  document.getElementById("newName").value = "";
-
-  loadTreeFromFirebase(); // tree refresh
-  loadParentsDropdown();
-}
-function drawTree(){
-  const canvas = document.getElementById("treeCanvas");
-  const ctx = canvas.getContext("2d");
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle = "#94a3b8";
-  ctx.fillStyle = "#2563eb";
-  ctx.lineWidth = 2;
-  ctx.font = "14px system-ui";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  drawNode(600, 80, "Root");
-
-  drawLine(600, 100, 400, 200);
-  drawLine(600, 100, 800, 200);
-
-  drawNode(400, 220, "Left");
-  drawNode(800, 220, "Right");
-}
-
-function drawNode(x,y,text){
-  const canvas = document.getElementById("treeCanvas");
-  const ctx = canvas.getContext("2d");
-
-  ctx.beginPath();
-  ctx.arc(x,y,26,0,Math.PI*2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle="#fff";
-  ctx.fillText(text,x,y);
-  ctx.fillStyle="#2563eb";
-}
-
-function drawLine(x1,y1,x2,y2){
-  const canvas = document.getElementById("treeCanvas");
-  const ctx = canvas.getContext("2d");
-
-  ctx.beginPath();
-  ctx.moveTo(x1,y1);
-  ctx.lineTo(x2,y2);
-  ctx.stroke();
+  async function loadTreeFromFirebase(){
+    const snap = await db.collection("users").get();
+    const users = {};
+    snap.forEach(d=>users[d.id]=d.data());
+    drawFirebaseTree(users);
   }
+
+  function drawFirebaseTree(users){
+    const c = treeCanvas;
+    const ctx = c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.fillStyle="#2563eb";
+    ctx.strokeStyle="#94a3b8";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+
+    const rootId = Object.keys(users).find(id=>users[id].position==="root");
+    if(!rootId){ alert("Root not found"); return; }
+
+    drawNodeAt(rootId,600,80);
+
+    function drawNodeAt(id,x,y){
+      const u = users[id];
+      drawNode(x,y,u.name);
+
+      Object.keys(users).forEach(cid=>{
+        if(users[cid].parent===id){
+          const off = users[cid].position==="left"?-200:200;
+          const nx=x+off, ny=y+120;
+          drawLine(x,y+26,nx,ny-26);
+          drawNodeAt(cid,nx,ny);
+        }
+      });
+    }
+  }
+
+  function drawNode(x,y,t){
+    const ctx = treeCanvas.getContext("2d");
+    ctx.beginPath();
+    ctx.arc(x,y,26,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle="#fff";
+    ctx.fillText(t,x,y);
+    ctx.fillStyle="#2563eb";
+  }
+
+  function drawLine(x1,y1,x2,y2){
+    const ctx = treeCanvas.getContext("2d");
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+  }
+
   async function loadParentsDropdown(){
-  const select = document.getElementById("parentId");
-  if(!select) return;
+    parentId.innerHTML="";
+    const snap = await db.collection("users").get();
+    snap.forEach(d=>{
+      const o=document.createElement("option");
+      o.value=d.id;
+      o.textContent=d.data().name+" ("+d.id+")";
+      parentId.appendChild(o);
+    });
+  }
 
-  select.innerHTML = "";
+  async function addUser(){
+    if(!newName.value) return alert("Name required");
 
-  const snap = await db.collection("users").get();
+    const id="u"+Date.now();
+    await db.collection("users").doc(id).set({
+      name:newName.value,
+      parent:parentId.value,
+      position:newPosition.value
+    });
 
-  snap.forEach(doc=>{
-    const opt = document.createElement("option");
-    opt.value = doc.id;
-    opt.textContent = doc.data().name + " (" + doc.id + ")";
-    select.appendChild(opt);
-  });
+    newName.value="";
+    loadTreeFromFirebase();
+    loadParentsDropdown();
   }
 </script>
 
