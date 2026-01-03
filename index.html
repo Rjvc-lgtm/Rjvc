@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
-  <title>Binary Tree – Stable Version</title>
+  <title>Binary Tree – Compact Stable</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
@@ -48,7 +48,7 @@
       align-items:center;
     }
     .canvas-wrap{
-      margin-top:20px;
+      margin-top:10px;
       display:flex;
       justify-content:center;
     }
@@ -57,8 +57,9 @@
       border-radius:10px;
     }
     .control{
-      margin-top:14px;
+      margin-top:10px;
       color:#cbd5f5;
+      font-size:14px;
     }
   </style>
 </head>
@@ -85,29 +86,31 @@
   <div class="wrap">
 
     <div class="topbar">
-      <h2>Binary Tree (Stable)</h2>
+      <h3>Binary Tree (Compact)</h3>
       <button onclick="logout()" style="width:auto;padding:6px 16px">Logout</button>
     </div>
 
     <!-- SIZE CONTROL -->
     <div class="control">
-      Tree Size:
-      <input type="range" min="120" max="300" value="180" id="sizeRange"
+      Tree Width:
+      <input type="range"
+             min="40"
+             max="200"
+             value="100"
+             id="sizeRange"
              oninput="drawTree()" />
     </div>
 
     <!-- TREE -->
     <div class="canvas-wrap">
-      <canvas id="treeCanvas" width="1200" height="520"></canvas>
+      <canvas id="treeCanvas" width="1200" height="420"></canvas>
     </div>
 
   </div>
 </div>
 
 <script>
-/* =========================
-   LOGIN
-========================= */
+/* LOGIN */
 function handleAdminLogin(){
   loginPage.style.display = "none";
   adminPage.style.display = "block";
@@ -119,40 +122,37 @@ function logout(){
   loginPage.style.display = "block";
 }
 
-/* =========================
-   TREE DRAWING
-========================= */
+/* TREE */
 function drawTree(){
   const canvas = document.getElementById("treeCanvas");
   const ctx = canvas.getContext("2d");
-
   const gap = parseInt(document.getElementById("sizeRange").value);
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.strokeStyle = "#94a3b8";
   ctx.fillStyle = "#2563eb";
   ctx.lineWidth = 2;
-  ctx.font = "14px system-ui";
+  ctx.font = "13px system-ui";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
   // ROOT
-  drawNode(600, 80, "ROOT");
+  drawNode(600, 70, "ROOT");
 
   // LEFT
-  drawLine(600, 106, 600-gap, 194);
-  drawNode(600-gap, 220, "LEFT");
+  drawLine(600, 88, 600-gap, 150);
+  drawNode(600-gap, 165, "LEFT");
 
   // RIGHT
-  drawLine(600, 106, 600+gap, 194);
-  drawNode(600+gap, 220, "RIGHT");
+  drawLine(600, 88, 600+gap, 150);
+  drawNode(600+gap, 165, "RIGHT");
 }
 
 function drawNode(x,y,text){
   const ctx = treeCanvas.getContext("2d");
 
   ctx.beginPath();
-  ctx.arc(x,y,26,0,Math.PI*2);
+  ctx.arc(x,y,18,0,Math.PI*2);   // 🔽 smaller node
   ctx.fill();
   ctx.stroke();
 
