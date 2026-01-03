@@ -1,159 +1,210 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>Binary Tree – Full View (Zoom)</title>
+<title>Binary Tree – Mobile Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-  body{
-    margin:0;
-    background:#020617;
-    color:#e5e7eb;
-    font-family:system-ui;
-  }
-  header{
-    padding:10px 14px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    background:#020617;
-  }
-  button{
-    background:#2563eb;
-    color:#fff;
-    border:none;
-    border-radius:20px;
-    padding:6px 14px;
-    cursor:pointer;
-  }
-  svg{
-    width:100%;
-    height:calc(100vh - 50px);
-    background:#020617;
-  }
-  .node circle{
-    fill:#2563eb;
-    stroke:#94a3b8;
-    stroke-width:2;
-  }
-  .node text{
-    fill:#fff;
-    font-size:12px;
-    text-anchor:middle;
-    dominant-baseline:middle;
-    pointer-events:none;
-  }
-  .link{
-    fill:none;
-    stroke:#94a3b8;
-    stroke-width:2;
-  }
-</style>
+body{
+  margin:0;
+  background:#020617;
+  color:#e5e7eb;
+  font-family:system-ui;
+}
+header{
+  padding:10px 14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+button{
+  background:#2563eb;
+  color:#fff;
+  border:none;
+  border-radius:18px;
+  padding:6px 14px;
+}
+svg{
+  width:100%;
+  height:calc(100vh - 50px);
+}
+.node circle{
+  fill:#2563eb;
+  stroke:#94a3b8;
+  stroke-width:2;
+}
+.node text{
+  fill:#fff;
+  font-size:12px;
+  text-anchor:middle;
+  dominant-baseline:middle;
+}
+.link{
+  fill:none;
+  stroke:#94a3b8;
+  stroke-width:2;
+}
 
+/* Bottom Sheet */
+.sheet{
+  position:fixed;
+  left:0; right:0; bottom:-100%;
+  background:#071028;
+  border-radius:16px 16px 0 0;
+  padding:16px;
+  transition:0.3s;
+}
+.sheet.show{ bottom:0; }
+.sheet button{
+  width:100%;
+  margin-top:8px;
+}
+input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:8px;
+  border:none;
+}
+</style>
 </head>
+
 <body>
 
 <header>
-  <h3>Binary Tree – Full View</h3>
-  <button onclick="resetZoom()">Reset Zoom</button>
+  <h3>Binary Tree Admin</h3>
+  <button onclick="resetZoom()">Reset</button>
 </header>
 
 <svg id="treeSvg"></svg>
 
-<!-- D3.js -->
+<!-- Bottom Sheet -->
+<div id="sheet" class="sheet">
+  <h3 id="sheetTitle"></h3>
+
+  <input id="userName" placeholder="Customer Name">
+  <input id="userMobile" placeholder="Mobile Number">
+
+  <button onclick="addChild('left')">➕ Add Left</button>
+  <button onclick="addChild('right')">➕ Add Right</button>
+  <button onclick="updateUser()">✏️ Update</button>
+  <button onclick="deleteUser()">🗑️ Delete</button>
+  <button onclick="closeSheet()">Close</button>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<!-- D3 -->
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <script>
-/* =========================
-   DEMO TREE DATA
-   (Firebase later)
-========================= */
-const treeData = {
-  name: "ROOT",
-  children: [
-    {
-      name: "LEFT",
-      children: [
-        { name: "L-L" },
-        { name: "L-R" }
-      ]
-    },
-    {
-      name: "RIGHT",
-      children: [
-        { name: "R-L" },
-        { name: "R-R" }
-      ]
-    }
-  ]
-};
+// 🔥 Firebase config (aapka)
+firebase.initializeApp({
+  apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
+  authDomain: "rjvc-plan.firebaseapp.com",
+  projectId: "rjvc-plan"
+});
+const db = firebase.firestore();
 
-/* =========================
-   SVG + ZOOM SETUP
-========================= */
+let selectedNode = null;
+
+/* ================= TREE ================= */
 const svg = d3.select("#treeSvg");
-const width = window.innerWidth;
-const height = window.innerHeight;
-
-const g = svg.append("g")
-  .attr("transform", "translate(40,40)");
-
-const zoom = d3.zoom()
-  .scaleExtent([0.2, 3])   // zoom out / zoom in
-  .on("zoom", (event) => {
-    g.attr("transform", event.transform);
-  });
-
+const g = svg.append("g").attr("transform","translate(40,40)");
+const zoom = d3.zoom().scaleExtent([0.2,3]).on("zoom",e=>g.attr("transform",e.transform));
 svg.call(zoom);
 
 function resetZoom(){
-  svg.transition().duration(500).call(
-    zoom.transform,
-    d3.zoomIdentity.translate(40,40).scale(1)
-  );
+  svg.transition().call(zoom.transform,d3.zoomIdentity.translate(40,40).scale(1));
 }
 
-/* =========================
-   TREE LAYOUT
-========================= */
-const root = d3.hierarchy(treeData);
+/* ================= LOAD TREE ================= */
+async function loadTree(){
+  const snap = await db.collection("users").get();
+  const map = {};
+  snap.forEach(d=>map[d.id]={ id:d.id, ...d.data(), children:[] });
 
-const treeLayout = d3.tree()
-  .nodeSize([80, 120]); // auto spacing
+  let root = null;
+  Object.values(map).forEach(u=>{
+    if(!u.parentId) root=u;
+    else map[u.parentId]?.children.push(u);
+  });
 
-treeLayout(root);
+  drawTree(root);
+}
 
-/* =========================
-   LINKS
-========================= */
-g.selectAll(".link")
-  .data(root.links())
-  .enter()
-  .append("path")
-  .attr("class","link")
-  .attr("d", d3.linkVertical()
-    .x(d => d.x)
-    .y(d => d.y)
-  );
+/* ================= DRAW ================= */
+function drawTree(data){
+  g.selectAll("*").remove();
+  const root = d3.hierarchy(data);
+  d3.tree().nodeSize([90,120])(root);
 
-/* =========================
-   NODES
-========================= */
-const node = g.selectAll(".node")
-  .data(root.descendants())
-  .enter()
-  .append("g")
-  .attr("class","node")
-  .attr("transform", d => `translate(${d.x},${d.y})`);
+  g.selectAll(".link")
+    .data(root.links())
+    .enter().append("path")
+    .attr("class","link")
+    .attr("d",d3.linkVertical().x(d=>d.x).y(d=>d.y));
 
-node.append("circle")
-  .attr("r", 18);
+  const node = g.selectAll(".node")
+    .data(root.descendants())
+    .enter().append("g")
+    .attr("class","node")
+    .attr("transform",d=>`translate(${d.x},${d.y})`)
+    .on("click",(e,d)=>openSheet(d.data));
 
-node.append("text")
-  .attr("dy","0.35em")
-  .text(d => d.data.name);
+  node.append("circle").attr("r",18);
+  node.append("text").text(d=>d.data.name);
+}
+
+/* ================= SHEET ================= */
+function openSheet(user){
+  selectedNode = user;
+  sheet.classList.add("show");
+  sheetTitle.innerText = user.name;
+  userName.value = user.name || "";
+  userMobile.value = user.mobile || "";
+}
+function closeSheet(){ sheet.classList.remove("show"); }
+
+/* ================= ACTIONS ================= */
+async function addChild(pos){
+  const id = "u"+Date.now();
+  await db.collection("users").doc(id).set({
+    name:userName.value,
+    mobile:userMobile.value,
+    parentId:selectedNode.id,
+    position:pos,
+    createdAt:Date.now(),
+    isActive:true
+  });
+  closeSheet(); loadTree();
+}
+
+async function updateUser(){
+  await db.collection("users").doc(selectedNode.id).update({
+    name:userName.value,
+    mobile:userMobile.value
+  });
+  closeSheet(); loadTree();
+}
+
+async function deleteUser(){
+  const child = await db.collection("users")
+    .where("parentId","==",selectedNode.id).get();
+  if(!child.empty){
+    alert("Child hone par delete allowed nahi");
+    return;
+  }
+  await db.collection("users").doc(selectedNode.id).delete();
+  closeSheet(); loadTree();
+}
+
+/* INIT */
+loadTree();
 </script>
 
 </body>
-</html>
+                                                                                </html>
