@@ -1,242 +1,110 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html>
 <head>
-<meta charset="UTF-8" />
-<title>RJVC Admin Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<title>RJVC Admin Tree</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-*{box-sizing:border-box;font-family:system-ui}
-body{margin:0;background:#f3f4f6}
-.wrap{max-width:1200px;margin:auto;padding:14px}
-.panel{background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
-.flex{display:flex;align-items:center}
-.between{justify-content:space-between}
-.btn{border:none;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
-.btn-primary{background:#2563eb;color:#fff}
-.btn-secondary{background:#e5e7eb}
-.btn-danger{background:#dc2626;color:#fff}
-.btn-sm{padding:6px 10px;font-size:12px}
-.small{font-size:12px;color:#6b7280}
-input{width:100%;padding:10px;border-radius:10px;border:1px solid #d1d5db}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:6px;border-bottom:1px solid #e5e7eb;text-align:left}
-th{font-size:11px;color:#6b7280}
+body{
+  background:#020617;
+  margin:0;
+  color:white;
+  font-family:Arial;
+}
+
+.top{
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  background:#071028;
+}
+
+canvas{
+  display:block;
+  margin:auto;
+}
+button{
+  background:#2563eb;
+  color:white;
+  border:none;
+  padding:8px 15px;
+  border-radius:6px;
+}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginPage" class="wrap">
-  <div class="panel" style="max-width:380px;margin:80px auto">
-    <h3>Admin Login</h3>
-    <input id="adminId" placeholder="admin">
-    <input id="adminPass" type="password" placeholder="1234" style="margin-top:8px">
-    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="login()">Login</button>
-    <div id="loginError" class="small" style="color:red;display:none">Wrong login</div>
-  </div>
+<div class="top">
+<h3>Binary Tree Admin</h3>
+<button onclick="logout()">Logout</button>
 </div>
 
-<!-- ADMIN -->
-<div id="adminPage" style="display:none">
-<div class="wrap">
-
-<div class="panel flex between">
-  <div>
-    <h2>RJVC Admin Panel</h2>
-    <div class="small">Tree • Wallet • Withdraw</div>
-  </div>
-  <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
-</div>
-
-<!-- CREATE ROOT -->
-<div class="panel">
-  <h3>Create Root Customer</h3>
-  <div class="flex" style="gap:10px">
-    <input id="rootName" placeholder="Customer Name">
-    <input id="rootPass" placeholder="Password">
-  </div>
-  <button class="btn btn-primary" style="margin-top:10px" onclick="createRoot()">Add Root</button>
-</div>
-
-<!-- CUSTOMER LIST -->
-<div class="panel">
-<h3>Customer List</h3>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Name</th>
-<th>Cycles</th>
-<th>Commission</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody id="customerTable"></tbody>
-</table>
-</div>
-
-</div>
-</div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<canvas id="tree" width="1200" height="700"></canvas>
 
 <script>
-/* ================= FIREBASE ================= */
-firebase.initializeApp({
-  apiKey:"AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
-  authDomain:"rjvc-plan.firebaseapp.com",
-  projectId:"rjvc-plan"
-});
 
-const db = firebase.firestore();
+const canvas=document.getElementById("tree");
+const ctx=canvas.getContext("2d");
 
-/* 🔥 COMPANY ID (FIXED) */
-const COMPANY_ID = "main";
+function node(x,y,text){
+ ctx.beginPath();
+ ctx.arc(x,y,25,0,Math.PI*2);
+ ctx.fillStyle="#2563eb";
+ ctx.fill();
+ ctx.strokeStyle="#94a3b8";
+ ctx.stroke();
 
-/* 🔥 CORRECT COLLECTION */
-const treeCol = db
-  .collection("CompanyWallets")
-  .doc(COMPANY_ID)
-  .collection("TreeNodes");
-
-const usersCol = db.collection("Users");
-
-let nodes = {};
-
-/* ================= LOGIN ================= */
-function login(){
-  if(adminId.value==="admin" && adminPass.value==="1234"){
-    loginPage.style.display="none";
-    adminPage.style.display="block";
-    loadData();
-  }else{
-    loginError.style.display="block";
-  }
-}
-function logout(){ location.reload(); }
-
-/* ================= LOAD DATA ================= */
-function loadData(){
-  treeCol.onSnapshot(snap=>{
-    nodes = {};
-    snap.forEach(d => nodes[d.id] = d.data());
-    renderTable();
-  });
+ ctx.fillStyle="white";
+ ctx.textAlign="center";
+ ctx.textBaseline="middle";
+ ctx.fillText(text,x,y);
 }
 
-/* ================= TABLE ================= */
-function renderTable(){
-  customerTable.innerHTML="";
-  let i=1;
-  Object.entries(nodes).forEach(([id,n])=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-<td>${i++}</td>
-<td><b>${n.name}</b><br><span class="small">${n.password||""}</span></td>
-<td>${n.monthsPaid||0}</td>
-<td>₹${getCommission(id)}</td>
-<td>
-<button class="btn btn-sm btn-secondary" onclick="openTree('${id}')">🌳 Tree</button>
-<button class="btn btn-sm btn-primary" onclick="addCycle('${id}')">₹20 Paid</button>
-<button class="btn btn-sm btn-danger" onclick="deleteCustomer('${id}')">🗑 Delete</button>
-</td>`;
-    customerTable.appendChild(tr);
-  });
+function line(x1,y1,x2,y2){
+ ctx.beginPath();
+ ctx.moveTo(x1,y1);
+ ctx.lineTo(x2,y2);
+ ctx.strokeStyle="#94a3b8";
+ ctx.stroke();
 }
 
-/* ================= COMMISSION ================= */
-function getCommission(id){
-  if(!nodes[id] || nodes[id].isActive!==true) return 0;
-  let count=0;
-  Object.values(nodes).forEach(n=>{
-    if(n.parentId===id && n.isActive===true) count++;
-  });
-  return Math.floor(count/2)*10;
+function drawTree(){
+
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ // ROOT
+ node(600,80,"ROOT");
+
+ // LINES
+ line(600,100,350,230);
+ line(600,100,850,230);
+
+ // LEFT RIGHT
+ node(350,250,"LEFT");
+ node(850,250,"RIGHT");
+
+ // LEVEL 2
+ line(350,270,250,380);
+ line(350,270,450,380);
+
+ line(850,270,750,380);
+ line(850,270,950,380);
+
+ node(250,400,"L-L");
+ node(450,400,"L-R");
+ node(750,400,"R-L");
+ node(950,400,"R-R");
 }
 
-/* ================= TREE OPEN ================= */
-function openTree(id){
-  window.open(
-    "tree.html?admin=1&company=main&root=" + id,
-    "_blank"
-  );
+drawTree();
+
+function logout(){
+ location="index.html";
 }
 
-/* ================= DELETE ================= */
-async function deleteCustomer(id){
-  if(!confirm("Delete customer + downline?")) return;
-  await treeCol.doc(id).delete();
-  await usersCol.doc(id).delete();
-  alert("Deleted");
-}
-
-/* ================= ₹20 PAID ================= */
-async function addCycle(id){
-  const ref = usersCol.doc(id);
-  let snap = await ref.get();
-
-  if(!snap.exists){
-    const t = nodes[id];
-    await ref.set({
-      name:t.name,
-      password:t.password||"",
-      bonusWallet:0,
-      commissionWallet:0,
-      cycleCount:0,
-      isActive:false,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    snap = await ref.get();
-  }
-
-  const c = snap.data().cycleCount||0;
-  await ref.update({
-    cycleCount:c+1,
-    isActive:true,
-    lastPaidAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  await treeCol.doc(id).update({
-    isActive:true,
-    monthsPaid:(nodes[id].monthsPaid||0)+1
-  });
-
-  alert("₹20 received & activated");
-}
-
-/* ================= CREATE ROOT ================= */
-async function createRoot(){
-  if(!rootName.value || !rootPass.value) return alert("Fill both");
-
-  const doc = await treeCol.add({
-    name:rootName.value,
-    password:rootPass.value,
-    parentId:null,
-    leftId:null,
-    rightId:null,
-    monthsPaid:0,
-    isActive:false,
-    joinedAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  await usersCol.doc(doc.id).set({
-    name:rootName.value,
-    password:rootPass.value,
-    bonusWallet:0,
-    commissionWallet:0,
-    cycleCount:0,
-    isActive:false,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  alert("Root created");
-  rootName.value="";
-  rootPass.value="";
-}
 </script>
+
 </body>
-  </html>
+</html>
