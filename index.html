@@ -1,209 +1,75 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Binary Tree – Mobile Admin</title>
+<title>RJVC Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
-  margin:0;
   background:#020617;
-  color:#e5e7eb;
-  font-family:system-ui;
+  color:white;
+  font-family:Arial;
+  text-align:center;
 }
-header{
-  padding:10px 14px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+.box{
+  max-width:300px;
+  margin:100px auto;
+  padding:20px;
+  background:#071028;
+  border-radius:10px;
+}
+input,select,button{
+  width:100%;
+  margin:8px 0;
+  padding:10px;
+  border-radius:6px;
+  border:none;
 }
 button{
   background:#2563eb;
-  color:#fff;
-  border:none;
-  border-radius:18px;
-  padding:6px 14px;
-}
-svg{
-  width:100%;
-  height:calc(100vh - 50px);
-}
-.node circle{
-  fill:#2563eb;
-  stroke:#94a3b8;
-  stroke-width:2;
-}
-.node text{
-  fill:#fff;
-  font-size:12px;
-  text-anchor:middle;
-  dominant-baseline:middle;
-}
-.link{
-  fill:none;
-  stroke:#94a3b8;
-  stroke-width:2;
-}
-
-/* Bottom Sheet */
-.sheet{
-  position:fixed;
-  left:0; right:0; bottom:-100%;
-  background:#071028;
-  border-radius:16px 16px 0 0;
-  padding:16px;
-  transition:0.3s;
-}
-.sheet.show{ bottom:0; }
-.sheet button{
-  width:100%;
-  margin-top:8px;
-}
-input{
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  border-radius:8px;
-  border:none;
+  color:white;
+  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <h3>Binary Tree Admin</h3>
-  <button onclick="resetZoom()">Reset</button>
-</header>
+<div class="box">
+<h2>RJVC Login</h2>
 
-<svg id="treeSvg"></svg>
+<input id="uid" placeholder="User ID">
 
-<!-- Bottom Sheet -->
-<div id="sheet" class="sheet">
-  <h3 id="sheetTitle"></h3>
+<input id="pass" type="password" placeholder="Password">
 
-  <input id="userName" placeholder="Customer Name">
-  <input id="userMobile" placeholder="Mobile Number">
+<select id="type">
+<option value="admin">Admin</option>
+<option value="customer">Customer</option>
+</select>
 
-  <button onclick="addChild('left')">➕ Add Left</button>
-  <button onclick="addChild('right')">➕ Add Right</button>
-  <button onclick="updateUser()">✏️ Update</button>
-  <button onclick="deleteUser()">🗑️ Delete</button>
-  <button onclick="closeSheet()">Close</button>
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
-<!-- D3 -->
-<script src="https://d3js.org/d3.v7.min.js"></script>
-
 <script>
-// 🔥 Firebase config (aapka)
-firebase.initializeApp({
-  apiKey: "AIzaSyBDw_FQyDzWZLJORFtOwZqrFRfeS5tOFSw",
-  authDomain: "rjvc-plan.firebaseapp.com",
-  projectId: "rjvc-plan"
-});
-const db = firebase.firestore();
+function login(){
 
-let selectedNode = null;
+  const id=document.getElementById("uid").value;
+  const pass=document.getElementById("pass").value;
+  const type=document.getElementById("type").value;
 
-/* ================= TREE ================= */
-const svg = d3.select("#treeSvg");
-const g = svg.append("g").attr("transform","translate(40,40)");
-const zoom = d3.zoom().scaleExtent([0.2,3]).on("zoom",e=>g.attr("transform",e.transform));
-svg.call(zoom);
-
-function resetZoom(){
-  svg.transition().call(zoom.transform,d3.zoomIdentity.translate(40,40).scale(1));
-}
-
-/* ================= LOAD TREE ================= */
-async function loadTree(){
-  const snap = await db.collection("users").get();
-  const map = {};
-  snap.forEach(d=>map[d.id]={ id:d.id, ...d.data(), children:[] });
-
-  let root = null;
-  Object.values(map).forEach(u=>{
-    if(!u.parentId) root=u;
-    else map[u.parentId]?.children.push(u);
-  });
-
-  drawTree(root);
-}
-
-/* ================= DRAW ================= */
-function drawTree(data){
-  g.selectAll("*").remove();
-  const root = d3.hierarchy(data);
-  d3.tree().nodeSize([90,120])(root);
-
-  g.selectAll(".link")
-    .data(root.links())
-    .enter().append("path")
-    .attr("class","link")
-    .attr("d",d3.linkVertical().x(d=>d.x).y(d=>d.y));
-
-  const node = g.selectAll(".node")
-    .data(root.descendants())
-    .enter().append("g")
-    .attr("class","node")
-    .attr("transform",d=>`translate(${d.x},${d.y})`)
-    .on("click",(e,d)=>openSheet(d.data));
-
-  node.append("circle").attr("r",18);
-  node.append("text").text(d=>d.data.name);
-}
-
-/* ================= SHEET ================= */
-function openSheet(user){
-  selectedNode = user;
-  sheet.classList.add("show");
-  sheetTitle.innerText = user.name;
-  userName.value = user.name || "";
-  userMobile.value = user.mobile || "";
-}
-function closeSheet(){ sheet.classList.remove("show"); }
-
-/* ================= ACTIONS ================= */
-async function addChild(pos){
-  const id = "u"+Date.now();
-  await db.collection("users").doc(id).set({
-    name:userName.value,
-    mobile:userMobile.value,
-    parentId:selectedNode.id,
-    position:pos,
-    createdAt:Date.now(),
-    isActive:true
-  });
-  closeSheet(); loadTree();
-}
-
-async function updateUser(){
-  await db.collection("users").doc(selectedNode.id).update({
-    name:userName.value,
-    mobile:userMobile.value
-  });
-  closeSheet(); loadTree();
-}
-
-async function deleteUser(){
-  const child = await db.collection("users")
-    .where("parentId","==",selectedNode.id).get();
-  if(!child.empty){
-    alert("Child hone par delete allowed nahi");
-    return;
+  if(type==="admin" && id==="admin" && pass==="1234"){
+    location="admin.html";
   }
-  await db.collection("users").doc(selectedNode.id).delete();
-  closeSheet(); loadTree();
+  else if(type==="customer"){
+    location="customer.html";
+  }
+  else{
+    document.getElementById("msg").innerText="Wrong Login";
+  }
 }
-
-/* INIT */
-loadTree();
 </script>
 
 </body>
