@@ -32,6 +32,25 @@ button{
   border-radius:6px;
 }
 </style>
+  <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBDW_FQyDzWZLJORFtOwZQzF",
+  authDomain: "rjvc-plan.firebaseapp.com",
+  projectId: "rjvc-plan",
+  storageBucket: "rjvc-plan.firebasestorage.app",
+  messagingSenderId: "265431528728",
+  appId: "1:265431528728:web:c3dc4b8e8f3ae4469a1a6d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+  </script>
 </head>
 
 <body>
