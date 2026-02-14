@@ -59,7 +59,18 @@ const db = getFirestore(app);
 <h3>Binary Tree Admin</h3>
 <button onclick="logout()">Logout</button>
 </div>
+<div style="padding:10px;background:#071028;">
+  <input id="newName" placeholder="Customer Name">
+  <input id="parentId" placeholder="Parent ID">
 
+  <select id="positionSelect">
+    <option value="left">Left</option>
+    <option value="right">Right</option>
+  </select>
+
+  <button onclick="addUser()">Add User</button>
+</div>
+  
 <canvas id="tree" width="1200" height="700"></canvas>
 
 <script>
