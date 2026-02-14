@@ -124,7 +124,7 @@ async function drawTree(){
 
   node(600,80,root.name);
 
-  let children = users.filter(u => u.parent == root.parent ? false : u.parent == root.id);
+  let children = users.filter(u => u.parent == root.docId);
 
   if(children[0]){
     line(600,100,350,230);
