@@ -109,8 +109,11 @@ async function drawTree(){
   let users = [];
 
   querySnapshot.forEach((doc)=>{
-    users.push(doc.data());
-  });
+    users.push({
+        docId: doc.id,
+        ...doc.data()
+    });
+});
 
   const root = users.find(u=>u.parent == null);
 
