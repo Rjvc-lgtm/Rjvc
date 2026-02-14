@@ -100,32 +100,38 @@ function line(x1,y1,x2,y2){
  ctx.stroke();
 }
 
-function drawTree(){
+async function drawTree(){
 
- ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
- // ROOT
- node(600,80,"ROOT");
+  const querySnapshot = await getDocs(collection(db,"users"));
 
- // LINES
- line(600,100,350,230);
- line(600,100,850,230);
+  let users = [];
 
- // LEFT RIGHT
- node(350,250,"LEFT");
- node(850,250,"RIGHT");
+  querySnapshot.forEach((doc)=>{
+    users.push(doc.data());
+  });
 
- // LEVEL 2
- line(350,270,250,380);
- line(350,270,450,380);
+  const root = users.find(u=>u.parent == null);
 
- line(850,270,750,380);
- line(850,270,950,380);
+  if(!root){
+    node(600,80,"No Root");
+    return;
+  }
 
- node(250,400,"L-L");
- node(450,400,"L-R");
- node(750,400,"R-L");
- node(950,400,"R-R");
+  node(600,80,root.name);
+
+  let children = users.filter(u=>u.parent == root.id);
+
+  if(children[0]){
+    line(600,100,350,230);
+    node(350,250,children[0].name);
+  }
+
+  if(children[1]){
+    line(600,100,850,230);
+    node(850,250,children[1].name);
+  }
 }
 
 drawTree();
