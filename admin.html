@@ -155,11 +155,11 @@ if(parentId == ""){
   const newId = "u" + Date.now();
 
   await addDoc(collection(db,"users"),{
-    id:newId,
-    name:name,
-    parent:parentId,
-    position:position
-  });
+  id:newId,
+  name:name,
+  parent:finalParent,
+  position:position
+});
 
   alert("User Added");
   }
