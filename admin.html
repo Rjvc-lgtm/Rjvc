@@ -129,7 +129,28 @@ function drawTree(){
 }
 
 drawTree();
+async function addUser(){
 
+  const name = document.getElementById("newName").value;
+  const parentId = document.getElementById("parentId").value;
+  const position = document.getElementById("positionSelect").value;
+
+  if(!name || !parentId){
+    alert("Enter name and parent ID");
+    return;
+  }
+
+  const newId = "u" + Date.now();
+
+  await addDoc(collection(db,"users"),{
+    id:newId,
+    name:name,
+    parent:parentId,
+    position:position
+  });
+
+  alert("User Added");
+  }
 function logout(){
  location="index.html";
 }
