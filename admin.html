@@ -141,10 +141,16 @@ async function addUser(){
   const parentId = document.getElementById("parentId").value;
   const position = document.getElementById("positionSelect").value;
 
-  if(!name || !parentId){
-    alert("Enter name and parent ID");
-    return;
-  }
+  if(!name){
+  alert("Enter name");
+  return;
+}
+
+let finalParent = parentId;
+
+if(parentId == ""){
+   finalParent = null;   // root user
+}
 
   const newId = "u" + Date.now();
 
