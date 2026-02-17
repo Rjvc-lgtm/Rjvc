@@ -2,98 +2,90 @@
 <html>
 <head>
   <title>RJVC Admin Panel</title>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
   <style>
     body {
-      background:#0b1c2d;
-      color:white;
-      font-family:Arial;
-      text-align:center;
-      padding-top:40px;
+      background-color: #0b1e2d;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding-top: 100px;
     }
-    input, select, button {
-      padding:10px;
-      margin:5px;
-      font-size:16px;
+
+    input {
+      padding: 10px;
+      width: 200px;
+      font-size: 16px;
     }
+
     button {
-      background:#2196F3;
-      border:none;
-      color:white;
-      cursor:pointer;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0b7dda;
+    }
+
+    #message {
+      margin-top: 20px;
+      color: lightgreen;
     }
   </style>
 </head>
 <body>
 
-<h1>RJVC Admin Panel</h1>
+  <h1>RJVC Admin Panel</h1>
 
-<input type="text" id="username" placeholder="User Name">
-<input type="text" id="parentId" placeholder="Parent ID (root)">
-<select id="position">
-  <option value="left">Left</option>
-  <option value="right">Right</option>
-</select>
-<button onclick="addUser()">Add User</button>
+  <input type="text" id="username" placeholder="User Name">
+  <button onclick="addUser()">Add User</button>
 
-<p id="message"></p>
+  <div id="message"></div>
 
-<script type="module">
+  <!-- Firebase Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDoc } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCsENvsEYmb72x8IkYrLRL07yhMf5GbL0k",
+      authDomain: "rjvc-money.firebaseapp.com",
+      projectId: "rjvc-money",
+      storageBucket: "rjvc-money.appspot.com",
+      messagingSenderId: "773092277754",
+      appId: "1:773092277754:web:5ac897ba8ee666cceb53843"
+    };
 
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "rjvc-momoney.firebaseapp.com",
-  projectId: "rjvc-momoney",
-  storageBucket: "rjvc-momoney.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    window.addUser = async function () {
+      const name = document.getElementById("username").value;
 
-// Root create if not exists
-const rootRef = doc(db, "users", "root");
-const rootSnap = await getDoc(rootRef);
+      if (name === "") {
+        alert("Please enter user name");
+        return;
+      }
 
-if (!rootSnap.exists()) {
-  await setDoc(rootRef, {
-    id: "root",
-    name: "root",
-    parent: null,
-    position: "root"
-  });
-}
+      try {
+        await setDoc(doc(db, "users", name), {
+          name: name,
+          parent: "root",
+          position: "left"
+        });
 
-window.addUser = async function () {
+        document.getElementById("message").innerText = "User Added Successfully!";
+        document.getElementById("username").value = "";
 
-  const username = document.getElementById("username").value;
-  const parentId = document.getElementById("parentId").value || "root";
-  const position = document.getElementById("position").value;
-
-  if (!username) {
-    document.getElementById("message").innerText = "Enter User Name";
-    return;
-  }
-
-  const userRef = doc(db, "users", username);
-
-  await setDoc(userRef, {
-    id: username,
-    name: username,
-    parent: parentId,
-    position: position
-  });
-
-  document.getElementById("message").innerText = "User Added Successfully!";
-}
-
-</script>
+      } catch (error) {
+        console.error("Error adding user: ", error);
+        alert("Error adding user");
+      }
+    };
+  </script>
 
 </body>
 </html>
