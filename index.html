@@ -1,9 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>RJVC Working</title>
+  <title>RJVC Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial; background:#0b1a2d; color:white; text-align:center; padding:20px; }
+    input, select, button { padding:10px; margin:5px; }
+    button { background:#1e88e5; color:white; border:none; }
+  </style>
 </head>
 <body>
-  <h1>RJVC Working ✅</h1>
+
+<h2>RJVC Admin Panel</h2>
+
+<input type="text" id="name" placeholder="User Name">
+<button onclick="addUser()">Add User</button>
+
+<ul id="userList"></ul>
+
+<script>
+let users = [];
+
+function addUser(){
+  let name = document.getElementById("name").value;
+  if(name === "") return alert("Name required");
+  users.push(name);
+  document.getElementById("name").value="";
+  displayUsers();
+}
+
+function displayUsers(){
+  let list="";
+  users.forEach(u => {
+    list += "<li>"+u+"</li>";
+  });
+  document.getElementById("userList").innerHTML=list;
+}
+</script>
+
 </body>
 </html>
