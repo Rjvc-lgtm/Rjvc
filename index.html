@@ -5,69 +5,77 @@
   <style>
     body {
       background-color: #0b1f33;
-      color: white;
-      text-align: center;
       font-family: Arial;
+      text-align: center;
+      color: white;
       margin-top: 100px;
     }
     input {
       padding: 10px;
       width: 200px;
+      font-size: 16px;
     }
     button {
       padding: 10px 20px;
-      background: #3498db;
+      font-size: 16px;
+      background-color: #3498db;
       color: white;
       border: none;
       cursor: pointer;
+    }
+    button:hover {
+      background-color: #2980b9;
     }
   </style>
 </head>
 <body>
 
-<h1>RJVC Admin Panel</h1>
+  <h1>RJVC Admin Panel</h1>
 
-<input type="text" id="username" placeholder="User Name">
-<button onclick="addUser()">Add User</button>
+  <input type="text" id="username" placeholder="User Name">
+  <button onclick="addUser()">Add User</button>
 
-<p id="message"></p>
+  <p id="message"></p>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+  <!-- Firebase Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCsENsvEYmb72x8IkYrLRL07yhMf5GbLbk",
-    authDomain: "rjvc-money.firebaseapp.com",
-    projectId: "rjvc-money",
-    storageBucket: "rjvc-money.firebasestorage.app",
-    messagingSenderId: "773092277754",
-    appId: "1:773092277754:web:5ac897ba8e666cceb53843"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCsENsvEymb72x8IkYrRL07yhMf5GbL0bk",
+      authDomain: "rjvc-money.firebaseapp.com",
+      projectId: "rjvc-money",
+      storageBucket: "rjvc-money.firebasestorage.app",
+      messagingSenderId: "773092277754",
+      appId: "1:773092277754:web:5ac897ba8e666ceb53843",
+      measurementId: "G-HRP8QG8Z7J"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  window.addUser = async function() {
-    const name = document.getElementById("username").value;
+    window.addUser = async function() {
+      const username = document.getElementById("username").value;
 
-    if(name === "") {
-      alert("Enter username");
-      return;
+      if(username === "") {
+        alert("Please enter username");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "users"), {
+          name: username,
+          created: new Date()
+        });
+
+        document.getElementById("message").innerText = "User Added Successfully!";
+        document.getElementById("username").value = "";
+      } catch (error) {
+        alert("Error: " + error);
+      }
     }
-
-    await setDoc(doc(collection(db, "users"), name), {
-      id: name,
-      name: name,
-      parent: "root",
-      position: "left"
-    });
-
-    document.getElementById("message").innerText = "User Added Successfully!";
-    document.getElementById("username").value = "";
-  }
-
-</script>
+  </script>
 
 </body>
 </html>
