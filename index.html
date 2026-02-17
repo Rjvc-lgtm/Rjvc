@@ -4,78 +4,72 @@
   <title>RJVC Admin Panel</title>
   <style>
     body {
-      background-color: #0b1f33;
       font-family: Arial;
+      background: #0b1e33;
       text-align: center;
+      padding-top: 100px;
       color: white;
-      margin-top: 100px;
     }
     input {
       padding: 10px;
       width: 200px;
-      font-size: 16px;
     }
     button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #3498db;
+      padding: 10px 15px;
+      background: #2196F3;
       color: white;
       border: none;
       cursor: pointer;
-    }
-    button:hover {
-      background-color: #2980b9;
     }
   </style>
 </head>
 <body>
 
-  <h1>RJVC Admin Panel</h1>
+<h2>RJVC Admin Panel</h2>
 
-  <input type="text" id="username" placeholder="User Name">
-  <button onclick="addUser()">Add User</button>
+<input type="text" id="username" placeholder="User Name">
+<button onclick="addUser()">Add User</button>
 
-  <p id="message"></p>
+<p id="msg"></p>
 
-  <!-- Firebase Script -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCsENsvEymb72x8IkYrRL07yhMf5GbL0bk",
-      authDomain: "rjvc-money.firebaseapp.com",
-      projectId: "rjvc-money",
-      storageBucket: "rjvc-money.firebasestorage.app",
-      messagingSenderId: "773092277754",
-      appId: "1:773092277754:web:5ac897ba8e666ceb53843",
-      measurementId: "G-HRP8QG8Z7J"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyCsEnsEvYmb72x8IkYrLRL07yhMf5GbLbk",
+    authDomain: "rjvc-money.firebaseapp.com",
+    projectId: "rjvc-money",
+    storageBucket: "rjvc-money.appspot.com",
+    messagingSenderId: "773092277754",
+    appId: "1:773092277754:web:5ac897ba8ee666ceb53843"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    window.addUser = async function() {
-      const username = document.getElementById("username").value;
+  window.addUser = async function() {
+    const name = document.getElementById("username").value;
 
-      if(username === "") {
-        alert("Please enter username");
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "users"), {
-          name: username,
-          created: new Date()
-        });
-
-        document.getElementById("message").innerText = "User Added Successfully!";
-        document.getElementById("username").value = "";
-      } catch (error) {
-        alert("Error: " + error);
-      }
+    if (name === "") {
+      document.getElementById("msg").innerText = "Enter name first";
+      return;
     }
-  </script>
+
+    try {
+      await addDoc(collection(db, "users"), {
+        name: name,
+        created: new Date()
+      });
+
+      document.getElementById("msg").innerText = "User Added Successfully!";
+      document.getElementById("username").value = "";
+
+    } catch (error) {
+      document.getElementById("msg").innerText = "Error: " + error;
+    }
+  }
+</script>
 
 </body>
-</html>
+  </html>
